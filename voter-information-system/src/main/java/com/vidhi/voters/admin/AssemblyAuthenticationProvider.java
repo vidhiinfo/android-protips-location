@@ -39,7 +39,7 @@ public class AssemblyAuthenticationProvider extends DaoAuthenticationProvider {
             throws AuthenticationException {
         super.additionalAuthenticationChecks(user, auth);   // password
         Integer chosen = auth.getDetails() instanceof LoginDetails d ? d.getAssemblyNo() : null;
-        Integer assigned = users.findByUsernameIgnoreCase(user.getUsername()).map(AppUser::getAssemblyNo).orElse(null);
+        Integer assigned = user instanceof AppUserDetails d ? d.getAssemblyNo() : null;
         if (assigned != null && !assigned.equals(chosen)) throw new AssemblyNotAllowedException();
         if (chosen != null && assemblies.findByAssemblyNo(chosen).isEmpty() && voters.countByAssemblyNo(chosen) == 0)
             throw new AssemblyNotAllowedException();

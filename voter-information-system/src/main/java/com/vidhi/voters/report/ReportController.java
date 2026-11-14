@@ -17,6 +17,7 @@ import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/reports")
+@org.springframework.security.access.prepost.PreAuthorize("hasAuthority('REPORT_VIEW')")
 public class ReportController {
 
     private final ReportService reports;
@@ -99,6 +100,6 @@ public class ReportController {
 
     static boolean isAdmin() {
         var a = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        return a != null && a.getAuthorities().stream().anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"));
+        return a != null && a.getAuthorities().stream().anyMatch(g -> g.getAuthority().equals("REPORT_SENSITIVE"));
     }
 }

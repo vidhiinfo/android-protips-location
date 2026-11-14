@@ -14,17 +14,17 @@
                 <option value="" th:text="#{common.all}"></option>
                 <option th:each="a : ${assemblies}" th:value="${a.assemblyNo}" th:selected="${a.assemblyNo == assemblyNo}" th:text="${a.assemblyNo} + ' - ' + ${a.name}"></option></select>
         </form>
-        <a sec:authorize="hasRole('ADMIN')" class="btn btn-primary btn-sm text-nowrap" th:href="@{/masters/candidates/new(electionId=${electionId},assemblyNo=${assemblyNo})}"><i class="bi bi-plus-lg"></i> <span th:text="#{common.add}"></span></a>
+        <a sec:authorize="hasAuthority('MASTER_EDIT')" class="btn btn-primary btn-sm text-nowrap" th:href="@{/masters/candidates/new(electionId=${electionId},assemblyNo=${assemblyNo})}"><i class="bi bi-plus-lg"></i> <span th:text="#{common.add}"></span></a>
     </div>
     <div class="table-responsive bg-white border rounded"><table class="table table-striped table-hover mb-0">
         <thead class="table-light"><tr><th th:text="#{master.election}"></th><th th:text="#{col.assemblyNo}"></th><th th:text="#{master.ballotNo}"></th>
-            <th th:text="#{result.candidate}"></th><th th:text="#{master.nameLocal}"></th><th th:text="#{result.party}"></th><th sec:authorize="hasRole('ADMIN')"></th></tr></thead>
+            <th th:text="#{result.candidate}"></th><th th:text="#{master.nameLocal}"></th><th th:text="#{result.party}"></th><th sec:authorize="hasAuthority('MASTER_EDIT')"></th></tr></thead>
         <tbody>
             <tr th:if="${#lists.isEmpty(items)}"><td colspan="7" class="text-center text-muted py-4" th:text="#{common.noRecords}"></td></tr>
             <tr th:each="i : ${items}">
                 <td th:text="${i.election.name}"></td><td th:text="${i.assemblyNo}"></td><td th:text="${i.ballotNo}"></td>
                 <td th:text="${i.name}"></td><td dir="auto" th:text="${i.nameLocal}"></td><td th:text="${i.partyShort}"></td>
-                <td class="text-end text-nowrap" sec:authorize="hasRole('ADMIN')">
+                <td class="text-end text-nowrap" sec:authorize="hasAuthority('MASTER_EDIT')">
                     <a class="btn btn-sm btn-outline-secondary" th:href="@{/masters/candidates/{id}/edit(id=${i.id})}" th:title="#{common.edit}"><i class="bi bi-pencil"></i></a>
                     <form th:action="@{/masters/candidates/{id}/delete(id=${i.id})}" method="post" class="d-inline" th:attr="data-confirm=#{common.confirmDelete}">
                         <button class="btn btn-sm btn-outline-danger" th:title="#{common.delete}"><i class="bi bi-trash"></i></button></form>

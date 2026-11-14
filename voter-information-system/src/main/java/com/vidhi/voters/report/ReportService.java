@@ -25,7 +25,7 @@ public class ReportService {
     }
     public static final List<String> REPORTS = SECTIONS.values().stream().flatMap(List::stream).toList();
 
-    /** Reports with sensitive personal data (social category) - administrators only. */
+    /** Reports with sensitive personal data (social category) - need the REPORT_SENSITIVE permission. */
     public static final Set<String> ADMIN_ONLY = Set.of("category-summary");
 
     /** Booth priority: a lead or trail within this share of votes polled is a swing booth. */

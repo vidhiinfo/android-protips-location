@@ -34,6 +34,7 @@ class VoterApplicationTests {
     @Autowired com.vidhi.voters.messaging.CampaignRepository campaigns;
     @Autowired com.vidhi.voters.messaging.MessageTemplateRepository templates;
     @Autowired com.vidhi.voters.master.ElectionRepository elections;
+    @Autowired com.vidhi.voters.admin.RoleRepository roles;
 
     private Voter anyVoterOf(int assembly) {
         return voters.findAll().stream().filter(v -> v.getAssemblyNo() == assembly && v.getHouseNo() != null).findFirst().orElseThrow();
@@ -84,7 +85,7 @@ class VoterApplicationTests {
 
     // ------------------------------------------------------------------ languages
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void uiSwitchesLanguageAndUrduIsRightToLeft() throws Exception {
         mvc.perform(get("/voters").param("lang", "hi"))
            .andExpect(content().string(containsString("मतदाता सूची")))
@@ -102,7 +103,7 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void searchFindsLocalLanguageNames() throws Exception {
         mvc.perform(get("/voters").param("q", "शर्मा"))
            .andExpect(content().string(containsString("Sharma")));
@@ -114,7 +115,7 @@ class VoterApplicationTests {
 
     // ------------------------------------------------------------------ voters
     @Test
-    @WithMockUser(roles = {"OPERATOR", "VIEWER"})
+    @AsOperator
     void createVoterWithLocalNamesAndNativeDigits() throws Exception {
         mvc.perform(post("/voters").with(csrf())
                         .param("epicNo", "uni0000001").param("name", "Meera Devi").param("nameLocal", "मीरा देवी")
@@ -137,7 +138,7 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void houseNoLinkOpensEveryoneInThatHouse() throws Exception {
         Voter v = anyVoterOf(45);
         long sameHouse = voters.findAll().stream().filter(o -> o.getAssemblyNo().equals(v.getAssemblyNo())
@@ -151,17 +152,18 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void viewerCannotAddVotersOrOpenAdminOrMasters() throws Exception {
         mvc.perform(get("/voters/new")).andExpect(status().isForbidden());
         mvc.perform(get("/admin/users")).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/roles")).andExpect(status().isForbidden());
         mvc.perform(get("/masters/parties/new")).andExpect(status().isForbidden());
         mvc.perform(get("/results/entry")).andExpect(status().isForbidden());
         mvc.perform(get("/masters/parties")).andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void exportsInHindiWithUnicodeFonts() throws Exception {
         byte[] xlsx = mvc.perform(get("/voters/export/excel").param("assemblyNo", "45").param("lang", "hi"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
@@ -179,7 +181,7 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = {"OPERATOR", "VIEWER"})
+    @AsOperator
     void importAcceptsTemplateInAnyLanguage() throws Exception {
         byte[] template = mvc.perform(get("/voters/import/template").param("lang", "ta"))
                 .andReturn().getResponse().getContentAsByteArray();
@@ -191,22 +193,23 @@ class VoterApplicationTests {
 
     // ------------------------------------------------------------------ masters, results, reports, dashboard
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    @AsAdmin
     void adminManagesMastersAndUsers() throws Exception {
         mvc.perform(post("/masters/parties").with(csrf()).param("name", "Test Party").param("shortName", "tp").param("color", "#123456"))
            .andExpect(redirectedUrl("/masters/parties"));
         mvc.perform(get("/masters/parties")).andExpect(content().string(containsString("TP")));
         mvc.perform(post("/masters/parties").with(csrf()).param("name", "Again").param("shortName", "TP"))
            .andExpect(content().string(containsString("already exists")));
+        Long viewerRole = roles.findByCodeIgnoreCase("VIEWER").orElseThrow().getId();
         mvc.perform(post("/admin/users").with(csrf()).param("username", "booth.agent").param("fullName", "Agent")
-                        .param("role", "VIEWER").param("enabled", "true").param("assemblyNo", "52").param("newPassword", "secret123"))
+                        .param("roleIds", viewerRole.toString()).param("enabled", "true").param("assemblyNo", "52").param("newPassword", "secret123"))
            .andExpect(redirectedUrl("/admin/users"));
         mvc.perform(get("/admin/audit")).andExpect(content().string(containsString("booth.agent")));
         mvc.perform(get("/admin/system")).andExpect(content().string(containsString("H2")));
     }
 
     @Test
-    @WithMockUser(username = "operator", roles = {"OPERATOR", "VIEWER"})
+    @AsOperator
     void resultsEntryAndView() throws Exception {
         String page = mvc.perform(get("/results/entry").param("assemblyNo", "45").param("boothNo", "12"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
@@ -222,7 +225,7 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void reportsRenderAndExport() throws Exception {
         for (String id : com.vidhi.voters.report.ReportService.REPORTS) {
             if (com.vidhi.voters.report.ReportService.ADMIN_ONLY.contains(id)) {
@@ -242,7 +245,7 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void dashboardDataForCandidate() throws Exception {
         mvc.perform(get("/dashboard").param("assemblyNo", "52")).andExpect(status().isOk())
            .andExpect(content().string(containsString("chartMargin")));
@@ -257,7 +260,7 @@ class VoterApplicationTests {
 
     // ------------------------------------------------------------------ new reports
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    @AsAdmin
     void duplicateCategoryAndPriorityReports() throws Exception {
         String html = mvc.perform(get("/reports/duplicate-voters").param("assemblyNo", "45"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
@@ -274,7 +277,7 @@ class VoterApplicationTests {
 
     // ------------------------------------------------------------------ SMS / WhatsApp
     @Test
-    @WithMockUser(username = "operator", roles = {"OPERATOR", "VIEWER"})
+    @AsOperator
     void composePreviewQueueAndSendInDryRun() throws Exception {
         var t = templates.findByChannelAndActiveTrueOrderByLanguageAscNameAsc(com.vidhi.voters.messaging.Channel.SMS)
                 .stream().filter(x -> x.getLanguage().equals("hi")).findFirst().orElseThrow();
@@ -307,7 +310,7 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    @AsAdmin
     void silencePeriodBlocksCampaigns() throws Exception {
         var e = elections.findFirstByCurrentTrue().orElseThrow();
         var original = e.getPollDate();
@@ -325,18 +328,62 @@ class VoterApplicationTests {
     }
 
     @Test
-    @WithMockUser(roles = "VIEWER")
+    @AsViewer
     void viewerCannotSendMessages() throws Exception {
         mvc.perform(get("/messages/compose")).andExpect(status().isForbidden());
         mvc.perform(get("/messages/campaigns")).andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    @AsAdmin
     void templateValidationAndSettings() throws Exception {
         mvc.perform(post("/messages/templates").with(csrf()).param("name", "Bad").param("channel", "SMS").param("language", "en")
                         .param("body", "Hello {fullName}").param("active", "true"))
            .andExpect(content().string(containsString("Unknown placeholder: fullName")));
         mvc.perform(get("/messages/settings")).andExpect(status().isOk()).andExpect(content().string(containsString("Dry run")));
+    }
+
+    // ------------------------------------------------------------------ roles & permissions
+    @Test
+    void customRoleGetsOnlyItsPermissions() throws Exception {
+        // demo user "agent" has the custom BOOTH_AGENT role: voter view + results view/entry, locked to assembly 52
+        MockHttpSession s = (MockHttpSession) mvc.perform(post("/login").with(csrf())
+                        .param("username", "agent").param("password", "agent@1234").param("assemblyNo", "52"))
+                .andExpect(redirectedUrl("/voters"))                  // no dashboard permission -> first allowed page
+                .andReturn().getRequest().getSession(false);
+        mvc.perform(get("/voters").session(s)).andExpect(status().isOk())
+           .andExpect(content().string(not(containsString("/voters/export/excel"))))     // no export button
+           .andExpect(content().string(not(containsString("bi-trash"))));               // no delete button
+        mvc.perform(get("/dashboard").session(s)).andExpect(status().isForbidden());
+        mvc.perform(get("/voters/export/excel").session(s)).andExpect(status().isForbidden());
+        mvc.perform(get("/reports").session(s)).andExpect(status().isForbidden());
+        mvc.perform(get("/results/entry").param("assemblyNo", "52").session(s)).andExpect(status().isOk());
+    }
+
+    @Test
+    @AsAdmin
+    void adminEditsRolePermissions() throws Exception {
+        mvc.perform(post("/admin/roles").with(csrf()).param("code", "data_entry").param("name", "Data Entry")
+                        .param("perms", "VOTER_VIEW", "VOTER_EDIT", "VOTER_IMPORT"))
+           .andExpect(redirectedUrl("/admin/roles"));
+        var r = roles.findByCodeIgnoreCase("DATA_ENTRY").orElseThrow();
+        assertThat(r.getPermissions()).containsExactlyInAnyOrder(com.vidhi.voters.admin.Permission.VOTER_VIEW,
+                com.vidhi.voters.admin.Permission.VOTER_EDIT, com.vidhi.voters.admin.Permission.VOTER_IMPORT);
+        mvc.perform(get("/admin/roles")).andExpect(content().string(containsString("Data Entry")));
+        // the ADMIN role cannot lose user administration; system roles cannot be deleted
+        var admin = roles.findByCodeIgnoreCase("ADMIN").orElseThrow();
+        mvc.perform(post("/admin/roles").with(csrf()).param("id", admin.getId().toString()).param("code", "ADMIN")
+                        .param("name", "Administrator").param("perms", "VOTER_VIEW"))
+           .andExpect(content().string(containsString("must keep the user administration permission")));
+        mvc.perform(post("/admin/roles/" + admin.getId() + "/delete").with(csrf())).andExpect(flash().attribute("error", "admin.error.systemRole"));
+    }
+
+    @Test
+    void loginPageHasBanner() throws Exception {
+        mvc.perform(get("/login").param("lang", "hi"))
+           .andExpect(content().string(containsString("login-banner")))
+           .andExpect(content().string(containsString("/images/login-banner.svg")))
+           .andExpect(content().string(containsString("हर मतदाता को जानें")));
+        mvc.perform(get("/images/login-banner.svg")).andExpect(status().isOk());
     }
 }

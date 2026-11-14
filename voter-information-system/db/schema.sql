@@ -126,17 +126,42 @@ CREATE TABLE IF NOT EXISTS booth_results (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------- users & audit
+-- Role-based access: users (app_users) <- user_roles -> roles <- role_permissions (permission codes).
+-- Default roles ADMIN / OPERATOR / VIEWER are created by the application on first start.
+CREATE TABLE IF NOT EXISTS roles (
+    id           BIGINT        NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    code         VARCHAR(40)   NOT NULL,
+    name         VARCHAR(100)  NOT NULL,
+    description  VARCHAR(300),
+    system_role  BIT           NOT NULL DEFAULT 0,
+    CONSTRAINT uk_role_code UNIQUE (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS role_permissions (
+    role_id     BIGINT       NOT NULL,
+    permission  VARCHAR(30)  NOT NULL COMMENT 'e.g. VOTER_EDIT, REPORT_SENSITIVE, USER_ADMIN',
+    CONSTRAINT uk_role_permission UNIQUE (role_id, permission),
+    CONSTRAINT fk_permission_role FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS app_users (
     id             BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
     username       VARCHAR(50)  NOT NULL,
     password_hash  VARCHAR(100) NOT NULL COMMENT 'BCrypt',
     full_name      VARCHAR(100) NOT NULL,
-    role           VARCHAR(10)  NOT NULL COMMENT 'ADMIN / OPERATOR / VIEWER',
     enabled        BIT          NOT NULL DEFAULT 1,
     assembly_no    INT                   COMMENT 'NULL = may log in to any assembly',
     last_login     DATETIME(6),
     created_at     DATETIME(6),
     CONSTRAINT uk_user_username UNIQUE (username)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id  BIGINT NOT NULL,
+    role_id  BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS audit_log (

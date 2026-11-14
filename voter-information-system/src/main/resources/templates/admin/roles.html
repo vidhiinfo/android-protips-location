@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{admin.roles})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1400px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex align-items-center mb-2">
+        <h4 class="me-auto mb-0"><i class="bi bi-shield-check"></i> <span th:text="#{admin.roles}"></span></h4>
+        <a class="btn btn-primary btn-sm" th:href="@{/admin/roles/new}"><i class="bi bi-plus-lg"></i> <span th:text="#{common.add}"></span></a>
+    </div>
+    <p class="small text-muted" th:text="#{admin.rolesIntro}"></p>
+    <div class="table-responsive bg-white border rounded"><table class="table table-sm table-bordered mb-0 align-middle text-center">
+        <thead class="table-light">
+            <tr><th class="text-start" th:text="#{admin.role}"></th><th th:text="#{admin.users}"></th>
+                <th th:each="p : ${permissions}" class="small" style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap" th:text="#{${'perm.' + p}}"></th>
+                <th></th></tr>
+        </thead>
+        <tbody><tr th:each="r : ${items}">
+            <td class="text-start"><b th:text="${r.name}"></b> <code class="small" th:text="${r.code}"></code>
+                <i th:if="${r.systemRole}" class="bi bi-lock-fill text-muted small" th:title="#{admin.systemRole}"></i>
+                <div class="small text-muted" th:text="${r.description}"></div></td>
+            <td th:text="${userCounts[r.id]}"></td>
+            <td th:each="p : ${permissions}"><i th:if="${r.has(p)}" class="bi bi-check-lg text-success" th:title="#{${'perm.' + p}}"></i></td>
+            <td class="text-nowrap">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/roles/{id}/edit(id=${r.id})}"><i class="bi bi-pencil"></i></a>
+                <form th:unless="${r.systemRole}" th:action="@{/admin/roles/{id}/delete(id=${r.id})}" method="post" class="d-inline" th:attr="data-confirm=#{common.confirmDelete}">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+            </td>
+        </tr></tbody></table></div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

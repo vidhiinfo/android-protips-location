@@ -14,10 +14,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * Masters menu: Assemblies, Booths, Parties, Elections, Candidates.
- * Everyone can view; only ADMIN can add, edit or delete.
+ * MASTER_VIEW to view, MASTER_EDIT to add, edit or delete.
  */
 @Controller
 @RequestMapping("/masters")
+@PreAuthorize("hasAuthority('MASTER_VIEW')")
 public class MasterController {
 
     private final AssemblyRepository assemblies;
@@ -58,14 +59,14 @@ public class MasterController {
         return "masters/assemblies";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @GetMapping({"/assemblies/new", "/assemblies/{id}/edit"})
     public String assemblyForm(@PathVariable(required = false) Long id, Model m) {
         m.addAttribute("item", id == null ? new Assembly() : assemblies.findById(id).orElseThrow(MasterController::notFound));
         return "masters/assembly-form";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/assemblies")
     public String saveAssembly(@Valid @ModelAttribute("item") Assembly a, BindingResult br, RedirectAttributes ra) {
         if (a.getAssemblyNo() != null && (a.getId() == null ? assemblies.existsByAssemblyNo(a.getAssemblyNo())
@@ -78,7 +79,7 @@ public class MasterController {
         return done(ra, "assemblies", "flash.saved");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/assemblies/{id}/delete")
     public String deleteAssembly(@PathVariable Long id, RedirectAttributes ra) {
         Assembly a = assemblies.findById(id).orElseThrow(MasterController::notFound);
@@ -102,7 +103,7 @@ public class MasterController {
         return "masters/booths";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @GetMapping({"/booths/new", "/booths/{id}/edit"})
     public String boothForm(@PathVariable(required = false) Long id, @RequestParam(required = false) Integer assemblyNo, Model m) {
         Booth b = id == null ? new Booth() : booths.findById(id).orElseThrow(MasterController::notFound);
@@ -112,7 +113,7 @@ public class MasterController {
         return "masters/booth-form";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/booths")
     public String saveBooth(@Valid @ModelAttribute("item") Booth b, BindingResult br, Model m, RedirectAttributes ra) {
         if (b.getAssemblyNo() != null && b.getBoothNo() != null && (b.getId() == null
@@ -130,7 +131,7 @@ public class MasterController {
         return "redirect:/masters/booths?assemblyNo=" + b.getAssemblyNo();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/booths/{id}/delete")
     public String deleteBooth(@PathVariable Long id, RedirectAttributes ra) {
         Booth b = booths.findById(id).orElseThrow(MasterController::notFound);
@@ -146,14 +147,14 @@ public class MasterController {
         return "masters/parties";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @GetMapping({"/parties/new", "/parties/{id}/edit"})
     public String partyForm(@PathVariable(required = false) Long id, Model m) {
         m.addAttribute("item", id == null ? new Party() : parties.findById(id).orElseThrow(MasterController::notFound));
         return "masters/party-form";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/parties")
     public String saveParty(@Valid @ModelAttribute("item") Party p, BindingResult br, RedirectAttributes ra) {
         if (p.getShortName() != null && (p.getId() == null ? parties.existsByShortNameIgnoreCase(p.getShortName())
@@ -166,7 +167,7 @@ public class MasterController {
         return done(ra, "parties", "flash.saved");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/parties/{id}/delete")
     public String deleteParty(@PathVariable Long id, RedirectAttributes ra) {
         Party p = parties.findById(id).orElseThrow(MasterController::notFound);
@@ -186,7 +187,7 @@ public class MasterController {
         return "masters/elections";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @GetMapping({"/elections/new", "/elections/{id}/edit"})
     public String electionForm(@PathVariable(required = false) Long id, Model m) {
         m.addAttribute("item", id == null ? new Election() : elections.findById(id).orElseThrow(MasterController::notFound));
@@ -194,7 +195,7 @@ public class MasterController {
         return "masters/election-form";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/elections")
     @Transactional
     public String saveElection(@Valid @ModelAttribute("item") Election e, BindingResult br, Model m, RedirectAttributes ra) {
@@ -209,7 +210,7 @@ public class MasterController {
         return done(ra, "elections", "flash.saved");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/elections/{id}/delete")
     public String deleteElection(@PathVariable Long id, RedirectAttributes ra) {
         Election e = elections.findById(id).orElseThrow(MasterController::notFound);
@@ -237,7 +238,7 @@ public class MasterController {
         return "masters/candidates";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @GetMapping({"/candidates/new", "/candidates/{id}/edit"})
     public String candidateForm(@PathVariable(required = false) Long id, @RequestParam(required = false) Long electionId,
                                 @RequestParam(required = false) Integer assemblyNo, Model m) {
@@ -258,7 +259,7 @@ public class MasterController {
         m.addAttribute("parties", parties.findAllByOrderByNameAsc());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/candidates")
     public String saveCandidate(@Valid @ModelAttribute("item") Candidate c, BindingResult br, Model m, RedirectAttributes ra) {
         if (br.hasErrors()) {
@@ -272,7 +273,7 @@ public class MasterController {
         return "redirect:/masters/candidates?electionId=" + c.getElection().getId() + "&assemblyNo=" + c.getAssemblyNo();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MASTER_EDIT')")
     @PostMapping("/candidates/{id}/delete")
     public String deleteCandidate(@PathVariable Long id, RedirectAttributes ra) {
         Candidate c = candidates.findById(id).orElseThrow(MasterController::notFound);

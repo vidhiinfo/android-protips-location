@@ -27,16 +27,16 @@
         </button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i> <span th:text="#{nav.dashboard}"></span></a></li>
-                <li class="nav-item dropdown">
+                <li class="nav-item" sec:authorize="hasAuthority('DASHBOARD_VIEW')"><a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i> <span th:text="#{nav.dashboard}"></span></a></li>
+                <li class="nav-item dropdown" sec:authorize="hasAuthority('VOTER_VIEW')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-people"></i> <span th:text="#{nav.voters}"></span></a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" th:href="@{/voters}" th:text="#{nav.voterList}"></a></li>
-                        <li sec:authorize="hasRole('OPERATOR')"><a class="dropdown-item" th:href="@{/voters/new}" th:text="#{nav.addVoter}"></a></li>
-                        <li sec:authorize="hasRole('OPERATOR')"><a class="dropdown-item" th:href="@{/voters/import}" th:text="#{nav.import}"></a></li>
+                        <li sec:authorize="hasAuthority('VOTER_EDIT')"><a class="dropdown-item" th:href="@{/voters/new}" th:text="#{nav.addVoter}"></a></li>
+                        <li sec:authorize="hasAuthority('VOTER_IMPORT')"><a class="dropdown-item" th:href="@{/voters/import}" th:text="#{nav.import}"></a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown">
+                <li class="nav-item dropdown" sec:authorize="hasAuthority('MASTER_VIEW')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-database"></i> <span th:text="#{nav.masters}"></span></a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" th:href="@{/masters/assemblies}" th:text="#{master.assemblies}"></a></li>
@@ -47,14 +47,14 @@
                         <li><a class="dropdown-item" th:href="@{/masters/candidates}" th:text="#{master.candidates}"></a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown">
+                <li class="nav-item dropdown" sec:authorize="hasAuthority('RESULT_VIEW')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-trophy"></i> <span th:text="#{nav.results}"></span></a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" th:href="@{/results}" th:text="#{result.overview}"></a></li>
-                        <li sec:authorize="hasRole('OPERATOR')"><a class="dropdown-item" th:href="@{/results/entry}" th:text="#{result.entry}"></a></li>
+                        <li sec:authorize="hasAuthority('RESULT_ENTRY')"><a class="dropdown-item" th:href="@{/results/entry}" th:text="#{result.entry}"></a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown">
+                <li class="nav-item dropdown" sec:authorize="hasAuthority('REPORT_VIEW')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-bar-chart"></i> <span th:text="#{nav.reports}"></span></a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" th:href="@{/reports}" th:text="#{report.all}"></a></li>
@@ -63,23 +63,24 @@
                             <a class="dropdown-item" th:href="@{/reports/{id}(id=${r})}" th:text="#{${'report.' + r}}"></a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown" sec:authorize="hasRole('OPERATOR')">
+                <li class="nav-item dropdown" sec:authorize="hasAuthority('MESSAGE_SEND')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-chat-dots"></i> <span th:text="#{nav.messages}"></span></a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" th:href="@{/messages/campaigns}" th:text="#{msg.campaigns}"></a></li>
                         <li><a class="dropdown-item" th:href="@{/messages/compose}" th:text="#{msg.new}"></a></li>
-                        <li sec:authorize="hasRole('ADMIN')"><hr class="dropdown-divider"></li>
-                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" th:href="@{/messages/templates}" th:text="#{msg.templates}"></a></li>
-                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" th:href="@{/messages/optouts}" th:text="#{msg.optouts}"></a></li>
-                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" th:href="@{/messages/settings}" th:text="#{msg.settings}"></a></li>
+                        <li sec:authorize="hasAuthority('MESSAGE_ADMIN')"><hr class="dropdown-divider"></li>
+                        <li sec:authorize="hasAuthority('MESSAGE_ADMIN')"><a class="dropdown-item" th:href="@{/messages/templates}" th:text="#{msg.templates}"></a></li>
+                        <li sec:authorize="hasAuthority('MESSAGE_ADMIN')"><a class="dropdown-item" th:href="@{/messages/optouts}" th:text="#{msg.optouts}"></a></li>
+                        <li sec:authorize="hasAuthority('MESSAGE_ADMIN')"><a class="dropdown-item" th:href="@{/messages/settings}" th:text="#{msg.settings}"></a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('USER_ADMIN','AUDIT_VIEW','SYSTEM_VIEW')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> <span th:text="#{nav.admin}"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" th:href="@{/admin/users}" th:text="#{admin.users}"></a></li>
-                        <li><a class="dropdown-item" th:href="@{/admin/audit}" th:text="#{admin.audit}"></a></li>
-                        <li><a class="dropdown-item" th:href="@{/admin/system}" th:text="#{admin.system}"></a></li>
+                        <li sec:authorize="hasAuthority('USER_ADMIN')"><a class="dropdown-item" th:href="@{/admin/users}" th:text="#{admin.users}"></a></li>
+                        <li sec:authorize="hasAuthority('USER_ADMIN')"><a class="dropdown-item" th:href="@{/admin/roles}" th:text="#{admin.roles}"></a></li>
+                        <li sec:authorize="hasAuthority('AUDIT_VIEW')"><a class="dropdown-item" th:href="@{/admin/audit}" th:text="#{admin.audit}"></a></li>
+                        <li sec:authorize="hasAuthority('SYSTEM_VIEW')"><a class="dropdown-item" th:href="@{/admin/system}" th:text="#{admin.system}"></a></li>
                     </ul>
                 </li>
             </ul>

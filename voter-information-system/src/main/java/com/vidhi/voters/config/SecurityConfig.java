@@ -13,15 +13,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Users live in the app_users table (see admin.UserService). Roles:
- *  ADMIN    - everything, incl. Admin menu and editing Masters
- *  OPERATOR - add / edit / delete / import voters, enter results
- *  VIEWER   - search, view, reports, results, export, print
- * Fine-grained rules are @PreAuthorize annotations on the controllers; URL rules below are a second line of defence.
+ * Role-based access: users (app_users) have roles (user_roles -> roles), roles have permissions (role_permissions).
+ * Authorities are the permission codes (VOTER_EDIT, REPORT_SENSITIVE, ...) checked by URL rules below,
+ * @PreAuthorize on controllers and sec:authorize in templates. Users may also come from external tables (UserService).
  */
 @Configuration
 @EnableMethodSecurity
+@org.springframework.boot.context.properties.EnableConfigurationProperties(com.vidhi.voters.admin.SecurityProperties.class)
 public class SecurityConfig {
+
+    /** First page the user is allowed to open. */
+    public static String landingPage(org.springframework.security.core.Authentication auth) {
+        java.util.Set<String> a = new java.util.HashSet<>();
+        auth.getAuthorities().forEach(g -> a.add(g.getAuthority()));
+        if (a.contains("DASHBOARD_VIEW")) return "/dashboard";
+        if (a.contains("VOTER_VIEW")) return "/voters";
+        if (a.contains("REPORT_VIEW")) return "/reports";
+        if (a.contains("RESULT_VIEW")) return "/results";
+        if (a.contains("MESSAGE_SEND")) return "/messages/campaigns";
+        if (a.contains("USER_ADMIN")) return "/admin/users";
+        return "/account/password";
+    }
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -33,11 +45,23 @@ public class SecurityConfig {
                                     WorkContext work, AssemblyRepository assemblies) throws Exception {
         http
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/css/**", "/js/**", "/fonts/**", "/webjars/**", "/login", "/error").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/voters/new", "/voters/*/edit", "/voters/*/delete", "/voters/import", "/voters/import/**",
-                                 "/results/entry", "/results/entry/**").hasRole("OPERATOR")
-                .anyRequest().hasRole("VIEWER"))
+                .requestMatchers("/css/**", "/js/**", "/fonts/**", "/images/**", "/webjars/**", "/login", "/error").permitAll()
+                // second line of defence - controllers also check with @PreAuthorize
+                .requestMatchers("/admin/users/**", "/admin/roles/**").hasAuthority("USER_ADMIN")
+                .requestMatchers("/admin/audit/**").hasAuthority("AUDIT_VIEW")
+                .requestMatchers("/admin/system/**").hasAuthority("SYSTEM_VIEW")
+                .requestMatchers("/voters/new", "/voters/*/edit").hasAuthority("VOTER_EDIT")
+                .requestMatchers("/voters/*/delete").hasAuthority("VOTER_DELETE")
+                .requestMatchers("/voters/import", "/voters/import/**").hasAuthority("VOTER_IMPORT")
+                .requestMatchers("/voters/export/**", "/voters/print").hasAuthority("VOTER_EXPORT")
+                .requestMatchers("/voters/**").hasAuthority("VOTER_VIEW")
+                .requestMatchers("/results/entry", "/results/entry/**").hasAuthority("RESULT_ENTRY")
+                .requestMatchers("/results/**").hasAuthority("RESULT_VIEW")
+                .requestMatchers("/masters/**").hasAuthority("MASTER_VIEW")
+                .requestMatchers("/reports/**").hasAuthority("REPORT_VIEW")
+                .requestMatchers("/dashboard/**").hasAuthority("DASHBOARD_VIEW")
+                .requestMatchers("/messages/**").hasAuthority("MESSAGE_SEND")
+                .anyRequest().authenticated())
             .authenticationProvider(provider)
             .formLogin(f -> f.loginPage("/login").permitAll()
                 .authenticationDetailsSource(LoginDetails::new)
@@ -45,7 +69,7 @@ public class SecurityConfig {
                     // remember the assembly picked on the login screen for this session
                     Integer a = auth.getDetails() instanceof LoginDetails d ? d.getAssemblyNo() : null;
                     work.set(a, a == null ? null : assemblies.findByAssemblyNo(a).map(Assembly::getName).orElse(""));
-                    res.sendRedirect(req.getContextPath() + "/dashboard");
+                    res.sendRedirect(req.getContextPath() + landingPage(auth));
                 })
                 .failureHandler((req, res, ex) -> res.sendRedirect(req.getContextPath() + "/login?error="
                         + (ex instanceof AssemblyAuthenticationProvider.AssemblyNotAllowedException ? "assembly" : "credentials"))))

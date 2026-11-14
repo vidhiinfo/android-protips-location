@@ -25,6 +25,7 @@ import java.util.*;
  */
 @Component
 @Profile("demo")
+@org.springframework.core.annotation.Order(10)
 public class DemoDataSeeder implements CommandLineRunner {
 
     /** English / local spelling pairs for one region. */
@@ -75,6 +76,9 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.vidhi.voters.messaging.MessageTemplateRepository templates;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.vidhi.voters.admin.RoleRepository roles;
 
     public DemoDataSeeder(VoterRepository voters, AssemblyRepository assemblies, BoothRepository booths, PartyRepository parties,
                           ElectionRepository elections, CandidateRepository candidates, BoothResultRepository results,
@@ -248,9 +252,14 @@ public class DemoDataSeeder implements CommandLineRunner {
         template("बूथ पर्ची", com.vidhi.voters.messaging.Channel.WHATSAPP, "hi",
                 "नमस्ते {nameLocal}! आपकी मतदाता पर्ची: EPIC {epicNo}, बूथ {boothNo} ({boothName}), क्रम सं. {serialNo}।", "voter_slip", "nameLocal,epicNo,boothNo,boothName,serialNo");
 
-        user("operator", "Data Entry Operator", AppUser.Role.OPERATOR, "operator@123", null);
-        user("viewer", "Read-only Viewer", AppUser.Role.VIEWER, "viewer@123", null);
-        user("jaipur", "Jaipur North Operator", AppUser.Role.OPERATOR, "jaipur@123", 45);
+        // a custom role: booth agents may look up voters and log results, nothing else
+        com.vidhi.voters.admin.Role agent = roles.save(new com.vidhi.voters.admin.Role("BOOTH_AGENT", "Booth Agent",
+                "Voter lookup and booth result entry", false, java.util.EnumSet.of(com.vidhi.voters.admin.Permission.VOTER_VIEW,
+                com.vidhi.voters.admin.Permission.RESULT_VIEW, com.vidhi.voters.admin.Permission.RESULT_ENTRY)));
+        user("operator", "Data Entry Operator", "OPERATOR", "operator@123", null);
+        user("viewer", "Read-only Viewer", "VIEWER", "viewer@123", null);
+        user("jaipur", "Jaipur North Operator", "OPERATOR", "jaipur@123", 45);
+        user("agent", "Booth Agent (Kolkata Port)", agent.getCode(), "agent@1234", 52);
     }
 
     private void template(String name, com.vidhi.voters.messaging.Channel ch, String lang, String body, String providerId, String params) {
@@ -274,11 +283,11 @@ public class DemoDataSeeder implements CommandLineRunner {
         return parties.save(p);
     }
 
-    private void user(String username, String fullName, AppUser.Role role, String password, Integer assemblyNo) {
+    private void user(String username, String fullName, String roleCode, String password, Integer assemblyNo) {
         AppUser u = new AppUser();
         u.setUsername(username);
         u.setFullName(fullName);
-        u.setRole(role);
+        u.getRoles().add(roles.findByCodeIgnoreCase(roleCode).orElseThrow());
         u.setPasswordHash(encoder.encode(password));
         u.setAssemblyNo(assemblyNo);
         users.save(u);

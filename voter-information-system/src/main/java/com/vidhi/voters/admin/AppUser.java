@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "app_users", uniqueConstraints = @UniqueConstraint(name = "uk_user_username", columnNames = "username"))
 public class AppUser {
-
-    /** ADMIN: everything incl. Admin and Masters. OPERATOR: voter data entry, import, results entry. VIEWER: read, reports, export. */
-    public enum Role { ADMIN, OPERATOR, VIEWER }
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,10 +27,10 @@ public class AppUser {
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 
-    @NotNull(message = "{validation.required}")
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
-    private Role role = Role.VIEWER;
+    /** Roles of the user (table user_roles). Permissions are the union of the roles' permissions. */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles = new LinkedHashSet<>();
 
     @Column(nullable = false)
     private boolean enabled = true;
@@ -57,8 +57,16 @@ public class AppUser {
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
+
+    public Set<Permission> getPermissions() {
+        Set<Permission> p = EnumSet.noneOf(Permission.class);
+        roles.forEach(r -> p.addAll(r.getPermissions()));
+        return p;
+    }
+
+    public boolean has(Permission p) { return getPermissions().contains(p); }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public Integer getAssemblyNo() { return assemblyNo; }

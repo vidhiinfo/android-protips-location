@@ -1,34 +1,63 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
 <head th:replace="~{fragments/layout :: head(#{login.title})}"></head>
-<body class="d-flex align-items-center" style="min-height:100vh">
-<div class="container" style="max-width:430px">
-    <div class="d-flex justify-content-end mb-2">
-        <select th:replace="~{fragments/layout :: langSwitcher('lang-login')}"></select>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body p-4">
-            <h4 class="mb-1 text-center"><i class="bi bi-person-vcard text-primary"></i> <span th:text="#{app.name}"></span></h4>
-            <p class="text-muted text-center small mb-4" th:text="#{login.subtitle}"></p>
-            <div th:if="${param.error != null and param.error[0] == 'assembly'}" class="alert alert-danger py-2" th:text="#{login.error.assembly}"></div>
-            <div th:if="${param.error != null and param.error[0] != 'assembly'}" class="alert alert-danger py-2" th:text="#{login.error}"></div>
-            <div th:if="${param.logout}" class="alert alert-info py-2" th:text="#{login.loggedOut}"></div>
-            <form th:action="@{/login}" method="post">
-                <div class="mb-3"><label class="form-label" for="username" th:text="#{login.username}"></label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-person"></i></span>
-                        <input id="username" name="username" class="form-control" required autofocus autocomplete="username"></div></div>
-                <div class="mb-3"><label class="form-label" for="password" th:text="#{login.password}"></label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input id="password" name="password" type="password" class="form-control" required autocomplete="current-password"></div></div>
-                <div class="mb-4"><label class="form-label" for="assemblyNo" th:text="#{login.assembly}"></label>
-                    <div class="input-group"><span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                        <select id="assemblyNo" name="assemblyNo" class="form-select">
-                            <option value="" th:text="#{login.allAssemblies}"></option>
-                            <option th:each="a : ${loginAssemblies}" th:value="${a.key}" th:text="${a.key} + ' - ' + ${a.value}"></option>
-                        </select></div>
-                    <div class="form-text" th:text="#{login.assemblyHelp}"></div></div>
-                <button class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right"></i> <span th:text="#{login.button}"></span></button>
-            </form>
+<body class="login-page">
+<div class="container-fluid p-0">
+    <div class="row g-0 min-vh-100">
+        <!-- banner -->
+        <div class="col-lg-7 login-banner d-flex flex-column">
+            <div class="login-banner-inner flex-grow-1 d-flex flex-column justify-content-center">
+                <div class="d-flex align-items-center gap-2 mb-4 login-brand">
+                    <span class="login-brand-mark"><i class="bi bi-person-vcard"></i></span>
+                    <span>
+                        <span class="d-block fw-semibold" th:text="#{app.name}"></span>
+                        <span class="d-block small opacity-75" th:if="${branding.organisation != ''}" th:text="${branding.organisation}"></span>
+                    </span>
+                </div>
+                <h1 class="login-title" th:text="#{login.banner.title}"></h1>
+                <p class="login-tagline" th:text="#{login.banner.tagline}"></p>
+                <img class="login-illustration d-none d-lg-block" th:src="@{${branding.bannerImage}}" alt="" aria-hidden="true">
+                <ul class="login-points list-unstyled d-none d-lg-block mb-0">
+                    <li><i class="bi bi-translate"></i> <span th:text="#{login.banner.point1}"></span></li>
+                    <li><i class="bi bi-bar-chart-line"></i> <span th:text="#{login.banner.point2}"></span></li>
+                    <li><i class="bi bi-chat-dots"></i> <span th:text="#{login.banner.point3}"></span></li>
+                </ul>
+            </div>
+            <div class="login-stripe" aria-hidden="true"><span></span><span></span><span></span></div>
+        </div>
+
+        <!-- sign-in -->
+        <div class="col-lg-5 d-flex flex-column login-form-col">
+            <div class="d-flex justify-content-end p-3">
+                <select th:replace="~{fragments/layout :: langSwitcher('lang-login')}"></select>
+            </div>
+            <div class="flex-grow-1 d-flex align-items-center justify-content-center px-3 pb-5">
+                <div class="login-card w-100">
+                    <img th:if="${branding.logo != ''}" th:src="@{${branding.logo}}" alt="" class="login-logo mb-3">
+                    <h2 class="h3 mb-1" th:text="#{login.welcome}"></h2>
+                    <p class="text-muted mb-4" th:text="#{login.subtitle}"></p>
+                    <div th:if="${param.error != null and param.error[0] == 'assembly'}" class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> <span th:text="#{login.error.assembly}"></span></div>
+                    <div th:if="${param.error != null and param.error[0] != 'assembly'}" class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> <span th:text="#{login.error}"></span></div>
+                    <div th:if="${param.logout}" class="alert alert-success py-2"><i class="bi bi-check-circle"></i> <span th:text="#{login.loggedOut}"></span></div>
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3"><label class="form-label fw-medium" for="username" th:text="#{login.username}"></label>
+                            <div class="input-group input-group-lg"><span class="input-group-text"><i class="bi bi-person"></i></span>
+                                <input id="username" name="username" class="form-control" required autofocus autocomplete="username"></div></div>
+                        <div class="mb-3"><label class="form-label fw-medium" for="password" th:text="#{login.password}"></label>
+                            <div class="input-group input-group-lg"><span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input id="password" name="password" type="password" class="form-control" required autocomplete="current-password"></div></div>
+                        <div class="mb-4"><label class="form-label fw-medium" for="assemblyNo" th:text="#{login.assembly}"></label>
+                            <div class="input-group input-group-lg"><span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <select id="assemblyNo" name="assemblyNo" class="form-select">
+                                    <option value="" th:text="#{login.allAssemblies}"></option>
+                                    <option th:each="a : ${loginAssemblies}" th:value="${a.key}" th:text="${a.key} + ' - ' + ${a.value}"></option>
+                                </select></div>
+                            <div class="form-text" th:text="#{login.assemblyHelp}"></div></div>
+                        <button class="btn btn-primary btn-lg w-100 login-btn"><i class="bi bi-box-arrow-in-right"></i> <span th:text="#{login.button}"></span></button>
+                    </form>
+                    <p class="small text-muted mt-4 mb-0 d-flex gap-2"><i class="bi bi-shield-lock"></i> <span th:text="#{login.secure}"></span></p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

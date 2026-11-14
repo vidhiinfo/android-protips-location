@@ -45,7 +45,7 @@ public class PdfFonts {
 
     @PostConstruct
     void load() throws Exception {
-        LayoutProcessor.enableKernLiga();
+        if (!LayoutProcessor.isEnabled()) LayoutProcessor.enableKernLiga();   // JVM-wide switch, enable once
         // LayoutProcessor needs real files, so copy the fonts out of the jar once
         Path dir = Files.createTempDirectory("vis-fonts");
         dir.toFile().deleteOnExit();

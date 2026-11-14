@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{admin.role})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:950px">
+    <h4 class="mb-3" th:text="#{admin.role}"></h4>
+    <form th:object="${item}" method="post" th:action="@{/admin/roles}" class="card" novalidate>
+        <div class="card-body row g-3">
+            <input type="hidden" th:field="*{id}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="col-12 alert alert-danger py-2 mb-0"><div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div></div>
+            <div class="col-md-3"><label class="form-label" th:text="#{admin.roleCode}"></label>
+                <input th:field="*{code}" class="form-control text-uppercase" th:errorclass="is-invalid" th:readonly="${item.systemRole}">
+                <div class="invalid-feedback" th:errors="*{code}"></div></div>
+            <div th:replace="~{fragments/form :: input('name', 'admin.roleName', 'col-md-4', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('description', 'admin.roleDescription', 'col-md-5', 'text', true)}"></div>
+            <div class="col-12"><label class="form-label fw-semibold" th:text="#{admin.permissions}"></label>
+                <div class="row g-3">
+                    <div class="col-md-4" th:each="g : ${groups}">
+                        <div class="border rounded p-2 h-100">
+                            <div class="small text-uppercase text-muted mb-1" th:text="#{${'perm.group.' + g.key}}"></div>
+                            <div class="form-check" th:each="p : ${g.value}">
+                                <input class="form-check-input" type="checkbox" name="perms" th:value="${p}" th:id="'perm-' + ${p}" th:checked="${item.has(p)}">
+                                <label class="form-check-label" th:for="'perm-' + ${p}"><span th:text="#{${'perm.' + p}}"></span>
+                                    <span class="d-block small text-muted" th:text="#{${'perm.' + p + '.desc'}}"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                </div></div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{common.save}"></span></button>
+            <a class="btn btn-outline-secondary" th:href="@{/admin/roles}" th:text="#{common.cancel}"></a>
+        </div>
+    </form>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

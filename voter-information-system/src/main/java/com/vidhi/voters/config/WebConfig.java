@@ -18,6 +18,7 @@ import java.util.Locale;
  * Unsupported codes fall back to English.
  */
 @Configuration
+@org.springframework.boot.context.properties.EnableConfigurationProperties(BrandingProperties.class)
 public class WebConfig implements WebMvcConfigurer {
 
     @Bean

@@ -16,9 +16,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.util.*;
 
-/** Results menu: booth-wise vote entry (OPERATOR) and result views (everyone). */
+/** Results menu: booth-wise vote entry (RESULT_ENTRY) and result views (RESULT_VIEW). */
 @Controller
 @RequestMapping("/results")
+@PreAuthorize("hasAuthority('RESULT_VIEW')")
 public class ResultController {
 
     private final ResultService service;
@@ -114,7 +115,7 @@ public class ResultController {
     }
 
     // ---------------------------------------------------------------- booth-wise entry
-    @PreAuthorize("hasRole('OPERATOR')")
+    @PreAuthorize("hasAuthority('RESULT_ENTRY')")
     @GetMapping("/entry")
     public String entry(@RequestParam(required = false) Long electionId, @RequestParam(required = false) Integer assemblyNo,
                         @RequestParam(required = false) Integer boothNo, Model m) {
@@ -131,7 +132,7 @@ public class ResultController {
         return "results/entry";
     }
 
-    @PreAuthorize("hasRole('OPERATOR')")
+    @PreAuthorize("hasAuthority('RESULT_ENTRY')")
     @PostMapping("/entry")
     public String saveEntry(@RequestParam Long electionId, @RequestParam Integer assemblyNo, @RequestParam Integer boothNo,
                             @RequestParam Map<String, String> params, RedirectAttributes ra) {

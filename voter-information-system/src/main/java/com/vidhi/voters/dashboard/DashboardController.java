@@ -16,6 +16,7 @@ import java.util.Map;
 /** Campaign dashboard: statistics and charts for one assembly (the login assembly when one was chosen). */
 @Controller
 @RequestMapping("/dashboard")
+@org.springframework.security.access.prepost.PreAuthorize("hasAuthority('DASHBOARD_VIEW')")
 public class DashboardController {
 
     private final DashboardService dashboard;

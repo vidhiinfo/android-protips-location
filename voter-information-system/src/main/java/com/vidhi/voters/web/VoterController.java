@@ -30,6 +30,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/voters")
+@org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_VIEW')")
 public class VoterController {
 
     private final VoterService service;
@@ -110,6 +111,7 @@ public class VoterController {
     }
 
     // ------------------------------------------------------------ create / update / delete
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EDIT')")
     @GetMapping("/new")
     public String createForm(Model model) {
         Voter v = new Voter();
@@ -125,6 +127,7 @@ public class VoterController {
     @ModelAttribute("masterBooths")
     List<com.vidhi.voters.master.Booth> masterBooths() { return service.boothMaster(); }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EDIT')")
     @PostMapping
     public String create(@Valid @ModelAttribute("voter") Voter voter, BindingResult br, RedirectAttributes ra) {
         voter.setId(null);
@@ -132,12 +135,14 @@ public class VoterController {
         return saveVoter(voter, br, ra, "flash.added");
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EDIT')")
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         model.addAttribute("voter", load(id));
         return "voters/form";
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EDIT')")
     @PostMapping("/{id}")
     public String update(@PathVariable Long id, @Valid @ModelAttribute("voter") Voter voter,
                          BindingResult br, RedirectAttributes ra) {
@@ -162,6 +167,7 @@ public class VoterController {
         }
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_DELETE')")
     @PostMapping("/{id}/delete")
     public String delete(@PathVariable Long id, RedirectAttributes ra) {
         load(id);
@@ -171,6 +177,7 @@ public class VoterController {
     }
 
     // ------------------------------------------------------------ export / print
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EXPORT')")
     @GetMapping("/export/excel")
     public void exportExcel(@ModelAttribute VoterFilter f, HttpServletResponse resp) throws IOException {
         f.setAssemblyNo(work.restrict(f.getAssemblyNo()));
@@ -179,6 +186,7 @@ public class VoterController {
         excel.write(service.searchAll(f), title(f), LocaleContextHolder.getLocale(), resp.getOutputStream());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EXPORT')")
     @GetMapping("/export/pdf")
     public void exportPdf(@ModelAttribute VoterFilter f, HttpServletResponse resp) throws IOException {
         f.setAssemblyNo(work.restrict(f.getAssemblyNo()));
@@ -187,6 +195,7 @@ public class VoterController {
         pdf.write(service.searchAll(f), title(f), summary(f), LocaleContextHolder.getLocale(), resp.getOutputStream());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_EXPORT')")
     @GetMapping("/print")
     public String print(@ModelAttribute("f") VoterFilter f,
                         @RequestParam(required = false) String autoprint, Model model) {
@@ -199,9 +208,11 @@ public class VoterController {
     }
 
     // ------------------------------------------------------------ bulk import
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_IMPORT')")
     @GetMapping("/import")
     public String importForm() { return "voters/import"; }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_IMPORT')")
     @GetMapping("/import/template")
     public void template(HttpServletResponse resp) throws IOException {
         resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -209,6 +220,7 @@ public class VoterController {
         excel.writeTemplate(LocaleContextHolder.getLocale(), resp.getOutputStream());
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAuthority('VOTER_IMPORT')")
     @PostMapping("/import")
     public String doImport(@RequestParam("file") MultipartFile file, Model model) {
         if (file.isEmpty() || file.getOriginalFilename() == null || !file.getOriginalFilename().toLowerCase().endsWith(".xlsx")) {

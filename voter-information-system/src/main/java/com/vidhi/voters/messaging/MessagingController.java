@@ -21,11 +21,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Messages menu. OPERATOR: compose, send and follow campaigns. ADMIN: templates, opt-outs, provider settings.
+ * Messages menu. MESSAGE_SEND: compose, send and follow campaigns. MESSAGE_ADMIN: templates, opt-outs, provider settings.
  */
 @Controller
 @RequestMapping("/messages")
-@PreAuthorize("hasRole('OPERATOR')")
+@PreAuthorize("hasAuthority('MESSAGE_SEND')")
 public class MessagingController {
 
     private final MessagingService service;
@@ -135,14 +135,14 @@ public class MessagingController {
     }
 
     // ---------------------------------------------------------------- templates (ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @GetMapping("/templates")
     public String templates(Model m) {
         m.addAttribute("items", templates.findAllByOrderByChannelAscLanguageAscNameAsc());
         return "messages/templates";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @GetMapping({"/templates/new", "/templates/{id}/edit"})
     public String templateForm(@PathVariable(required = false) Long id, Model m) {
         m.addAttribute("item", id == null ? new MessageTemplate() : templates.findById(id).orElseThrow(MessagingController::notFound));
@@ -155,7 +155,7 @@ public class MessagingController {
         m.addAttribute("langs", Languages.ALL);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @PostMapping("/templates")
     public String saveTemplate(@Valid @ModelAttribute("item") MessageTemplate t, BindingResult br, Model m, RedirectAttributes ra) {
         List<String> bad = TemplateRenderer.unknownPlaceholders(t.getBody(), t.getParams());
@@ -171,7 +171,7 @@ public class MessagingController {
         return "redirect:/messages/templates";
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @PostMapping("/templates/{id}/delete")
     public String deleteTemplate(@PathVariable Long id, RedirectAttributes ra) {
         MessageTemplate t = templates.findById(id).orElseThrow(MessagingController::notFound);
@@ -188,7 +188,7 @@ public class MessagingController {
     }
 
     // ---------------------------------------------------------------- opt-outs (ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @GetMapping("/optouts")
     public String optOuts(Model m) {
         m.addAttribute("items", optOuts.findAllByOrderByCreatedAtDesc());
@@ -205,7 +205,7 @@ public class MessagingController {
         return "redirect:" + (back != null && back.startsWith("/") && !back.startsWith("//") ? back : "/messages/optouts");
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @PostMapping("/optouts/{id}/delete")
     public String deleteOptOut(@PathVariable Long id, RedirectAttributes ra) {
         optOuts.findById(id).ifPresent(o -> {
@@ -217,7 +217,7 @@ public class MessagingController {
     }
 
     // ---------------------------------------------------------------- settings (ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @GetMapping("/settings")
     public String settings(Model m) {
         m.addAttribute("props", props);
@@ -232,7 +232,7 @@ public class MessagingController {
     }
 
     /** Sends one message right away (ignores the window, not the silence period) to check the provider. */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MESSAGE_ADMIN')")
     @PostMapping("/settings/test")
     public String test(@RequestParam String mobile, @RequestParam Long templateId, RedirectAttributes ra) {
         MessageTemplate t = templates.findById(templateId).orElseThrow(MessagingController::notFound);
