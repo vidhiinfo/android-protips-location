@@ -170,6 +170,11 @@ src/main/resources
 db/schema.sql, db/upgrade-v1-to-v2.sql
 ```
 
+## Hosting on Windows Server
+See **[docs/WINDOWS-HOSTING.md](docs/WINDOWS-HOSTING.md)**: Java 21, MySQL 8 (utf8mb4), the app as a Windows service (`deploy/windows/install.ps1`),
+IIS reverse proxy with free HTTPS (`deploy/windows/web.config`), nightly backups (`deploy/windows/backup-mysql.ps1`), updates and troubleshooting.
+Build on Windows without installing Maven: `mvnw.cmd clean package`.
+
 ## Production notes
 * Run behind HTTPS (nginx or Apache reverse proxy) and take regular `mysqldump --default-character-set=utf8mb4` backups.
 * All third-party assets (Bootstrap, icons, Chart.js, fonts) are served by the app itself. No CDN is needed, and the strict

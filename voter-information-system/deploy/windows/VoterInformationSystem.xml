@@ -1,0 +1,24 @@
+<!--
+  Windows service definition for WinSW (https://github.com/winsw/winsw).
+  install.ps1 places this file next to VoterInformationSystem.exe (a renamed WinSW-x64.exe) in C:\VoterSystem.
+-->
+<service>
+  <id>VoterInformationSystem</id>
+  <name>Voter Information System</name>
+  <description>Voter Information System (Spring Boot) - http://localhost:8080</description>
+  <executable>java</executable>
+  <arguments>-Xms512m -Xmx2g -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Kolkata -jar "%BASE%\voter-information-system.jar"</arguments>
+  <workingdirectory>%BASE%</workingdirectory>
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+  <depend>MySQL80</depend>
+  <onfailure action="restart" delay="10 sec"/>
+  <onfailure action="restart" delay="30 sec"/>
+  <resetfailure>1 hour</resetfailure>
+  <stoptimeout>30 sec</stoptimeout>
+  <log mode="roll-by-size">
+    <logpath>%BASE%\logs</logpath>
+    <sizeThreshold>10240</sizeThreshold>
+    <keepFiles>8</keepFiles>
+  </log>
+</service>

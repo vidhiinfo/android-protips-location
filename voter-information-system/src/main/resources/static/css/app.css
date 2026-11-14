@@ -82,3 +82,9 @@ a.house-link:hover { border-bottom-style: solid; }
   .login-tagline { font-size: .95rem; margin-bottom: 0; }
 }
 .navbar .nav-link, .navbar .badge { white-space: nowrap; }
+/* keep the full navbar on one line on laptop-size screens */
+@media (min-width: 992px) and (max-width: 1599.98px) {
+  .navbar-brand { font-size: 1.05rem; margin-right: .5rem; }
+  .navbar .navbar-nav .nav-link { padding-left: .45rem; padding-right: .45rem; font-size: .95rem; }
+  .navbar select[data-lang-switch] { max-width: 150px; }
+}

@@ -132,6 +132,31 @@ public class DemoDataSeeder implements CommandLineRunner {
                 String[] grandfather = r.male()[rnd.nextInt(r.male().length)];
                 int headAge = 35 + rnd.nextInt(35);
                 int members = 1 + rnd.nextInt(5);
+                if (fam % 12 == 5) {      // an elderly grandparent (85+, eligible for home voting) in some families
+                    Voter g = new Voter();
+                    boolean gm = rnd.nextBoolean();
+                    String[] gf = gm ? grandfather : r.female()[rnd.nextInt(r.female().length)];
+                    g.setEpicNo(String.format("DEM%07d", ++epic));
+                    g.setName(gf[0] + " " + sur[0]);
+                    g.setNameLocal(gf[1] + " " + sur[1]);
+                    g.setGender(gm ? Gender.MALE : Gender.FEMALE);
+                    g.setRelationType(gm ? RelationType.FATHER : RelationType.HUSBAND);
+                    String[] rel = r.male()[rnd.nextInt(r.male().length)];
+                    g.setRelativeName(rel[0] + " " + sur[0]);
+                    g.setRelativeNameLocal(rel[1] + " " + sur[1]);
+                    g.setAge(85 + rnd.nextInt(12));
+                    g.setAssemblyNo(r.assemblyNo());
+                    g.setAssemblyName(r.assembly());
+                    g.setBoothNo(booth);
+                    g.setBoothName("Govt. School Room " + ((booth - 1) % 4 + 1) + ", " + r.areas()[(booth - 1) % r.areas().length][0]);
+                    g.setSerialNo(serial++);
+                    g.setHouseNo(house);
+                    g.setAddress("Street " + street);
+                    g.setAddressLocal(r.streetLocal() + " " + street + ", " + area[1]);
+                    g.setVillageWard(area[0]);
+                    g.setDistrict(r.district());
+                    voters.save(g);
+                }
                 for (int m = 0; m < members; m++) {
                     Voter v = new Voter();
                     boolean isMale;
