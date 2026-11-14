@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Voters')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <!-- stats -->
+    <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">Total voters</div><div class="num" th:text="${total}">0</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">Male</div><div class="num" th:text="${genderCounts['MALE']}">0</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">Female</div><div class="num" th:text="${genderCounts['FEMALE']}">0</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">Matching filters</div><div class="num text-primary" th:text="${page.totalElements}">0</div></div></div>
+    </div>
+
+    <!-- search + filters -->
+    <form method="get" th:action="@{/voters}" class="card filter-card mb-3">
+        <div class="card-body pb-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Quick search (name, father/husband name, EPIC, mobile, house no, address)</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input name="q" th:value="${f.q}" class="form-control" placeholder="e.g. Ramesh Sharma or 98765 or RJX1000012">
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Assembly</label>
+                    <select name="assemblyNo" class="form-select">
+                        <option value="">All</option>
+                        <option th:each="a : ${assemblies}" th:value="${a.key}" th:selected="${a.key == f.assemblyNo}"
+                                th:text="${a.key} + (${a.value} != '' ? ' - ' + ${a.value} : '')"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label">Booth No</label>
+                    <select name="boothNo" class="form-select">
+                        <option value="">All</option>
+                        <option th:each="b : ${booths}" th:value="${b}" th:selected="${b == f.boothNo}" th:text="${b}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> Search</button>
+                    <a th:href="@{/voters}" class="btn btn-outline-secondary" title="Reset"><i class="bi bi-x-lg"></i></a>
+                </div>
+            </div>
+
+            <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#adv">Advanced filters <i class="bi bi-chevron-down"></i></a>
+            <div id="adv" class="collapse" th:classappend="${f.name != null or f.relativeName != null or f.epicNo != null or f.mobile != null or f.gender != null or f.ageMin != null or f.ageMax != null or f.district != null or f.villageWard != null or f.houseNo != null or f.hasMobile != null} ? 'show'">
+                <div class="row g-2 mt-1">
+                    <div class="col-6 col-md-2"><label class="form-label">Voter name</label><input name="name" th:value="${f.name}" class="form-control"></div>
+                    <div class="col-6 col-md-2"><label class="form-label">Father/Husband name</label><input name="relativeName" th:value="${f.relativeName}" class="form-control"></div>
+                    <div class="col-6 col-md-2"><label class="form-label">EPIC No</label><input name="epicNo" th:value="${f.epicNo}" class="form-control"></div>
+                    <div class="col-6 col-md-2"><label class="form-label">Mobile</label><input name="mobile" th:value="${f.mobile}" class="form-control"></div>
+                    <div class="col-6 col-md-2"><label class="form-label">House No</label><input name="houseNo" th:value="${f.houseNo}" class="form-control"></div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">Gender</label>
+                        <select name="gender" class="form-select">
+                            <option value="">All</option>
+                            <option th:each="g : ${genders}" th:value="${g}" th:selected="${g == f.gender}" th:text="${g.label}"></option>
+                        </select>
+                    </div>
+                    <div class="col-3 col-md-1"><label class="form-label">Age from</label><input name="ageMin" type="number" min="18" th:value="${f.ageMin}" class="form-control"></div>
+                    <div class="col-3 col-md-1"><label class="form-label">Age to</label><input name="ageMax" type="number" min="18" th:value="${f.ageMax}" class="form-control"></div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">District</label>
+                        <select name="district" class="form-select">
+                            <option value="">All</option>
+                            <option th:each="d : ${districts}" th:value="${d}" th:selected="${d == f.district}" th:text="${d}"></option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">Village / Ward</label>
+                        <select name="villageWard" class="form-select">
+                            <option value="">All</option>
+                            <option th:each="v : ${villages}" th:value="${v}" th:selected="${v == f.villageWard}" th:text="${v}"></option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">Mobile available</label>
+                        <select name="hasMobile" class="form-select">
+                            <option value="">Any</option>
+                            <option value="true" th:selected="${f.hasMobile == true}">With mobile</option>
+                            <option value="false" th:selected="${f.hasMobile == false}">Without mobile</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="sort" th:value="${f.sort}">
+            <input type="hidden" name="dir" th:value="${f.dir}">
+            <input type="hidden" name="size" th:value="${f.size}">
+        </div>
+    </form>
+
+    <!-- toolbar -->
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+        <div class="me-auto text-muted small">
+            Showing <b th:text="${page.totalElements == 0 ? 0 : page.number * page.size + 1}"></b>–<b th:text="${page.number * page.size + page.numberOfElements}"></b>
+            of <b th:text="${page.totalElements}"></b>
+            <span th:if="${f.active}" class="badge text-bg-warning ms-1">filtered</span>
+        </div>
+        <a class="btn btn-sm btn-success" th:href="@{/voters/export/excel} + '?' + ${f.queryWithSort()}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a class="btn btn-sm btn-danger" th:href="@{/voters/export/pdf} + '?' + ${f.queryWithSort()}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        <a class="btn btn-sm btn-secondary" target="_blank" th:href="@{/voters/print} + '?' + ${f.queryWithSort()} + '&autoprint=1'"><i class="bi bi-printer"></i> Print</a>
+        <form method="get" th:action="@{/voters}" class="d-flex align-items-center gap-1">
+            <input type="hidden" th:each="p : ${f.hiddenParams()}" th:name="${p.key}" th:value="${p.value}">
+            <select name="size" class="form-select form-select-sm" data-autosubmit>
+                <option th:each="s : ${ {10,25,50,100,250,500} }" th:value="${s}" th:selected="${s == f.size}" th:text="${s} + ' / page'"></option>
+            </select>
+        </form>
+    </div>
+
+    <!-- table -->
+    <div class="table-responsive bg-white border rounded">
+        <table class="table table-hover table-striped mb-0">
+            <thead class="table-light">
+            <tr>
+                <th:block th:each="c : ${ { {'assemblyNo','AC'}, {'boothNo','Booth'}, {'serialNo','Sr.'}, {'epicNo','EPIC No'}, {'name','Voter Name'}, {'relativeName','Father/Husband'}, {'gender','Gender'}, {'age','Age'}, {'villageWard','Village/Ward'}, {'mobile','Mobile'} } }">
+                    <th><a th:href="${f.sortLink(c[0])}">
+                        <span th:text="${c[1]}"></span>
+                        <i th:if="${f.sort == c[0]}" th:class="${f.dir == 'asc'} ? 'bi bi-sort-up' : 'bi bi-sort-down'"></i>
+                    </a></th>
+                </th:block>
+                <th>Address</th>
+                <th class="text-end no-print">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${page.empty}"><td colspan="12" class="text-center text-muted py-4">No voters found</td></tr>
+            <tr th:each="v : ${page.content}">
+                <td th:text="${v.assemblyNo}"></td>
+                <td th:text="${v.boothNo}"></td>
+                <td th:text="${v.serialNo}"></td>
+                <td><code th:text="${v.epicNo}"></code></td>
+                <td><a th:href="@{/voters/{id}(id=${v.id})}" th:text="${v.name}"></a></td>
+                <td th:text="${v.relationDisplay}"></td>
+                <td th:text="${v.gender?.label}"></td>
+                <td th:text="${v.age}"></td>
+                <td th:text="${v.villageWard}"></td>
+                <td><a th:if="${v.mobile}" th:href="'tel:' + ${v.mobile}" th:text="${v.mobile}"></a></td>
+                <td class="small text-muted" th:text="${v.fullAddress}"></td>
+                <td class="text-end text-nowrap no-print">
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/voters/{id}(id=${v.id})}" title="View"><i class="bi bi-eye"></i></a>
+                    <th:block sec:authorize="hasRole('ADMIN')">
+                        <a class="btn btn-sm btn-outline-secondary" th:href="@{/voters/{id}/edit(id=${v.id})}" title="Edit"><i class="bi bi-pencil"></i></a>
+                        <form th:action="@{/voters/{id}/delete(id=${v.id})}" method="post" class="d-inline" data-confirm="Delete this voter?">
+                            <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </th:block>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- pagination -->
+    <nav th:if="${page.totalPages > 1}" class="mt-3">
+        <ul class="pagination pagination-sm justify-content-center flex-wrap">
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'"><a class="page-link" th:href="${f.pageLink(0)}">&laquo;</a></li>
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'"><a class="page-link" th:href="${f.pageLink(page.number - 1)}">&lsaquo;</a></li>
+            <li th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                class="page-item" th:classappend="${i == page.number} ? 'active'">
+                <a class="page-link" th:href="${f.pageLink(i)}" th:text="${i + 1}"></a>
+            </li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'"><a class="page-link" th:href="${f.pageLink(page.number + 1)}">&rsaquo;</a></li>
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'"><a class="page-link" th:href="${f.pageLink(page.totalPages - 1)}">&raquo;</a></li>
+        </ul>
+    </nav>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

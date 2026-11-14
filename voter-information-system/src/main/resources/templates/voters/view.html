@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(${voter.name})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:900px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex align-items-center mb-3 no-print">
+        <a th:href="@{/voters}" class="btn btn-sm btn-outline-secondary me-auto"><i class="bi bi-arrow-left"></i> Back</a>
+        <button class="btn btn-sm btn-secondary me-2" data-print><i class="bi bi-printer"></i> Print slip</button>
+        <th:block sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/voters/{id}/edit(id=${voter.id})}" class="btn btn-sm btn-primary me-2"><i class="bi bi-pencil"></i> Edit</a>
+            <form th:action="@{/voters/{id}/delete(id=${voter.id})}" method="post" data-confirm="Delete this voter?">
+                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</button>
+            </form>
+        </th:block>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h4 class="mb-0" th:text="${voter.name}"></h4>
+            <div class="text-muted mb-3" th:text="${voter.relationDisplay}"></div>
+            <dl class="row detail mb-0">
+                <dt class="col-sm-3">EPIC No</dt><dd class="col-sm-9"><code th:text="${voter.epicNo}"></code></dd>
+                <dt class="col-sm-3">Gender / Age</dt><dd class="col-sm-9" th:text="${voter.gender?.label} + (${voter.age} != null ? ' / ' + ${voter.age} + ' yrs' : '')"></dd>
+                <dt class="col-sm-3">Assembly</dt><dd class="col-sm-9" th:text="${voter.assemblyNo} + (${voter.assemblyName} != null ? ' - ' + ${voter.assemblyName} : '')"></dd>
+                <dt class="col-sm-3">Booth / Part No</dt><dd class="col-sm-9" th:text="${voter.boothNo} + (${voter.boothName} != null ? ' - ' + ${voter.boothName} : '')"></dd>
+                <dt class="col-sm-3">Serial No</dt><dd class="col-sm-9" th:text="${voter.serialNo} ?: '-'"></dd>
+                <dt class="col-sm-3">Address</dt><dd class="col-sm-9" th:text="${voter.fullAddress} ?: '-'"></dd>
+                <dt class="col-sm-3">Mobile</dt><dd class="col-sm-9" th:text="${voter.mobile} ?: '-'"></dd>
+                <dt class="col-sm-3">Alternate mobile</dt><dd class="col-sm-9" th:text="${voter.altMobile} ?: '-'"></dd>
+                <dt class="col-sm-3">Email</dt><dd class="col-sm-9" th:text="${voter.email} ?: '-'"></dd>
+                <dt class="col-sm-3">Category</dt><dd class="col-sm-9" th:text="${voter.category} ?: '-'"></dd>
+                <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9" th:text="${voter.remarks} ?: '-'"></dd>
+                <dt class="col-sm-3 no-print">Last updated</dt><dd class="col-sm-9 no-print" th:text="${#temporals.format(voter.updatedAt, 'dd-MM-yyyy HH:mm')}"></dd>
+            </dl>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

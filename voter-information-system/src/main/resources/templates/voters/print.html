@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Print')}"></head>
+<body class="print-page" th:attr="data-autoprint=${autoprint} ? 'true' : null">
+<div class="no-print mb-3 d-flex gap-2">
+    <button class="btn btn-primary btn-sm" data-print><i class="bi bi-printer"></i> Print</button>
+    <a class="btn btn-outline-secondary btn-sm" th:href="@{/voters} + '?' + ${f.queryWithSort()}">Back to list</a>
+</div>
+<h5 class="text-center mb-0" th:text="${title}"></h5>
+<p class="text-center small text-muted">
+    Records: <span th:text="${#lists.size(voters)}"></span>
+    <span th:if="${summary != ''}"> | Filters: <span th:text="${summary}"></span></span>
+    | Printed: <span th:text="${#temporals.format(#temporals.createNow(), 'dd-MM-yyyy HH:mm')}"></span>
+</p>
+<table>
+    <thead>
+    <tr><th>#</th><th>AC</th><th>Booth</th><th>Sr.</th><th>EPIC No</th><th>Voter Name</th><th>Father/Husband</th>
+        <th>Gender</th><th>Age</th><th>House No</th><th>Address</th><th>Mobile</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="v, st : ${voters}">
+        <td th:text="${st.count}"></td>
+        <td th:text="${v.assemblyNo}"></td>
+        <td th:text="${v.boothNo}"></td>
+        <td th:text="${v.serialNo}"></td>
+        <td th:text="${v.epicNo}"></td>
+        <td th:text="${v.name}"></td>
+        <td th:text="${v.relationDisplay}"></td>
+        <td th:text="${v.gender?.label}"></td>
+        <td th:text="${v.age}"></td>
+        <td th:text="${v.houseNo}"></td>
+        <td th:text="${(v.address ?: '') + (v.villageWard != null ? ', ' + v.villageWard : '')}"></td>
+        <td th:text="${v.mobile}"></td>
+    </tr>
+    </tbody>
+</table>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

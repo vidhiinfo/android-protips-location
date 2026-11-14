@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Voter Information System'">Voter Information System</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<nav th:fragment="nav" class="navbar navbar-expand-md navbar-dark bg-primary mb-3 no-print">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/voters}"><i class="bi bi-person-vcard"></i> Voter Information System</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" th:href="@{/voters}">Voters</a></li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" th:href="@{/voters/new}">Add Voter</a></li>
+                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" th:href="@{/voters/import}">Bulk Import</a></li>
+            </ul>
+            <span class="navbar-text text-white me-3"><i class="bi bi-person-circle"></i> <span sec:authentication="name">user</span></span>
+            <form th:action="@{/logout}" method="post"><button class="btn btn-sm btn-outline-light">Logout</button></form>
+        </div>
+    </div>
+</nav>
+<div th:fragment="flash">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show no-print">
+        <span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
+<th:block th:fragment="scripts">
+    <script th:src="@{/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/app.js}"></script>
+</th:block>
+</body>
+</html>

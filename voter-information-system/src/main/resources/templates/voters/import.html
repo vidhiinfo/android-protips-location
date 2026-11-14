@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bulk Import')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:800px">
+    <h4 class="mb-3">Bulk import voters from Excel</h4>
+    <div class="card mb-3"><div class="card-body">
+        <ol class="mb-3">
+            <li><a th:href="@{/voters/import/template}">Download the Excel template</a> (or use a file exported from this system).</li>
+            <li>Fill one voter per row. EPIC No, Voter Name, Gender, Assembly No and Booth No are required.</li>
+            <li>Upload it. Voters whose EPIC No already exists are <b>updated</b>; others are <b>added</b>.</li>
+        </ol>
+        <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+        <form th:action="@{/voters/import}" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+            <input type="file" name="file" accept=".xlsx" class="form-control" required>
+            <button class="btn btn-primary"><i class="bi bi-upload"></i> Upload</button>
+        </form>
+    </div></div>
+
+    <div th:if="${result}" class="card">
+        <div class="card-body">
+            <h6>Import result</h6>
+            <p class="mb-2"><span class="badge text-bg-success" th:text="${result.inserted} + ' added'"></span>
+                <span class="badge text-bg-primary" th:text="${result.updated} + ' updated'"></span>
+                <span class="badge text-bg-danger" th:text="${#lists.size(result.errors)} + ' errors'"></span></p>
+            <ul th:unless="${#lists.isEmpty(result.errors)}" class="small text-danger mb-0">
+                <li th:each="e : ${result.errors}" th:text="${e}"></li>
+            </ul>
+            <a th:href="@{/voters}" class="btn btn-sm btn-outline-primary mt-2">Go to voter list</a>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

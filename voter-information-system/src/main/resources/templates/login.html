@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Login')}"></head>
+<body class="d-flex align-items-center" style="min-height:100vh">
+<div class="container" style="max-width:400px">
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <h4 class="mb-1 text-center"><i class="bi bi-person-vcard text-primary"></i> Voter Information System</h4>
+            <p class="text-muted text-center small mb-4">Sign in to continue</p>
+            <div th:if="${param.error}" class="alert alert-danger py-2">Invalid username or password</div>
+            <div th:if="${param.logout}" class="alert alert-info py-2">You have been logged out</div>
+            <form th:action="@{/login}" method="post">
+                <div class="mb-3"><label class="form-label">Username</label>
+                    <input name="username" class="form-control" required autofocus></div>
+                <div class="mb-3"><label class="form-label">Password</label>
+                    <input name="password" type="password" class="form-control" required></div>
+                <button class="btn btn-primary w-100">Login</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
