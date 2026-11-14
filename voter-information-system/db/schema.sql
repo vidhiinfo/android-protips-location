@@ -153,3 +153,63 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 -- The first administrator is created by the application on first start
 -- (app.security.admin.username / ADMIN_PASSWORD).
+
+-- ---------------------------------------------------------------- SMS / WhatsApp
+CREATE TABLE IF NOT EXISTS message_templates (
+    id                    BIGINT        NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name                  VARCHAR(100)  NOT NULL,
+    channel               VARCHAR(10)   NOT NULL COMMENT 'SMS / WHATSAPP',
+    language              VARCHAR(10)   NOT NULL,
+    body                  VARCHAR(1000) NOT NULL,
+    provider_template_id  VARCHAR(100)           COMMENT 'DLT template id / WhatsApp template name / Twilio Content SID',
+    params                VARCHAR(300)           COMMENT 'placeholders in provider variable order',
+    active                BIT           NOT NULL DEFAULT 1,
+    created_at            DATETIME(6)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS message_campaigns (
+    id              BIGINT        NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(150)  NOT NULL,
+    channel         VARCHAR(10)   NOT NULL,
+    template_id     BIGINT        NOT NULL,
+    filter_query    VARCHAR(1000),
+    filter_summary  VARCHAR(500),
+    status          VARCHAR(10)   NOT NULL,
+    scheduled_at    DATETIME(6),
+    total           INT           NOT NULL,
+    sent            INT           NOT NULL,
+    failed          INT           NOT NULL,
+    skipped         INT           NOT NULL,
+    created_by      VARCHAR(50),
+    created_at      DATETIME(6),
+    completed_at    DATETIME(6),
+    CONSTRAINT fk_campaign_template FOREIGN KEY (template_id) REFERENCES message_templates (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS message_outbox (
+    id            BIGINT        NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    campaign_id   BIGINT        NOT NULL,
+    voter_id      BIGINT,
+    voter_name    VARCHAR(120),
+    mobile        VARCHAR(16)   NOT NULL COMMENT 'E.164',
+    body          VARCHAR(1000) NOT NULL,
+    param_values  VARCHAR(1000),
+    status        VARCHAR(10)   NOT NULL COMMENT 'QUEUED / SENDING / SENT / FAILED / SKIPPED',
+    attempts      INT           NOT NULL,
+    provider_id   VARCHAR(100),
+    error         VARCHAR(300),
+    created_at    DATETIME(6),
+    sent_at       DATETIME(6),
+    INDEX idx_outbox_status (status, campaign_id),
+    INDEX idx_outbox_campaign (campaign_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS message_optouts (
+    id          BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    mobile      VARCHAR(10)  NOT NULL,
+    channel     VARCHAR(10)           COMMENT 'NULL = every channel',
+    reason      VARCHAR(200),
+    created_by  VARCHAR(50),
+    created_at  DATETIME(6),
+    CONSTRAINT uk_optout UNIQUE (mobile, channel)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

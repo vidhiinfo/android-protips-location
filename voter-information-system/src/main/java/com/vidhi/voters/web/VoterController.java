@@ -41,6 +41,9 @@ public class VoterController {
 
     private final com.vidhi.voters.config.WorkContext work;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.vidhi.voters.messaging.MessagingService messaging;
+
     public VoterController(VoterService service, ExcelExporter excel, PdfExporter pdf, ExcelImporter importer, Messages msg,
                            com.vidhi.voters.admin.AuditService audit, com.vidhi.voters.config.WorkContext work) {
         this.audit = audit;
@@ -93,6 +96,7 @@ public class VoterController {
         Voter v = load(id);
         model.addAttribute("voter", v);
         model.addAttribute("household", service.household(v));
+        model.addAttribute("optedOut", messaging.isOptedOut(v.getMobile(), com.vidhi.voters.messaging.Channel.SMS));
         return "voters/view";
     }
 

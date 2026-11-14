@@ -6,7 +6,7 @@
 <div class="container-fluid px-3" style="max-width:1400px">
     <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
         <h4 class="me-auto mb-0" th:text="${report.title}"></h4>
-        <th:block th:with="q='assemblyNo=' + (${assemblyNo} ?: '') + '&boothNo=' + (${boothNo} ?: '') + '&electionId=' + (${electionId} ?: '')">
+        <th:block th:with="q='assemblyNo=' + (${assemblyNo} ?: '') + '&boothNo=' + (${boothNo} ?: '') + '&electionId=' + (${electionId} ?: '') + '&scope=' + (${scope} ?: '') + '&party=' + (${party} ?: '')">
             <a class="btn btn-sm btn-success" th:href="@{/reports/{id}/export/xlsx(id=${reportId})} + '?' + ${q}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
             <a class="btn btn-sm btn-danger" th:href="@{/reports/{id}/export/pdf(id=${reportId})} + '?' + ${q}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
             <a class="btn btn-sm btn-secondary" target="_blank" th:href="@{/reports/{id}(id=${reportId})} + '?' + ${q} + '&print=1'"><i class="bi bi-printer"></i> <span th:text="#{common.print}"></span></a>
@@ -20,12 +20,22 @@
                 <select name="assemblyNo" class="form-select form-select-sm" th:disabled="${work.scoped}">
                     <option value="" th:text="#{common.all}"></option>
                     <option th:each="a : ${assemblies}" th:value="${a.key}" th:selected="${a.key == assemblyNo}" th:text="${a.key} + ' - ' + ${a.value}"></option></select></div>
-            <div class="col-md-2" th:if="${reportId == 'age-gender'}">
+            <div class="col-md-2" th:if="${reportId == 'age-gender' or reportId == 'first-time-voters' or reportId == 'senior-voters' or reportId == 'phone-bank'}">
                 <label class="form-label small" th:text="#{col.boothNo}"></label>
                 <select name="boothNo" class="form-select form-select-sm">
                     <option value="" th:text="#{common.all}"></option>
                     <option th:each="b : ${booths}" th:value="${b}" th:selected="${b == boothNo}" th:text="${b}"></option></select></div>
-            <div class="col-md-4" th:if="${reportId == 'results-summary' or reportId == 'party-performance'}">
+            <div class="col-md-3" th:if="${reportId == 'duplicate-voters'}">
+                <label class="form-label small" th:text="#{report.dup.match}"></label>
+                <select name="scope" class="form-select form-select-sm">
+                    <option value="assembly" th:text="#{report.dup.byAssembly}"></option>
+                    <option value="ward" th:selected="${scope == 'ward'}" th:text="#{report.dup.byWard}"></option></select></div>
+            <div class="col-md-2" th:if="${reportId == 'booth-priority'}">
+                <label class="form-label small" th:text="#{dash.focusParty}"></label>
+                <select name="party" class="form-select form-select-sm">
+                    <option value="" th:text="#{report.seatWinner}"></option>
+                    <option th:each="p : ${parties}" th:value="${p.shortName}" th:selected="${p.shortName == party}" th:text="${p.shortName}"></option></select></div>
+            <div class="col-md-4" th:if="${reportId == 'results-summary' or reportId == 'party-performance' or reportId == 'booth-priority'}">
                 <label class="form-label small" th:text="#{master.election}"></label>
                 <select name="electionId" class="form-select form-select-sm">
                     <option th:each="e : ${elections}" th:value="${e.id}" th:selected="${e.id == electionId or (electionId == null and e.current)}" th:text="${e.name}"></option></select></div>

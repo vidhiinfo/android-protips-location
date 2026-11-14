@@ -23,13 +23,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Runs against the "demo" profile: in-memory H2 with Hindi / Urdu / Bengali sample voters (assemblies 45, 46, 52). */
-@SpringBootTest
+@SpringBootTest(properties = "app.messaging.worker-enabled=false")
 @AutoConfigureMockMvc
 @ActiveProfiles("demo")
 class VoterApplicationTests {
 
     @Autowired MockMvc mvc;
     @Autowired VoterRepository voters;
+    @Autowired com.vidhi.voters.messaging.OutboxWorker worker;
+    @Autowired com.vidhi.voters.messaging.CampaignRepository campaigns;
+    @Autowired com.vidhi.voters.messaging.MessageTemplateRepository templates;
+    @Autowired com.vidhi.voters.master.ElectionRepository elections;
 
     private Voter anyVoterOf(int assembly) {
         return voters.findAll().stream().filter(v -> v.getAssemblyNo() == assembly && v.getHouseNo() != null).findFirst().orElseThrow();
@@ -220,10 +224,18 @@ class VoterApplicationTests {
     @Test
     @WithMockUser(roles = "VIEWER")
     void reportsRenderAndExport() throws Exception {
-        for (String id : new String[]{"assembly-summary", "booth-summary", "village-summary", "age-gender", "results-summary", "party-performance"}) {
+        for (String id : com.vidhi.voters.report.ReportService.REPORTS) {
+            if (com.vidhi.voters.report.ReportService.ADMIN_ONLY.contains(id)) {
+                mvc.perform(get("/reports/" + id)).andExpect(status().isForbidden());
+                continue;
+            }
             mvc.perform(get("/reports/" + id).param("lang", "hi")).andExpect(status().isOk());
-            mvc.perform(get("/reports/" + id + "/export/pdf")).andExpect(status().isOk());
-            mvc.perform(get("/reports/" + id + "/export/xlsx")).andExpect(status().isOk());
+            byte[] pdf = mvc.perform(get("/reports/" + id + "/export/pdf")).andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsByteArray();
+            assertThat(new String(pdf, 0, 5)).isEqualTo("%PDF-");
+            byte[] xlsx = mvc.perform(get("/reports/" + id + "/export/xlsx")).andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsByteArray();
+            try (var wb = WorkbookFactory.create(new ByteArrayInputStream(xlsx))) { assertThat(wb.getNumberOfSheets()).isEqualTo(1); }
         }
         mvc.perform(get("/reports/assembly-summary")).andExpect(content().string(containsString("Lucknow West")));
         mvc.perform(get("/reports/nope")).andExpect(status().isNotFound());
@@ -241,5 +253,90 @@ class VoterApplicationTests {
            .andExpect(jsonPath("$.ageGender.series[0].name").value("পুরুষ"))
            .andExpect(jsonPath("$.election.margin.series[0].data.length()").value(10))
            .andExpect(jsonPath("$.household.labels[5]").value("6+"));
+    }
+
+    // ------------------------------------------------------------------ new reports
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    void duplicateCategoryAndPriorityReports() throws Exception {
+        String html = mvc.perform(get("/reports/duplicate-voters").param("assemblyNo", "45"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(html).contains("DUP1").contains("Same assembly");
+        mvc.perform(get("/reports/duplicate-voters").param("scope", "ward")).andExpect(status().isOk())
+           .andExpect(content().string(containsString("Same village/ward")));
+        mvc.perform(get("/reports/category-summary").param("assemblyNo", "52")).andExpect(status().isOk())
+           .andExpect(content().string(containsString("Not recorded")));
+        mvc.perform(get("/reports/category-summary/export/xlsx")).andExpect(status().isOk());
+        mvc.perform(get("/reports/booth-priority").param("assemblyNo", "46").param("party", "LSD"))
+           .andExpect(status().isOk()).andExpect(content().string(anyOf(containsString("Swing"), containsString("Weak"))));
+        mvc.perform(get("/reports/senior-voters")).andExpect(status().isOk());
+    }
+
+    // ------------------------------------------------------------------ SMS / WhatsApp
+    @Test
+    @WithMockUser(username = "operator", roles = {"OPERATOR", "VIEWER"})
+    void composePreviewQueueAndSendInDryRun() throws Exception {
+        var t = templates.findByChannelAndActiveTrueOrderByLanguageAscNameAsc(com.vidhi.voters.messaging.Channel.SMS)
+                .stream().filter(x -> x.getLanguage().equals("hi")).findFirst().orElseThrow();
+        Voter v = voters.findAll().stream().filter(x -> x.getAssemblyNo() == 45 && x.getMobile() != null).findFirst().orElseThrow();
+
+        // opt one number out, then preview a booth
+        mvc.perform(post("/messages/optouts").with(csrf()).param("mobile", v.getMobile()).param("back", "/voters/" + v.getId()))
+           .andExpect(redirectedUrl("/voters/" + v.getId()));
+        String page = mvc.perform(get("/messages/compose").param("assemblyNo", "45").param("boothNo", String.valueOf(v.getBoothNo()))
+                        .param("channel", "SMS").param("templateId", t.getId().toString()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(page).contains("प्रिय").contains("Dry-run mode");
+
+        long before = campaigns.count();
+        mvc.perform(post("/messages/campaigns").with(csrf()).param("assemblyNo", "45").param("boothNo", String.valueOf(v.getBoothNo()))
+                        .param("templateId", t.getId().toString()).param("campaignName", "Booth reminder"))
+           .andExpect(status().is3xxRedirection());
+        var camp = campaigns.findAll().stream().max(java.util.Comparator.comparing(com.vidhi.voters.messaging.Campaign::getId)).orElseThrow();
+        assertThat(campaigns.count()).isEqualTo(before + 1);
+        long withMobile = voters.findAll().stream().filter(x -> x.getAssemblyNo() == 45 && x.getBoothNo().equals(v.getBoothNo())
+                && x.getMobile() != null && !x.getMobile().equals(v.getMobile())).map(Voter::getMobile).distinct().count();
+        assertThat(camp.getTotal()).isEqualTo((int) withMobile);       // opted-out number excluded, duplicates merged
+
+        while (worker.processBatch(true) > 0) { }
+        camp = campaigns.findById(camp.getId()).orElseThrow();
+        assertThat(camp.getStatus()).isEqualTo(com.vidhi.voters.messaging.Campaign.Status.COMPLETED);
+        assertThat(camp.getSent()).isEqualTo(camp.getTotal());
+        mvc.perform(get("/messages/campaigns/" + camp.getId())).andExpect(content().string(containsString("dry-run-")));
+        mvc.perform(get("/voters/" + v.getId())).andExpect(content().string(containsString("Opted out")));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    void silencePeriodBlocksCampaigns() throws Exception {
+        var e = elections.findFirstByCurrentTrue().orElseThrow();
+        var original = e.getPollDate();
+        e.setPollDate(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).plusDays(1));
+        elections.save(e);
+        try {
+            var t = templates.findAll().get(0);
+            mvc.perform(get("/messages/compose").param("assemblyNo", "45")).andExpect(content().string(containsString("Silence period")));
+            mvc.perform(post("/messages/campaigns").with(csrf()).param("assemblyNo", "45").param("templateId", t.getId().toString()))
+               .andExpect(flash().attribute("error", "msg.error.silence"));
+        } finally {
+            e.setPollDate(original);
+            elections.save(e);
+        }
+    }
+
+    @Test
+    @WithMockUser(roles = "VIEWER")
+    void viewerCannotSendMessages() throws Exception {
+        mvc.perform(get("/messages/compose")).andExpect(status().isForbidden());
+        mvc.perform(get("/messages/campaigns")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN", "OPERATOR", "VIEWER"})
+    void templateValidationAndSettings() throws Exception {
+        mvc.perform(post("/messages/templates").with(csrf()).param("name", "Bad").param("channel", "SMS").param("language", "en")
+                        .param("body", "Hello {fullName}").param("active", "true"))
+           .andExpect(content().string(containsString("Unknown placeholder: fullName")));
+        mvc.perform(get("/messages/settings")).andExpect(status().isOk()).andExpect(content().string(containsString("Dry run")));
     }
 }

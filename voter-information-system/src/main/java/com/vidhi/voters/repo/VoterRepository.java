@@ -33,6 +33,12 @@ public interface VoterRepository extends JpaRepository<Voter, Long>, JpaSpecific
 
     long countByAssemblyNo(Integer assemblyNo);
 
+    /** [assemblyNo, boothNo, category, count] - social category per booth. */
+    @Query("select v.assemblyNo, v.boothNo, upper(trim(coalesce(v.category, ''))), count(v) from Voter v" +
+           " where (:assemblyNo is null or v.assemblyNo = :assemblyNo)" +
+           " group by v.assemblyNo, v.boothNo, upper(trim(coalesce(v.category, ''))) order by v.assemblyNo, v.boothNo")
+    List<Object[]> categoryByBooth(Integer assemblyNo);
+
     /** Voters per house (same house no. + address + village/ward) in an assembly. */
     @Query("select count(v) from Voter v where v.assemblyNo = :assemblyNo and v.houseNo is not null and v.houseNo <> ''" +
            " group by lower(v.houseNo), lower(coalesce(v.address, '')), lower(coalesce(v.villageWard, ''))")

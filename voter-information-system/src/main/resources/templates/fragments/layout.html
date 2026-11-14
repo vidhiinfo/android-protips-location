@@ -63,6 +63,17 @@
                             <a class="dropdown-item" th:href="@{/reports/{id}(id=${r})}" th:text="#{${'report.' + r}}"></a></li>
                     </ul>
                 </li>
+                <li class="nav-item dropdown" sec:authorize="hasRole('OPERATOR')">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-chat-dots"></i> <span th:text="#{nav.messages}"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/messages/campaigns}" th:text="#{msg.campaigns}"></a></li>
+                        <li><a class="dropdown-item" th:href="@{/messages/compose}" th:text="#{msg.new}"></a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><hr class="dropdown-divider"></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" th:href="@{/messages/templates}" th:text="#{msg.templates}"></a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" th:href="@{/messages/optouts}" th:text="#{msg.optouts}"></a></li>
+                        <li sec:authorize="hasRole('ADMIN')"><a class="dropdown-item" th:href="@{/messages/settings}" th:text="#{msg.settings}"></a></li>
+                    </ul>
+                </li>
                 <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> <span th:text="#{nav.admin}"></span></a>
                     <ul class="dropdown-menu">

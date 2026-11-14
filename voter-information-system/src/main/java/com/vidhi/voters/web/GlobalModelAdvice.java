@@ -20,7 +20,12 @@ public class GlobalModelAdvice {
     public com.vidhi.voters.config.WorkContext work() { return work; }
 
     @ModelAttribute("reportIds")
-    public List<String> reportIds() { return com.vidhi.voters.report.ReportService.REPORTS; }
+    public List<String> reportIds() {
+        var a = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean admin = a != null && a.getAuthorities().stream().anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"));
+        return com.vidhi.voters.report.ReportService.REPORTS.stream()
+                .filter(r -> admin || !com.vidhi.voters.report.ReportService.ADMIN_ONLY.contains(r)).toList();
+    }
 
     @ModelAttribute("languages")
     public List<Languages.Lang> languages() { return Languages.ALL; }

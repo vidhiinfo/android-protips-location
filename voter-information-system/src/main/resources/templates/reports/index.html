@@ -5,16 +5,29 @@
 <nav th:replace="~{fragments/layout :: nav}"></nav>
 <div class="container" style="max-width:1100px">
     <h4 class="mb-3"><i class="bi bi-bar-chart"></i> <span th:text="#{nav.reports}"></span></h4>
-    <div class="row g-3">
-        <div class="col-md-6 col-lg-4" th:each="r : ${reports}">
-            <a class="card h-100 text-decoration-none report-card" th:href="@{/reports/{id}(id=${r})}">
-                <div class="card-body">
-                    <h6 class="card-title" th:text="#{${'report.' + r}}"></h6>
-                    <p class="card-text small text-muted mb-0" th:text="#{${'report.' + r + '.desc'}}"></p>
-                </div>
-            </a>
+    <th:block th:each="sec : ${sections}">
+        <h6 class="text-uppercase text-muted small mt-3 mb-2" th:text="#{${'report.section.' + sec.key}}"></h6>
+        <div class="row g-3">
+            <th:block th:each="r : ${sec.value}">
+            <div class="col-md-6 col-lg-4" th:if="${!adminOnly.contains(r)}" sec:authorize="isAuthenticated()">
+                <a class="card h-100 text-decoration-none report-card" th:href="@{/reports/{id}(id=${r})}">
+                    <div class="card-body">
+                        <h6 class="card-title" th:text="#{${'report.' + r}}"></h6>
+                        <p class="card-text small text-muted mb-0" th:text="#{${'report.' + r + '.desc'}}"></p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4" th:if="${adminOnly.contains(r)}" sec:authorize="hasRole('ADMIN')">
+                <a class="card h-100 text-decoration-none report-card" th:href="@{/reports/{id}(id=${r})}">
+                    <div class="card-body">
+                        <h6 class="card-title"><span th:text="#{${'report.' + r}}"></span> <i class="bi bi-shield-lock text-warning" th:title="#{report.adminOnly}"></i></h6>
+                        <p class="card-text small text-muted mb-0" th:text="#{${'report.' + r + '.desc'}}"></p>
+                    </div>
+                </a>
+            </div>
+            </th:block>
         </div>
-    </div>
+    </th:block>
 </div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>

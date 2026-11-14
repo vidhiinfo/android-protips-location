@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{msg.new})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:1100px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div th:if="${silence}" class="alert alert-danger py-2"><i class="bi bi-slash-circle"></i> <span th:text="#{msg.silenceActive(${silence})}"></span></div>
+    <h4 class="mb-3"><i class="bi bi-send"></i> <span th:text="#{msg.new}"></span></h4>
+    <div th:if="${dryRun}" class="alert alert-warning py-2"><i class="bi bi-cone-striped"></i> <span th:text="#{msg.dryRunBanner}"></span></div>
+    <div th:if="${!dryRun and !ready}" class="alert alert-danger py-2" th:text="#{msg.notConfigured}"></div>
+
+    <form method="get" class="card card-body mb-3">
+        <input type="hidden" th:each="p : ${f.hiddenParams()}" th:name="${p.key}" th:value="${p.value}">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3"><label class="form-label small" th:text="#{msg.channel}"></label>
+                <select name="channel" class="form-select" data-autosubmit>
+                    <option th:each="c : ${channels}" th:value="${c}" th:selected="${c == channel}" th:text="#{${'msg.channel.' + c}}"></option></select></div>
+            <div class="col-md-6"><label class="form-label small" th:text="#{msg.template}"></label>
+                <select name="templateId" class="form-select" data-autosubmit>
+                    <option th:if="${#lists.isEmpty(templates)}" value="" th:text="#{msg.noTemplates}"></option>
+                    <option th:each="t : ${templates}" th:value="${t.id}" th:selected="${template != null and t.id == template.id}"
+                            th:text="'[' + ${t.language} + '] ' + ${t.name}"></option></select></div>
+            <div class="col-md-3 small text-muted">
+                <span th:text="#{msg.recipientsFrom}"></span>
+                <a th:href="@{/voters} + '?' + ${f.queryWithSort()}" th:text="${f.active} ? #{list.filtered} : #{common.all}"></a>
+            </div>
+        </div>
+    </form>
+
+    <th:block th:if="${preview != null}">
+        <div class="row g-2 mb-3">
+            <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted" th:text="#{msg.p.voters}"></div><div class="num" th:text="${preview.voters}"></div></div></div>
+            <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted" th:text="#{msg.p.recipients}"></div><div class="num text-primary" th:text="${preview.recipients}"></div></div></div>
+            <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted" th:text="#{msg.p.noMobile}"></div><div class="num" th:text="${preview.noMobile}"></div></div></div>
+            <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted" th:text="#{msg.p.optedOut}"></div><div class="num" th:text="${preview.optedOut}"></div></div></div>
+            <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted" th:text="#{msg.p.duplicates}"></div><div class="num" th:text="${preview.duplicates}"></div></div></div>
+            <div class="col-6 col-md-2" th:if="${channel.name() == 'SMS'}"><div class="stat"><div class="small text-muted" th:text="#{msg.p.segments}"></div>
+                <div class="num" th:text="${preview.maxSegments}"></div></div></div>
+        </div>
+        <div class="card mb-3">
+            <div class="card-header fw-semibold" th:text="#{msg.preview}"></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" th:if="${#lists.isEmpty(preview.samples)}" th:text="#{msg.error.noRecipients}"></li>
+                <li class="list-group-item" th:each="s : ${preview.samples}">
+                    <div class="small text-muted"><span th:text="${s[0]}"></span> &middot; <span th:text="${s[1]}"></span></div>
+                    <div dir="auto" style="white-space:pre-wrap" th:text="${s[2]}"></div>
+                </li>
+            </ul>
+        </div>
+        <form method="post" th:action="@{/messages/campaigns}" class="card card-body" th:if="${preview.recipients > 0}"
+              th:attr="data-confirm=#{msg.confirmSend(${preview.recipients})}">
+            <input type="hidden" th:each="p : ${f.hiddenParams()}" th:name="${p.key}" th:value="${p.value}">
+            <input type="hidden" name="templateId" th:value="${template.id}">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5"><label class="form-label small" th:text="#{msg.campaignName}"></label>
+                    <input name="campaignName" class="form-control" maxlength="150" dir="auto" th:placeholder="${template.name}"></div>
+                <div class="col-md-4"><label class="form-label small" th:text="#{msg.scheduleAt}"></label>
+                    <input name="scheduledAt" type="datetime-local" class="form-control"></div>
+                <div class="col-md-3"><button class="btn btn-primary w-100" th:disabled="${silence != null or (!dryRun and !ready)}">
+                    <i class="bi bi-send"></i> <span th:text="#{msg.send(${preview.recipients})}"></span></button></div>
+            </div>
+            <div class="form-text" th:text="#{msg.rulesHint}"></div>
+        </form>
+    </th:block>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

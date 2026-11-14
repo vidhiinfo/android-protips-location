@@ -73,6 +73,9 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final AppUserRepository users;
     private final PasswordEncoder encoder;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.vidhi.voters.messaging.MessageTemplateRepository templates;
+
     public DemoDataSeeder(VoterRepository voters, AssemblyRepository assemblies, BoothRepository booths, PartyRepository parties,
                           ElectionRepository elections, CandidateRepository candidates, BoothResultRepository results,
                           AppUserRepository users, PasswordEncoder encoder) {
@@ -155,7 +158,29 @@ public class DemoDataSeeder implements CommandLineRunner {
                     v.setDistrict(r.district());
                     v.setPincode(String.valueOf(r.assemblyNo() == 45 ? 302001 + rnd.nextInt(9) : r.assemblyNo() == 46 ? 226001 + rnd.nextInt(9) : 700024));
                     if (rnd.nextInt(10) < 8) v.setMobile(String.valueOf(9000000000L + rnd.nextInt(999999999)));
+                    int cat = rnd.nextInt(20);   // optional social category, left blank for some voters
+                    v.setCategory(cat < 7 ? "GEN" : cat < 13 ? "OBC" : cat < 16 ? "SC" : cat < 18 ? "ST" : null);
                     voters.save(v);
+                    // a few deliberate duplicate registrations (same name + father name, different EPIC) for the report
+                    if (fam % 40 == 7 && m == 0) {
+                        Voter d = new Voter();
+                        d.setEpicNo(String.format("DUP%07d", ++epic));
+                        d.setName(v.getName().replace(" ", "  ").toUpperCase());     // spacing/case differ, still a match
+                        d.setNameLocal(v.getNameLocal());
+                        d.setGender(v.getGender());
+                        d.setRelationType(v.getRelationType());
+                        d.setRelativeName(v.getRelativeName());
+                        d.setAge(v.getAge() + 1);
+                        d.setAssemblyNo(v.getAssemblyNo());
+                        d.setAssemblyName(v.getAssemblyName());
+                        d.setBoothNo(1 + (v.getBoothNo() % boothsPerAssembly));
+                        d.setSerialNo(serial++);
+                        d.setHouseNo(String.valueOf(1 + rnd.nextInt(300)));
+                        d.setAddress("Street " + (1 + rnd.nextInt(30)));
+                        d.setVillageWard(v.getVillageWard());
+                        d.setDistrict(v.getDistrict());
+                        voters.save(d);
+                    }
                 }
             }
         }
@@ -209,9 +234,34 @@ public class DemoDataSeeder implements CommandLineRunner {
             }
         }
 
+        // message templates (dry-run provider by default: nothing is really sent)
+        template("Polling day reminder", com.vidhi.voters.messaging.Channel.SMS, "en",
+                "Dear {name}, please vote on polling day. Your booth: {boothNo} {boothName}, serial no. {serialNo}. - Jan Vikas Party", "1107170000000000001", "name,boothNo,boothName,serialNo");
+        template("मतदान दिवस अनुस्मारक", com.vidhi.voters.messaging.Channel.SMS, "hi",
+                "प्रिय {nameLocal}, कृपया मतदान अवश्य करें। आपका बूथ: {boothNo} {boothName}, क्रम सं. {serialNo}। - जन विकास पार्टी", "1107170000000000002", "nameLocal,boothNo,boothName,serialNo");
+        template("ووٹنگ یاد دہانی", com.vidhi.voters.messaging.Channel.SMS, "ur",
+                "محترم {nameLocal}، براہ کرم ووٹ ضرور دیں۔ آپ کا بوتھ: {boothNo} {boothName}، سیریل نمبر {serialNo}۔", "1107170000000000003", "nameLocal,boothNo,boothName,serialNo");
+        template("ভোটের অনুস্মারক", com.vidhi.voters.messaging.Channel.SMS, "bn",
+                "প্রিয় {nameLocal}, অনুগ্রহ করে ভোট দিন। আপনার বুথ: {boothNo} {boothName}, ক্রম নং {serialNo}।", "1107170000000000004", "nameLocal,boothNo,boothName,serialNo");
+        template("Booth slip", com.vidhi.voters.messaging.Channel.WHATSAPP, "en",
+                "Namaste {name}! Your voter slip: EPIC {epicNo}, booth {boothNo} ({boothName}), serial {serialNo}.", "voter_slip", "name,epicNo,boothNo,boothName,serialNo");
+        template("बूथ पर्ची", com.vidhi.voters.messaging.Channel.WHATSAPP, "hi",
+                "नमस्ते {nameLocal}! आपकी मतदाता पर्ची: EPIC {epicNo}, बूथ {boothNo} ({boothName}), क्रम सं. {serialNo}।", "voter_slip", "nameLocal,epicNo,boothNo,boothName,serialNo");
+
         user("operator", "Data Entry Operator", AppUser.Role.OPERATOR, "operator@123", null);
         user("viewer", "Read-only Viewer", AppUser.Role.VIEWER, "viewer@123", null);
         user("jaipur", "Jaipur North Operator", AppUser.Role.OPERATOR, "jaipur@123", 45);
+    }
+
+    private void template(String name, com.vidhi.voters.messaging.Channel ch, String lang, String body, String providerId, String params) {
+        com.vidhi.voters.messaging.MessageTemplate t = new com.vidhi.voters.messaging.MessageTemplate();
+        t.setName(name);
+        t.setChannel(ch);
+        t.setLanguage(lang);
+        t.setBody(body);
+        t.setProviderTemplateId(providerId);
+        t.setParams(params);
+        templates.save(t);
     }
 
     private Party party(String name, String local, String shortName, String symbol, String color) {

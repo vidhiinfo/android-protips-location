@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{msg.settings})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:1000px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div th:if="${silence}" class="alert alert-danger py-2"><i class="bi bi-slash-circle"></i> <span th:text="#{msg.silenceActive(${silence})}"></span></div>
+    <div th:if="${testResult}" class="alert alert-info py-2" th:text="${testResult}"></div>
+    <h4 class="mb-3"><i class="bi bi-sliders"></i> <span th:text="#{msg.settings}"></span></h4>
+    <div class="card mb-3"><table class="table mb-0">
+        <tr><th style="width:35%" th:text="#{msg.channel.SMS}"></th>
+            <td><code th:text="${smsProvider}"></code>
+                <span th:if="${smsDryRun}" class="badge text-bg-warning" th:text="#{msg.dryRun}"></span>
+                <span th:unless="${smsDryRun}" th:class="${smsReady} ? 'badge text-bg-success' : 'badge text-bg-danger'" th:text="${smsReady} ? #{msg.ready} : #{msg.notConfiguredShort}"></span></td></tr>
+        <tr><th th:text="#{msg.channel.WHATSAPP}"></th>
+            <td><code th:text="${waProvider}"></code>
+                <span th:if="${waDryRun}" class="badge text-bg-warning" th:text="#{msg.dryRun}"></span>
+                <span th:unless="${waDryRun}" th:class="${waReady} ? 'badge text-bg-success' : 'badge text-bg-danger'" th:text="${waReady} ? #{msg.ready} : #{msg.notConfiguredShort}"></span></td></tr>
+        <tr><th th:text="#{msg.sendWindow}"></th><td><span th:text="${props.sendFrom} + ' - ' + ${props.sendUntil} + ' (' + ${props.timeZone} + ')'"></span>
+            <span th:class="${windowOpen} ? 'badge text-bg-success' : 'badge text-bg-secondary'" th:text="${windowOpen} ? #{msg.open} : #{msg.closed}"></span></td></tr>
+        <tr><th th:text="#{msg.rate}"></th><td th:text="${props.ratePerSecond} + ' / s'"></td></tr>
+        <tr><th th:text="#{msg.silenceRule}"></th><td th:text="${props.enforceSilencePeriod} ? #{admin.active} : #{admin.disabled}"></td></tr>
+    </table></div>
+    <p class="small text-muted" th:text="#{msg.settingsHelp}"></p>
+
+    <div class="card"><div class="card-header fw-semibold" th:text="#{msg.testSend}"></div>
+        <form method="post" th:action="@{/messages/settings/test}" class="card-body row g-2 align-items-end">
+            <div class="col-md-4"><label class="form-label small" th:text="#{col.mobile}"></label><input name="mobile" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label small" th:text="#{msg.template}"></label>
+                <select name="templateId" class="form-select">
+                    <optgroup th:label="#{msg.channel.SMS}"><option th:each="t : ${templatesSms}" th:value="${t.id}" th:text="'[' + ${t.language} + '] ' + ${t.name}"></option></optgroup>
+                    <optgroup th:label="#{msg.channel.WHATSAPP}"><option th:each="t : ${templatesWa}" th:value="${t.id}" th:text="'[' + ${t.language} + '] ' + ${t.name}"></option></optgroup>
+                </select></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100" th:text="#{msg.sendTest}"></button></div>
+        </form></div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

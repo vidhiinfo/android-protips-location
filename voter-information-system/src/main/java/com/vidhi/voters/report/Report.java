@@ -28,6 +28,11 @@ public class Report {
 
     public static boolean isNumber(Object o) { return o instanceof Number; }
 
+    /** Rows shown on screen; exports always contain every row. */
+    public static final int DISPLAY_LIMIT = 1000;
+    public List<List<Object>> getDisplayRows() { return rows.size() <= DISPLAY_LIMIT ? rows : rows.subList(0, DISPLAY_LIMIT); }
+    public boolean isTruncated() { return rows.size() > DISPLAY_LIMIT; }
+
     /** Display form of a row for templates: formatted text + whether to right-align. */
     public record Cell(String text, boolean number) {}
 

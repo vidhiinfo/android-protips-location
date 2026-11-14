@@ -115,8 +115,8 @@ public class AdminController {
         m.addAttribute("user", user);
         m.addAttribute("action", action);
         m.addAttribute("entity", entity);
-        m.addAttribute("actions", List.of("CREATE", "UPDATE", "DELETE", "IMPORT", "RESULT_SAVE", "LOGIN", "LOGIN_FAILED", "PASSWORD_CHANGE"));
-        m.addAttribute("entities", List.of("VOTER", "USER", "ASSEMBLY", "BOOTH", "PARTY", "ELECTION", "CANDIDATE", "RESULT"));
+        m.addAttribute("actions", List.of("CREATE", "UPDATE", "DELETE", "IMPORT", "RESULT_SAVE", "LOGIN", "LOGIN_FAILED", "PASSWORD_CHANGE", "MSG_CAMPAIGN", "MSG_CANCEL", "MSG_TEST", "OPT_OUT"));
+        m.addAttribute("entities", List.of("VOTER", "USER", "ASSEMBLY", "BOOTH", "PARTY", "ELECTION", "CANDIDATE", "RESULT", "CAMPAIGN", "TEMPLATE", "OPTOUT"));
         return "admin/audit";
     }
 
