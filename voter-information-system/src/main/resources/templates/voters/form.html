@@ -1,81 +1,65 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head(${voter.id == null} ? 'Add Voter' : 'Edit Voter')}"></head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(${voter.id == null} ? #{form.addTitle} : #{form.editTitle})}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav}"></nav>
-<div class="container" style="max-width:1000px">
-    <h4 class="mb-3" th:text="${voter.id == null} ? 'Add Voter' : 'Edit Voter: ' + ${voter.name}">Voter</h4>
-    <form th:object="${voter}" method="post"
-          th:action="${voter.id == null} ? @{/voters} : @{/voters/{id}(id=${voter.id})}" novalidate>
-        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger py-2">Please correct the highlighted fields.</div>
+<div class="container" style="max-width:1050px">
+    <h4 class="mb-3" th:text="${voter.id == null} ? #{form.addTitle} : #{form.editTitle} + ': ' + ${voter.name}"></h4>
+    <form th:object="${voter}" method="post" th:action="${voter.id == null} ? @{/voters} : @{/voters/{id}(id=${voter.id})}" novalidate>
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger py-2" th:text="#{form.fixErrors}"></div>
 
-        <div class="card mb-3"><div class="card-header fw-semibold">Voter details</div><div class="card-body row g-3">
-            <div class="col-md-4"><label class="form-label">EPIC / Voter ID No *</label>
-                <input th:field="*{epicNo}" class="form-control text-uppercase" th:errorclass="is-invalid" maxlength="20">
-                <div class="invalid-feedback" th:errors="*{epicNo}"></div></div>
-            <div class="col-md-8"><label class="form-label">Voter name *</label>
-                <input th:field="*{name}" class="form-control" th:errorclass="is-invalid" maxlength="120">
-                <div class="invalid-feedback" th:errors="*{name}"></div></div>
-            <div class="col-md-3"><label class="form-label">Relation</label>
+        <div class="card mb-3"><div class="card-header fw-semibold" th:text="#{form.section.voter}"></div><div class="card-body row g-3">
+            <div th:replace="~{fragments/form :: input('epicNo', 'col.epicNo', 'col-md-4', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('name', 'form.nameEnglish', 'col-md-4', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('nameLocal', 'col.nameLocal', 'col-md-4', 'text', true)}"></div>
+            <div class="col-md-2"><label class="form-label" th:text="#{col.relation}"></label>
                 <select th:field="*{relationType}" class="form-select">
-                    <option th:each="r : ${relations}" th:value="${r}" th:text="${r.label}"></option>
+                    <option th:each="r : ${relations}" th:value="${r}" th:text="#{${'relation.' + r}}"></option>
                 </select></div>
-            <div class="col-md-5"><label class="form-label">Father / Husband name</label>
-                <input th:field="*{relativeName}" class="form-control" th:errorclass="is-invalid" maxlength="120">
-                <div class="invalid-feedback" th:errors="*{relativeName}"></div></div>
-            <div class="col-md-2"><label class="form-label">Gender *</label>
+            <div th:replace="~{fragments/form :: input('relativeName', 'col.relativeName', 'col-md-4', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('relativeNameLocal', 'col.relativeNameLocal', 'col-md-6', 'text', true)}"></div>
+            <div class="col-md-2"><label class="form-label" th:text="#{col.gender}"></label>
                 <select th:field="*{gender}" class="form-select" th:errorclass="is-invalid">
                     <option value="">--</option>
-                    <option th:each="g : ${genders}" th:value="${g}" th:text="${g.label}"></option>
+                    <option th:each="g : ${genders}" th:value="${g}" th:text="#{${'gender.' + g}}"></option>
                 </select>
                 <div class="invalid-feedback" th:errors="*{gender}"></div></div>
-            <div class="col-md-2"><label class="form-label">Age</label>
-                <input th:field="*{age}" type="number" min="18" max="130" class="form-control" th:errorclass="is-invalid">
-                <div class="invalid-feedback" th:errors="*{age}"></div></div>
-            <div class="col-md-3"><label class="form-label">Category</label>
-                <input th:field="*{category}" class="form-control" placeholder="GEN / OBC / SC / ST"></div>
+            <div th:replace="~{fragments/form :: input('age', 'col.age', 'col-md-2', 'number', false)}"></div>
+            <div th:replace="~{fragments/form :: input('category', 'col.category', 'col-md-3', 'text', false)}"></div>
         </div></div>
 
-        <div class="card mb-3"><div class="card-header fw-semibold">Constituency &amp; booth</div><div class="card-body row g-3">
-            <div class="col-md-2"><label class="form-label">Assembly No *</label>
-                <input th:field="*{assemblyNo}" type="number" min="1" class="form-control" th:errorclass="is-invalid">
+        <div class="card mb-3"><div class="card-header fw-semibold" th:text="#{form.section.booth}"></div><div class="card-body row g-3">
+            <div class="col-md-3"><label class="form-label" th:text="#{col.assemblyNo}"></label>
+                <input th:field="*{assemblyNo}" type="number" min="1" class="form-control" th:errorclass="is-invalid" list="assemblyList" th:readonly="${work.scoped}">
+                <datalist id="assemblyList"><option th:each="a : ${masterAssemblies}" th:value="${a.assemblyNo}" th:text="${a.name}"></option></datalist>
                 <div class="invalid-feedback" th:errors="*{assemblyNo}"></div></div>
-            <div class="col-md-4"><label class="form-label">Assembly name</label>
-                <input th:field="*{assemblyName}" class="form-control"></div>
-            <div class="col-md-2"><label class="form-label">Booth / Part No *</label>
-                <input th:field="*{boothNo}" type="number" min="1" class="form-control" th:errorclass="is-invalid">
+            <div th:replace="~{fragments/form :: input('assemblyName', 'col.assemblyName', 'col-md-3', 'text', true)}"></div>
+            <div class="col-md-3"><label class="form-label" th:text="#{col.boothNo}"></label>
+                <input th:field="*{boothNo}" type="number" min="1" class="form-control" th:errorclass="is-invalid" list="boothList">
+                <datalist id="boothList"><option th:each="b : ${masterBooths}" th:if="${!work.scoped or b.assemblyNo == work.assemblyNo}" th:value="${b.boothNo}" th:text="${b.assemblyNo} + '/' + ${b.boothNo} + ' ' + ${b.name}"></option></datalist>
                 <div class="invalid-feedback" th:errors="*{boothNo}"></div></div>
-            <div class="col-md-2"><label class="form-label">Serial No</label>
-                <input th:field="*{serialNo}" type="number" min="1" class="form-control" th:errorclass="is-invalid">
-                <div class="invalid-feedback" th:errors="*{serialNo}"></div></div>
-            <div class="col-md-12"><label class="form-label">Polling station / Booth name</label>
-                <input th:field="*{boothName}" class="form-control"></div>
+            <div th:replace="~{fragments/form :: input('serialNo', 'col.serialNo', 'col-md-3', 'number', false)}"></div>
+            <div th:replace="~{fragments/form :: input('boothName', 'col.boothName', 'col-12', 'text', true)}"></div>
+            <div class="col-12 form-text mt-0" th:text="#{form.mastersHint}"></div>
         </div></div>
 
-        <div class="card mb-3"><div class="card-header fw-semibold">Address &amp; contact</div><div class="card-body row g-3">
-            <div class="col-md-2"><label class="form-label">House No</label><input th:field="*{houseNo}" class="form-control"></div>
-            <div class="col-md-10"><label class="form-label">Address</label><input th:field="*{address}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">Village / Ward</label><input th:field="*{villageWard}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">District</label><input th:field="*{district}" class="form-control"></div>
-            <div class="col-md-4"><label class="form-label">Pincode</label>
-                <input th:field="*{pincode}" class="form-control" th:errorclass="is-invalid" maxlength="6">
-                <div class="invalid-feedback" th:errors="*{pincode}"></div></div>
-            <div class="col-md-4"><label class="form-label">Mobile</label>
-                <input th:field="*{mobile}" class="form-control" th:errorclass="is-invalid" maxlength="10">
-                <div class="invalid-feedback" th:errors="*{mobile}"></div></div>
-            <div class="col-md-4"><label class="form-label">Alternate mobile</label>
-                <input th:field="*{altMobile}" class="form-control" th:errorclass="is-invalid" maxlength="10">
-                <div class="invalid-feedback" th:errors="*{altMobile}"></div></div>
-            <div class="col-md-4"><label class="form-label">Email</label>
-                <input th:field="*{email}" type="email" class="form-control" th:errorclass="is-invalid">
-                <div class="invalid-feedback" th:errors="*{email}"></div></div>
-            <div class="col-12"><label class="form-label">Remarks</label>
-                <textarea th:field="*{remarks}" class="form-control" rows="2" maxlength="500"></textarea></div>
+        <div class="card mb-3"><div class="card-header fw-semibold" th:text="#{form.section.address}"></div><div class="card-body row g-3">
+            <div th:replace="~{fragments/form :: input('houseNo', 'col.houseNo', 'col-md-2', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('address', 'col.address', 'col-md-5', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('addressLocal', 'col.addressLocal', 'col-md-5', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('villageWard', 'col.villageWard', 'col-md-4', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('district', 'col.district', 'col-md-4', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('pincode', 'col.pincode', 'col-md-4', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('mobile', 'col.mobile', 'col-md-4', 'tel', false)}"></div>
+            <div th:replace="~{fragments/form :: input('altMobile', 'col.altMobile', 'col-md-4', 'tel', false)}"></div>
+            <div th:replace="~{fragments/form :: input('email', 'col.email', 'col-md-4', 'email', false)}"></div>
+            <div class="col-12"><label class="form-label" th:text="#{col.remarks}"></label>
+                <textarea th:field="*{remarks}" class="form-control" rows="2" maxlength="500" dir="auto"></textarea></div>
         </div></div>
 
         <div class="d-flex gap-2 mb-4">
-            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>
-            <a th:href="${voter.id == null} ? @{/voters} : @{/voters/{id}(id=${voter.id})}" class="btn btn-outline-secondary">Cancel</a>
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{common.save}"></span></button>
+            <a th:href="${voter.id == null} ? @{/voters} : @{/voters/{id}(id=${voter.id})}" class="btn btn-outline-secondary" th:text="#{common.cancel}"></a>
         </div>
     </form>
 </div>

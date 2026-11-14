@@ -1,13 +1,20 @@
 package com.vidhi.voters.service;
 
 import com.vidhi.voters.model.Voter;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
-/** Converts a {@link VoterFilter} into a JPA Criteria query (parameterised, SQL-injection safe). */
+/**
+ * Converts a {@link VoterFilter} into a JPA Criteria query (parameterised, SQL-injection safe).
+ * Text search covers both the English and the local-language columns, and search terms are
+ * NFC-normalised the same way stored values are, so Hindi / Bengali / Urdu text typed with any keyboard matches.
+ */
 public final class VoterSpecifications {
 
     private VoterSpecifications() {}
@@ -17,11 +24,14 @@ public final class VoterSpecifications {
             List<Predicate> p = new ArrayList<>();
 
             if (notBlank(f.getQ())) {
-                for (String term : f.getQ().trim().split("\\s+")) {
-                    String like = "%" + escape(term.toLowerCase()) + "%";
+                for (String term : Voter.nfc(f.getQ()).split("\\s+")) {
+                    String like = "%" + escape(term.toLowerCase(Locale.ROOT)) + "%";
                     p.add(cb.or(
                             cb.like(cb.lower(root.get("name")), like, '\\'),
+                            cb.like(cb.lower(root.get("nameLocal")), like, '\\'),
                             cb.like(cb.lower(root.get("relativeName")), like, '\\'),
+                            cb.like(cb.lower(root.get("relativeNameLocal")), like, '\\'),
+                            cb.like(cb.lower(root.get("addressLocal")), like, '\\'),
                             cb.like(cb.lower(root.get("epicNo")), like, '\\'),
                             cb.like(root.get("mobile"), like, '\\'),
                             cb.like(root.get("altMobile"), like, '\\'),
@@ -32,9 +42,9 @@ public final class VoterSpecifications {
                 }
             }
             if (notBlank(f.getName()))
-                p.add(cb.like(cb.lower(root.get("name")), contains(f.getName()), '\\'));
+                p.add(anyLike(cb, root, contains(f.getName()), "name", "nameLocal"));
             if (notBlank(f.getRelativeName()))
-                p.add(cb.like(cb.lower(root.get("relativeName")), contains(f.getRelativeName()), '\\'));
+                p.add(anyLike(cb, root, contains(f.getRelativeName()), "relativeName", "relativeNameLocal"));
             if (notBlank(f.getEpicNo()))
                 p.add(cb.like(cb.lower(root.get("epicNo")), contains(f.getEpicNo()), '\\'));
             if (notBlank(f.getMobile()))
@@ -58,9 +68,15 @@ public final class VoterSpecifications {
         };
     }
 
+    private static Predicate anyLike(CriteriaBuilder cb, Root<Voter> root, String like, String... fields) {
+        return cb.or(java.util.Arrays.stream(fields)
+                .map(fl -> cb.like(cb.lower(root.get(fl)), like, '\\'))
+                .toArray(Predicate[]::new));
+    }
+
     private static boolean notBlank(String s) { return s != null && !s.isBlank(); }
 
-    private static String contains(String s) { return "%" + escape(s.trim().toLowerCase()) + "%"; }
+    private static String contains(String s) { return "%" + escape(Voter.nfc(s).toLowerCase(Locale.ROOT)) + "%"; }
 
     private static String escape(String s) {
         return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");

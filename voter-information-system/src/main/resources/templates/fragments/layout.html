@@ -1,36 +1,120 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!--/* Shared page parts. Every page's <html> tag sets lang + dir from currentLang (dir="rtl" for Urdu). */-->
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="${title} + ' | Voter Information System'">Voter Information System</title>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css}">
+    <title th:text="${title} + ' | ' + #{app.name}">Voter Information System</title>
+    <link rel="stylesheet" th:if="${!currentLang.rtl}" th:href="@{/webjars/bootstrap/5.3.3/dist/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:if="${currentLang.rtl}" th:href="@{/webjars/bootstrap/5.3.3/dist/css/bootstrap.rtl.min.css}">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/fonts.css}">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-<nav th:fragment="nav" class="navbar navbar-expand-md navbar-dark bg-primary mb-3 no-print">
+
+<!--/* Language picker: switching reloads the current page with ?lang=xx (remembered in a cookie). */-->
+<select th:fragment="langSwitcher(cls)" th:class="'form-select form-select-sm ' + ${cls}" data-lang-switch th:title="#{nav.language}" th:aria-label="#{nav.language}">
+    <option th:each="l : ${languages}" th:value="${l.code}" th:selected="${l.code == currentLang.code}"
+            th:text="${l.nativeName} + (${l.code} != 'en' ? ' (' + ${l.englishName} + ')' : '')"></option>
+</select>
+
+<nav th:fragment="nav" class="navbar navbar-expand-lg navbar-dark bg-primary mb-3 no-print">
     <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/voters}"><i class="bi bi-person-vcard"></i> Voter Information System</a>
+        <a class="navbar-brand" th:href="@{/dashboard}"><i class="bi bi-person-vcard"></i> <span th:text="#{app.name}"></span></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" th:href="@{/voters}">Voters</a></li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" th:href="@{/voters/new}">Add Voter</a></li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" th:href="@{/voters/import}">Bulk Import</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i> <span th:text="#{nav.dashboard}"></span></a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-people"></i> <span th:text="#{nav.voters}"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/voters}" th:text="#{nav.voterList}"></a></li>
+                        <li sec:authorize="hasRole('OPERATOR')"><a class="dropdown-item" th:href="@{/voters/new}" th:text="#{nav.addVoter}"></a></li>
+                        <li sec:authorize="hasRole('OPERATOR')"><a class="dropdown-item" th:href="@{/voters/import}" th:text="#{nav.import}"></a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-database"></i> <span th:text="#{nav.masters}"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/masters/assemblies}" th:text="#{master.assemblies}"></a></li>
+                        <li><a class="dropdown-item" th:href="@{/masters/booths}" th:text="#{master.booths}"></a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/masters/parties}" th:text="#{master.parties}"></a></li>
+                        <li><a class="dropdown-item" th:href="@{/masters/elections}" th:text="#{master.elections}"></a></li>
+                        <li><a class="dropdown-item" th:href="@{/masters/candidates}" th:text="#{master.candidates}"></a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-trophy"></i> <span th:text="#{nav.results}"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/results}" th:text="#{result.overview}"></a></li>
+                        <li sec:authorize="hasRole('OPERATOR')"><a class="dropdown-item" th:href="@{/results/entry}" th:text="#{result.entry}"></a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-bar-chart"></i> <span th:text="#{nav.reports}"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/reports}" th:text="#{report.all}"></a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li th:each="r : ${reportIds}">
+                            <a class="dropdown-item" th:href="@{/reports/{id}(id=${r})}" th:text="#{${'report.' + r}}"></a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear"></i> <span th:text="#{nav.admin}"></span></a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/admin/users}" th:text="#{admin.users}"></a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/audit}" th:text="#{admin.audit}"></a></li>
+                        <li><a class="dropdown-item" th:href="@{/admin/system}" th:text="#{admin.system}"></a></li>
+                    </ul>
+                </li>
             </ul>
-            <span class="navbar-text text-white me-3"><i class="bi bi-person-circle"></i> <span sec:authentication="name">user</span></span>
-            <form th:action="@{/logout}" method="post"><button class="btn btn-sm btn-outline-light">Logout</button></form>
+            <span class="badge text-bg-light me-2 mb-2 mb-lg-0" th:title="#{login.assembly}">
+                <i class="bi bi-geo-alt"></i>
+                <span th:text="${work.scoped} ? ${work.assemblyNo} + ' - ' + ${work.assemblyName} : #{login.allAssemblies}"></span>
+            </span>
+            <select th:replace="~{fragments/layout :: langSwitcher('w-auto me-2 mb-2 mb-lg-0')}"></select>
+            <div class="dropdown">
+                <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i> <span sec:authentication="name">user</span></a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" th:href="@{/account/password}" th:text="#{account.changePassword}"></a></li>
+                    <li><form th:action="@{/logout}" method="post"><button class="dropdown-item" th:text="#{nav.logout}"></button></form></li>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>
+
 <div th:fragment="flash">
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show no-print">
-        <span th:text="${success}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <span th:text="#{${success}}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show no-print">
+        <span th:text="#{${error}}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 </div>
+
+<!--/* Popup used by the House No links */-->
+<div th:fragment="householdModal" class="modal fade" id="householdModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-house"></i> <span th:text="#{household.title}"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="householdBody"></div>
+            <div class="modal-footer">
+                <a id="householdOpen" class="btn btn-outline-secondary btn-sm" target="_blank" href="#"><i class="bi bi-box-arrow-up-right"></i> <span th:text="#{household.newWindow}"></span></a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" th:text="#{common.close}"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <th:block th:fragment="scripts">
     <script th:src="@{/webjars/bootstrap/5.3.3/dist/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/js/app.js}"></script>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{dash.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1400px" id="dashboard" th:attr="data-url=@{/dashboard/data}">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+        <div class="me-auto">
+            <h4 class="mb-0"><i class="bi bi-speedometer2"></i> <span th:text="#{dash.title}"></span></h4>
+            <div class="small text-muted" th:text="#{dash.subtitle}"></div>
+        </div>
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-end no-print">
+            <div th:unless="${work.scoped}"><label class="form-label small mb-0" th:text="#{col.assemblyNo}"></label>
+                <select name="assemblyNo" class="form-select form-select-sm" data-autosubmit>
+                    <option th:each="a : ${assemblies}" th:value="${a.key}" th:selected="${a.key == assemblyNo}" th:text="${a.key} + ' - ' + ${a.value}"></option>
+                </select></div>
+            <div><label class="form-label small mb-0" th:text="#{master.election}"></label>
+                <select name="electionId" class="form-select form-select-sm" data-autosubmit>
+                    <option th:each="e : ${elections}" th:value="${e.id}" th:selected="${election != null and e.id == election.id}" th:text="${e.name}"></option>
+                </select></div>
+            <div th:if="${data != null and data.election != null}"><label class="form-label small mb-0" th:text="#{dash.focusParty}"></label>
+                <select name="party" class="form-select form-select-sm" data-autosubmit>
+                    <option th:each="p : ${data.election.parties}" th:value="${p}" th:selected="${p == data.election.focusParty}" th:text="${p}"></option>
+                </select></div>
+            <button type="button" class="btn btn-sm btn-secondary" data-print><i class="bi bi-printer"></i> <span th:text="#{common.print}"></span></button>
+        </form>
+    </div>
+
+    <div th:if="${data == null}" class="alert alert-info" th:text="#{dash.pickAssembly}"></div>
+    <th:block th:if="${data != null}">
+        <div class="row g-2 mb-3">
+            <div class="col-6 col-md-4 col-xl-2" th:each="t : ${data.tiles}">
+                <div class="stat h-100"><div class="text-muted small" th:text="${t.label}"></div><div class="num fs-5" th:text="${t.value}"></div></div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.ageGender}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.ageGender.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartAgeGender" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartAgeGender" role="img" th:aria-label="#{dash.chart.ageGender}"></canvas></div>
+                    <div class="chart-table d-none" id="chartAgeGender-table"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.boothVoters}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.boothVoters.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartBoothVoters" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartBoothVoters" role="img" th:aria-label="#{dash.chart.boothVoters}"></canvas></div>
+                    <div class="chart-table d-none" id="chartBoothVoters-table"></div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div th:if="${data.election == null}" class="alert alert-light border" th:text="#{dash.noElection}"></div>
+        <div class="row g-3 mb-3" th:if="${data.election != null}">
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.margin}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.margin.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartMargin" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartMargin" role="img" th:aria-label="#{dash.chart.margin}"></canvas></div>
+                    <div class="chart-table d-none" id="chartMargin-table"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.partyShare}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.partyShare.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartPartyShare" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartPartyShare" role="img" th:aria-label="#{dash.chart.partyShare}"></canvas></div>
+                    <div class="chart-table d-none" id="chartPartyShare-table"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.turnout}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.turnout.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartTurnout" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartTurnout" role="img" th:aria-label="#{dash.chart.turnout}"></canvas></div>
+                    <div class="chart-table d-none" id="chartTurnout-table"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.mobile}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.mobile.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartMobile" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartMobile" role="img" th:aria-label="#{dash.chart.mobile}"></canvas></div>
+                    <div class="chart-table d-none" id="chartMobile-table"></div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <th:block th:if="${data.election == null}">
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.mobile}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.mobile.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartMobile" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartMobile" role="img" th:aria-label="#{dash.chart.mobile}"></canvas></div>
+                    <div class="chart-table d-none" id="chartMobile-table"></div>
+                </div>
+            </div>
+        </div>
+            </th:block>
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.young}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.young.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartYoung" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartYoung" role="img" th:aria-label="#{dash.chart.young}"></canvas></div>
+                    <div class="chart-table d-none" id="chartYoung-table"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 chart-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="me-auto">
+                            <h6 class="mb-0" th:text="#{dash.chart.household}"></h6>
+                            <p class="small text-muted mb-2" th:text="#{dash.chart.household.desc}"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary no-print" data-toggle-table="chartHousehold" th:text="#{dash.showTable}"></button>
+                    </div>
+                    <div class="chart-box"><canvas id="chartHousehold" role="img" th:aria-label="#{dash.chart.household}"></canvas></div>
+                    <div class="chart-table d-none" id="chartHousehold-table"></div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </th:block>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/webjars/chart.js/4.4.1/dist/chart.umd.js}"></script>
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

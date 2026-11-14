@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{admin.system})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:900px">
+    <h4 class="mb-3"><i class="bi bi-hdd-stack"></i> <span th:text="#{admin.system}"></span></h4>
+    <div class="card"><table class="table mb-0">
+        <tr th:each="e : ${info}"><th style="width:35%" th:text="#{${e.key}}"></th><td class="text-break" th:text="${e.value}"></td></tr>
+        <tr><th th:text="#{admin.sys.languages}"></th><td><span th:each="l : ${languages}" class="badge text-bg-light border me-1" th:text="${l.nativeName}"></span></td></tr>
+    </table></div>
+    <p class="small text-muted mt-2" th:text="#{admin.sys.charsetHint}"></p>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

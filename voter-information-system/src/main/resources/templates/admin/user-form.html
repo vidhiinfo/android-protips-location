@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{admin.user})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container" style="max-width:800px">
+    <h4 class="mb-3" th:text="#{admin.user}"></h4>
+    <form th:object="${item}" method="post" th:action="@{/admin/users}" class="card" novalidate>
+        <div class="card-body row g-3">
+            <input type="hidden" th:field="*{id}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="col-12 alert alert-danger py-2 mb-0"><div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div></div>
+            <div class="col-md-6"><label class="form-label" th:text="#{login.username}"></label>
+                <input th:field="*{username}" class="form-control" th:errorclass="is-invalid" th:readonly="${item.id != null}" autocomplete="off">
+                <div class="invalid-feedback" th:errors="*{username}"></div></div>
+            <div th:replace="~{fragments/form :: input('fullName', 'admin.fullName', 'col-md-6', 'text', true)}"></div>
+            <div class="col-md-4"><label class="form-label" th:text="#{admin.role}"></label>
+                <select th:field="*{role}" class="form-select"><option th:each="r : ${roles}" th:value="${r}" th:text="#{${'role.' + r}}"></option></select></div>
+            <div class="col-md-5"><label class="form-label" th:text="#{admin.assignedAssembly}"></label>
+                <select th:field="*{assemblyNo}" class="form-select">
+                    <option value="" th:text="#{login.allAssemblies}"></option>
+                    <option th:each="a : ${assemblyList}" th:value="${a.assemblyNo}" th:text="${a.assemblyNo} + ' - ' + ${a.name}"></option></select>
+                <div class="form-text" th:text="#{admin.assignedAssemblyHelp}"></div></div>
+            <div class="col-md-3 d-flex align-items-center"><div class="form-check mt-3">
+                <input type="checkbox" th:field="*{enabled}" class="form-check-input">
+                <label class="form-check-label" th:for="${#ids.prev('enabled')}" th:text="#{admin.active}"></label></div></div>
+            <div class="col-md-6"><label class="form-label" for="newPassword" th:text="${item.id == null} ? #{admin.password} : #{admin.resetPassword}"></label>
+                <input id="newPassword" name="newPassword" type="password" class="form-control" autocomplete="new-password" minlength="8">
+                <div class="form-text" th:text="#{validation.password}"></div></div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{common.save}"></span></button>
+            <a class="btn btn-outline-secondary" th:href="@{/admin/users}" th:text="#{common.cancel}"></a>
+        </div>
+    </form>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

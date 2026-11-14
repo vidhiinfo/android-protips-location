@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{master.assembly})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1300px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h4 class="mb-3" th:text="#{master.assembly}"></h4>
+    <form th:object="${item}" method="post" th:action="@{/masters/assemblies}" class="card" style="max-width:900px" novalidate>
+        <div class="card-body row g-3">
+            <input type="hidden" th:field="*{id}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="col-12 alert alert-danger py-2 mb-0"><div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div></div>
+            <div th:replace="~{fragments/form :: input('assemblyNo', 'col.assemblyNo', 'col-md-3', 'number', false)}"></div>
+            <div th:replace="~{fragments/form :: input('name', 'col.assemblyName', 'col-md-5', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('nameLocal', 'master.nameLocal', 'col-md-4', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('district', 'col.district', 'col-md-4', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('state', 'master.state', 'col-md-4', 'text', true)}"></div>
+            <div th:replace="~{fragments/form :: input('reservedFor', 'master.reservedFor', 'col-md-4', 'text', false)}"></div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{common.save}"></span></button>
+            <a class="btn btn-outline-secondary" th:href="@{/masters/assemblies}" th:text="#{common.cancel}"></a>
+        </div>
+    </form>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

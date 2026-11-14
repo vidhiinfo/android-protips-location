@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{household.title})}"></head>
+<body class="print-page">
+<div class="no-print mb-3 d-flex gap-2">
+    <button class="btn btn-primary btn-sm" data-print><i class="bi bi-printer"></i> <span th:text="#{common.print}"></span></button>
+</div>
+<!--/* "content" is also loaded into the popup on the voter list */-->
+<div th:fragment="content">
+    <div class="mb-3">
+        <div class="fs-5 fw-semibold">
+            <i class="bi bi-house-door"></i> <span th:text="#{col.houseNo}"></span>: <span th:text="${voter.houseNo} ?: '-'"></span>
+        </div>
+        <div class="text-muted" th:text="${voter.fullAddress}"></div>
+        <div th:if="${voter.addressLocal}" class="text-muted" dir="auto" th:text="${voter.addressLocal}"></div>
+        <div class="small mt-1">
+            <span th:text="#{col.assemblyNo}"></span> <b th:text="${voter.assemblyNo}"></b> &middot;
+            <span class="badge text-bg-primary" th:text="#{household.count(${#lists.size(household)})}"></span>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered table-striped align-middle mb-0">
+            <thead class="table-light">
+            <tr><th>#</th><th th:text="#{col.epicNo}"></th><th th:text="#{col.name}"></th><th th:text="#{list.col.relative}"></th>
+                <th th:text="#{col.gender}"></th><th th:text="#{col.age}"></th><th th:text="#{list.col.booth}"></th>
+                <th th:text="#{list.col.sr}"></th><th th:text="#{col.mobile}"></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="h, st : ${household}" th:classappend="${h.id == voter.id} ? 'table-warning'">
+                <td th:text="${st.count}"></td>
+                <td><code th:text="${h.epicNo}"></code></td>
+                <td><a th:href="@{/voters/{id}(id=${h.id})}" target="_top" th:text="${h.name}"></a>
+                    <span th:if="${h.nameLocal}" class="local-text" dir="auto" th:text="${h.nameLocal}"></span></td>
+                <td><span th:if="${h.relativeName}" th:text="#{${h.relationKey}} + ' ' + ${h.relativeName}"></span>
+                    <span th:if="${h.relativeNameLocal}" class="local-text" dir="auto" th:text="${h.relativeNameLocal}"></span></td>
+                <td th:text="${h.gender} ? #{${'gender.' + h.gender}}"></td>
+                <td th:text="${h.age}"></td>
+                <td th:text="${h.boothNo}"></td>
+                <td th:text="${h.serialNo}"></td>
+                <td th:text="${h.mobile}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -16,6 +16,7 @@ public class VoterFilter {
     public static final Map<String, String> SORTABLE = Map.ofEntries(
             Map.entry("epicNo", "epicNo"),
             Map.entry("name", "name"),
+            Map.entry("nameLocal", "nameLocal"),
             Map.entry("relativeName", "relativeName"),
             Map.entry("gender", "gender"),
             Map.entry("age", "age"),

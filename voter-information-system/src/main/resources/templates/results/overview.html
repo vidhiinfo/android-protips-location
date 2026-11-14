@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{result.overview})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1300px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <h4 class="me-auto mb-0"><i class="bi bi-trophy"></i> <span th:text="#{result.overview}"></span></h4>
+        <form method="get" class="d-flex gap-2"><select name="electionId" class="form-select form-select-sm" data-autosubmit>
+                <option th:if="${#lists.isEmpty(elections)}" value="" th:text="#{result.noElection}"></option>
+                <option th:each="e : ${elections}" th:value="${e.id}" th:selected="${election != null and e.id == election.id}" th:text="${e.name}"></option></select></form>
+        <a sec:authorize="hasRole('OPERATOR')" class="btn btn-sm btn-primary text-nowrap" th:href="@{/results/entry(electionId=${election?.id})}"><i class="bi bi-pencil-square"></i> <span th:text="#{result.entry}"></span></a>
+        <a class="btn btn-sm btn-outline-secondary text-nowrap" th:href="@{/reports/results-summary(electionId=${election?.id})}"><i class="bi bi-bar-chart"></i> <span th:text="#{report.results-summary}"></span></a>
+    </div>
+    <div th:if="${#lists.isEmpty(contests)}" class="alert alert-info" th:text="#{result.noContests}"></div>
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4" th:each="c : ${contests}">
+            <div class="card h-100" th:classappend="${c.winner != null} ? 'winner-card'">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="mb-1"><a th:href="@{/results/contest(electionId=${c.election.id},assemblyNo=${c.assemblyNo})}" th:text="${c.assemblyNo} + ' - ' + ${c.assemblyName}"></a></h6>
+                        <span class="badge" th:classappend="${c.complete} ? 'text-bg-success' : 'text-bg-warning'"
+                              th:text="${c.complete} ? #{result.final} : #{result.counting}"></span>
+                    </div>
+                    <div class="small text-muted mb-2" th:text="#{result.boothsReported} + ': ' + ${c.boothsReported} + '/' + ${c.boothsTotal}"></div>
+                    <div th:each="t, st : ${c.totals}" th:if="${st.index < 3}" class="mb-2">
+                        <div class="d-flex justify-content-between small">
+                            <span><b th:text="${t.candidate.partyShort}"></b> <span th:text="${t.candidate.name}"></span></span>
+                            <span th:text="${t.votes} + ' (' + ${#numbers.formatDecimal(t.share, 1, 1)} + '%)'"></span>
+                        </div>
+                        <div class="vote-bar"><span th:style="'width:' + ${t.share} + '%;background:' + ${t.partyColor}"></span></div>
+                    </div>
+                    <div class="small" th:if="${c.winner != null}">
+                        <span th:text="${c.complete} ? #{result.won} : #{result.leading}"></span>:
+                        <b th:text="${c.winner.candidate.name}"></b> &middot; <span th:text="#{result.margin}"></span> <b th:text="${c.margin}"></b>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

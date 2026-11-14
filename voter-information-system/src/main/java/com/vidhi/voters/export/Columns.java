@@ -3,35 +3,47 @@ package com.vidhi.voters.export;
 import com.vidhi.voters.model.Voter;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
-/** Single definition of the exported columns, shared by Excel, PDF and the import template. */
+/**
+ * Single definition of the exported columns, shared by Excel, PDF, the import template and the importer.
+ * Headers are message keys ("col.name" ...) translated into the user's language.
+ */
 public final class Columns {
 
-    public record Col(String header, Function<Voter, Object> value, float pdfWidth) {}
+    /**
+     * @param key      message key of the header, also the importer's column id
+     * @param value    cell value; the second argument translates message keys (for gender / relation)
+     * @param pdfWidth relative width in the PDF, 0 = not in the PDF
+     */
+    public record Col(String key, BiFunction<Voter, Function<String, String>, Object> value, float pdfWidth) {}
 
     public static final List<Col> ALL = List.of(
-            new Col("Assembly No", Voter::getAssemblyNo, 5),
-            new Col("Assembly Name", Voter::getAssemblyName, 9),
-            new Col("Booth No", Voter::getBoothNo, 4),
-            new Col("Serial No", Voter::getSerialNo, 4),
-            new Col("EPIC No", Voter::getEpicNo, 9),
-            new Col("Voter Name", Voter::getName, 12),
-            new Col("Relation", v -> v.getRelationType() == null ? "" : v.getRelationType().getLabel(), 0),
-            new Col("Father/Husband Name", Voter::getRelativeName, 12),
-            new Col("Gender", v -> v.getGender() == null ? "" : v.getGender().getLabel(), 5),
-            new Col("Age", Voter::getAge, 3),
-            new Col("House No", Voter::getHouseNo, 5),
-            new Col("Address", Voter::getAddress, 0),
-            new Col("Village/Ward", Voter::getVillageWard, 8),
-            new Col("District", Voter::getDistrict, 0),
-            new Col("Pincode", Voter::getPincode, 0),
-            new Col("Mobile", Voter::getMobile, 8),
-            new Col("Alt Mobile", Voter::getAltMobile, 0),
-            new Col("Email", Voter::getEmail, 0),
-            new Col("Booth Name", Voter::getBoothName, 0),
-            new Col("Category", Voter::getCategory, 0),
-            new Col("Remarks", Voter::getRemarks, 0));
+            new Col("col.assemblyNo", (v, t) -> v.getAssemblyNo(), 4),
+            new Col("col.assemblyName", (v, t) -> v.getAssemblyName(), 0),
+            new Col("col.boothNo", (v, t) -> v.getBoothNo(), 4),
+            new Col("col.serialNo", (v, t) -> v.getSerialNo(), 4),
+            new Col("col.epicNo", (v, t) -> v.getEpicNo(), 9),
+            new Col("col.name", (v, t) -> v.getName(), 11),
+            new Col("col.nameLocal", (v, t) -> v.getNameLocal(), 11),
+            new Col("col.relation", (v, t) -> v.getRelationType() == null ? null : t.apply("relation." + v.getRelationType()), 0),
+            new Col("col.relativeName", (v, t) -> v.getRelativeName(), 11),
+            new Col("col.relativeNameLocal", (v, t) -> v.getRelativeNameLocal(), 11),
+            new Col("col.gender", (v, t) -> v.getGender() == null ? null : t.apply("gender." + v.getGender()), 5),
+            new Col("col.age", (v, t) -> v.getAge(), 3),
+            new Col("col.houseNo", (v, t) -> v.getHouseNo(), 4),
+            new Col("col.address", (v, t) -> v.getAddress(), 9),
+            new Col("col.addressLocal", (v, t) -> v.getAddressLocal(), 0),
+            new Col("col.villageWard", (v, t) -> v.getVillageWard(), 0),
+            new Col("col.district", (v, t) -> v.getDistrict(), 0),
+            new Col("col.pincode", (v, t) -> v.getPincode(), 0),
+            new Col("col.mobile", (v, t) -> v.getMobile(), 8),
+            new Col("col.altMobile", (v, t) -> v.getAltMobile(), 0),
+            new Col("col.email", (v, t) -> v.getEmail(), 0),
+            new Col("col.boothName", (v, t) -> v.getBoothName(), 0),
+            new Col("col.category", (v, t) -> v.getCategory(), 0),
+            new Col("col.remarks", (v, t) -> v.getRemarks(), 0));
 
     /** Narrower set for landscape A4 PDF (pdfWidth > 0). */
     public static List<Col> pdf() {

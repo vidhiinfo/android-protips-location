@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{result.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1300px">
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <h4 class="me-auto mb-0"><i class="bi bi-trophy"></i> <span th:text="${c.assemblyNo} + ' - ' + ${c.assemblyName}"></span>
+            <small class="text-muted fs-6" th:text="${c.election.name}"></small></h4>
+        <a class="btn btn-sm btn-success no-print" th:href="@{/results/contest/export/xlsx(electionId=${c.election.id},assemblyNo=${c.assemblyNo})}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a class="btn btn-sm btn-danger no-print" th:href="@{/results/contest/export/pdf(electionId=${c.election.id},assemblyNo=${c.assemblyNo})}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        <button class="btn btn-sm btn-secondary no-print" data-print><i class="bi bi-printer"></i> <span th:text="#{common.print}"></span></button>
+    </div>
+    <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small" th:text="#{result.totalVotes}"></div><div class="num" th:text="${c.totalVotes}"></div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small" th:text="#{result.electors}"></div><div class="num" th:text="${c.electors}"></div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small" th:text="#{result.turnoutPct}"></div><div class="num" th:text="${#numbers.formatDecimal(c.turnout, 1, 2)}"></div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small" th:text="#{result.boothsReported}"></div><div class="num" th:text="${c.boothsReported} + '/' + ${c.boothsTotal}"></div></div></div>
+    </div>
+    <div class="alert alert-success" th:if="${c.winner != null}">
+        <i class="bi bi-award"></i> <span th:text="${c.complete} ? #{result.won} : #{result.leading}"></span>:
+        <b th:text="${c.winner.candidate.name}"></b> <span dir="auto" th:if="${c.winner.candidate.nameLocal}" th:text="'(' + ${c.winner.candidate.nameLocal} + ')'"></span>
+        - <b th:text="${c.winner.candidate.partyShort}"></b>, <span th:text="#{result.margin}"></span> <b th:text="${c.margin}"></b>
+    </div>
+    <div class="card mb-3"><div class="table-responsive"><table class="table mb-0 align-middle">
+        <thead class="table-light"><tr><th th:text="#{result.rank}"></th><th th:text="#{result.candidate}"></th><th th:text="#{result.party}"></th>
+            <th class="text-end" th:text="#{result.votes}"></th><th style="width:30%" th:text="#{result.voteSharePct}"></th></tr></thead>
+        <tbody><tr th:each="t : ${c.totals}">
+            <td th:text="${t.rank}"></td>
+            <td><span th:text="${t.candidate.name}"></span><span th:if="${t.candidate.nameLocal}" class="local-text" dir="auto" th:text="${t.candidate.nameLocal}"></span></td>
+            <td th:text="${t.candidate.partyShort}"></td>
+            <td class="text-end fw-semibold" th:text="${t.votes}"></td>
+            <td><div class="d-flex align-items-center gap-2"><div class="vote-bar flex-fill"><span th:style="'width:' + ${t.share} + '%;background:' + ${t.partyColor}"></span></div>
+                <span class="small" th:text="${#numbers.formatDecimal(t.share, 1, 2)}"></span></div></td>
+        </tr></tbody></table></div></div>
+
+    <h5 th:text="#{result.boothWise}"></h5>
+    <div class="table-responsive bg-white border rounded mb-4"><table class="table table-sm table-striped mb-0">
+        <thead class="table-light"><tr><th th:text="#{col.boothNo}"></th><th th:text="#{col.boothName}"></th>
+            <th class="text-end" th:each="t : ${c.totals}" th:text="${t.candidate.partyShort}" th:title="${t.candidate.name}"></th>
+            <th class="text-end" th:text="#{report.total}"></th><th th:text="#{result.leader}"></th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(c.booths)}"><td colspan="20" class="text-center text-muted py-3" th:text="#{result.noBooths}"></td></tr>
+            <tr th:each="b : ${c.booths}">
+                <td th:text="${b.boothNo}"></td><td class="small" th:text="${b.boothName}"></td>
+                <td class="text-end" th:each="t : ${c.totals}" th:text="${b.votesFor(t.candidate.id)}"></td>
+                <td class="text-end fw-semibold" th:text="${b.total}"></td>
+                <td th:text="${b.leader?.partyShort}"></td>
+            </tr>
+        </tbody></table></div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

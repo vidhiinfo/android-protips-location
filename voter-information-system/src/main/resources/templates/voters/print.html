@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Print')}"></head>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{common.print})}"></head>
 <body class="print-page" th:attr="data-autoprint=${autoprint} ? 'true' : null">
 <div class="no-print mb-3 d-flex gap-2">
-    <button class="btn btn-primary btn-sm" data-print><i class="bi bi-printer"></i> Print</button>
-    <a class="btn btn-outline-secondary btn-sm" th:href="@{/voters} + '?' + ${f.queryWithSort()}">Back to list</a>
+    <button class="btn btn-primary btn-sm" data-print><i class="bi bi-printer"></i> <span th:text="#{common.print}"></span></button>
+    <a class="btn btn-outline-secondary btn-sm" th:href="@{/voters} + '?' + ${f.queryWithSort()}" th:text="#{common.back}"></a>
 </div>
 <h5 class="text-center mb-0" th:text="${title}"></h5>
 <p class="text-center small text-muted">
-    Records: <span th:text="${#lists.size(voters)}"></span>
-    <span th:if="${summary != ''}"> | Filters: <span th:text="${summary}"></span></span>
-    | Printed: <span th:text="${#temporals.format(#temporals.createNow(), 'dd-MM-yyyy HH:mm')}"></span>
+    <span th:text="#{pdf.records}"></span>: <span th:text="${#lists.size(voters)}"></span>
+    <span th:if="${summary != ''}"> | <span th:text="#{pdf.filters}"></span>: <span th:text="${summary}"></span></span>
+    | <span th:text="#{pdf.generated}"></span> <span th:text="${#temporals.format(#temporals.createNow(), 'dd-MM-yyyy HH:mm')}"></span>
 </p>
 <table>
     <thead>
-    <tr><th>#</th><th>AC</th><th>Booth</th><th>Sr.</th><th>EPIC No</th><th>Voter Name</th><th>Father/Husband</th>
-        <th>Gender</th><th>Age</th><th>House No</th><th>Address</th><th>Mobile</th></tr>
+    <tr><th>#</th><th th:text="#{list.col.ac}"></th><th th:text="#{list.col.booth}"></th><th th:text="#{list.col.sr}"></th>
+        <th th:text="#{col.epicNo}"></th><th th:text="#{col.name}"></th><th th:text="#{list.col.relative}"></th>
+        <th th:text="#{col.gender}"></th><th th:text="#{col.age}"></th><th th:text="#{col.houseNo}"></th>
+        <th th:text="#{col.address}"></th><th th:text="#{col.mobile}"></th></tr>
     </thead>
     <tbody>
     <tr th:each="v, st : ${voters}">
@@ -24,12 +26,13 @@
         <td th:text="${v.boothNo}"></td>
         <td th:text="${v.serialNo}"></td>
         <td th:text="${v.epicNo}"></td>
-        <td th:text="${v.name}"></td>
-        <td th:text="${v.relationDisplay}"></td>
-        <td th:text="${v.gender?.label}"></td>
+        <td><span th:text="${v.name}"></span><span th:if="${v.nameLocal}" class="local-text" dir="auto" th:text="${v.nameLocal}"></span></td>
+        <td><span th:if="${v.relativeName}" th:text="#{${v.relationKey}} + ' ' + ${v.relativeName}"></span>
+            <span th:if="${v.relativeNameLocal}" class="local-text" dir="auto" th:text="${v.relativeNameLocal}"></span></td>
+        <td th:text="${v.gender} ? #{${'gender.' + v.gender}}"></td>
         <td th:text="${v.age}"></td>
         <td th:text="${v.houseNo}"></td>
-        <td th:text="${(v.address ?: '') + (v.villageWard != null ? ', ' + v.villageWard : '')}"></td>
+        <td><span th:text="${v.fullAddress}"></span><span th:if="${v.addressLocal}" class="local-text" dir="auto" th:text="${v.addressLocal}"></span></td>
         <td th:text="${v.mobile}"></td>
     </tr>
     </tbody>

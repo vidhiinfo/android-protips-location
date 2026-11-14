@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{master.candidates})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1300px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <h4 class="me-auto mb-0"><i class="bi bi-database"></i> <span th:text="#{master.candidates}"></span></h4>
+        <form method="get" class="d-flex gap-2">
+            <select name="electionId" class="form-select form-select-sm" data-autosubmit>
+                <option th:each="e : ${elections}" th:value="${e.id}" th:selected="${e.id == electionId}" th:text="${e.name}"></option></select>
+            <select name="assemblyNo" class="form-select form-select-sm" data-autosubmit>
+                <option value="" th:text="#{common.all}"></option>
+                <option th:each="a : ${assemblies}" th:value="${a.assemblyNo}" th:selected="${a.assemblyNo == assemblyNo}" th:text="${a.assemblyNo} + ' - ' + ${a.name}"></option></select>
+        </form>
+        <a sec:authorize="hasRole('ADMIN')" class="btn btn-primary btn-sm text-nowrap" th:href="@{/masters/candidates/new(electionId=${electionId},assemblyNo=${assemblyNo})}"><i class="bi bi-plus-lg"></i> <span th:text="#{common.add}"></span></a>
+    </div>
+    <div class="table-responsive bg-white border rounded"><table class="table table-striped table-hover mb-0">
+        <thead class="table-light"><tr><th th:text="#{master.election}"></th><th th:text="#{col.assemblyNo}"></th><th th:text="#{master.ballotNo}"></th>
+            <th th:text="#{result.candidate}"></th><th th:text="#{master.nameLocal}"></th><th th:text="#{result.party}"></th><th sec:authorize="hasRole('ADMIN')"></th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(items)}"><td colspan="7" class="text-center text-muted py-4" th:text="#{common.noRecords}"></td></tr>
+            <tr th:each="i : ${items}">
+                <td th:text="${i.election.name}"></td><td th:text="${i.assemblyNo}"></td><td th:text="${i.ballotNo}"></td>
+                <td th:text="${i.name}"></td><td dir="auto" th:text="${i.nameLocal}"></td><td th:text="${i.partyShort}"></td>
+                <td class="text-end text-nowrap" sec:authorize="hasRole('ADMIN')">
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/masters/candidates/{id}/edit(id=${i.id})}" th:title="#{common.edit}"><i class="bi bi-pencil"></i></a>
+                    <form th:action="@{/masters/candidates/{id}/delete(id=${i.id})}" method="post" class="d-inline" th:attr="data-confirm=#{common.confirmDelete}">
+                        <button class="btn btn-sm btn-outline-danger" th:title="#{common.delete}"><i class="bi bi-trash"></i></button></form>
+                </td>
+            </tr>
+        </tbody></table></div>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

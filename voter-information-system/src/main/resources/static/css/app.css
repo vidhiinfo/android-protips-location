@@ -19,3 +19,29 @@ body { background: #f4f6fa; }
   .no-print { display: none !important; }
   body { background: #fff; }
 }
+
+/* ---------- multilingual ---------- */
+.local-text { color: #5a6270; font-size: .85em; display: block; }
+[dir="rtl"] .table td, [dir="rtl"] .table th { text-align: right; }
+[dir="rtl"] .text-end { text-align: left !important; }
+.lang-login { max-width: 220px; }
+
+/* ---------- house no link / household popup ---------- */
+a.house-link { font-weight: 600; text-decoration: none; border-bottom: 1px dashed currentColor; }
+a.house-link:hover { border-bottom-style: solid; }
+
+/* ---------- results ---------- */
+.vote-bar { height: .55rem; border-radius: .3rem; background: #e9ecef; overflow: hidden; }
+.vote-bar > span { display: block; height: 100%; }
+.winner-card { border-left: .35rem solid #198754; }
+[dir="rtl"] .winner-card { border-left: 0; border-right: .35rem solid #198754; }
+.booth-done { background: #d1e7dd !important; }
+.report-card:hover { box-shadow: 0 .25rem .75rem rgba(0,0,0,.08); }
+
+/* ---------- dashboard ---------- */
+.chart-box { position: relative; height: 280px; }
+.chart-table { max-height: 280px; overflow: auto; }
+@media print {
+  .chart-card { break-inside: avoid; }
+  .chart-box { height: 240px; }
+}

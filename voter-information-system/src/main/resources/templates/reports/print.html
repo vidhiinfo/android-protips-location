@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(${report.title})}"></head>
+<body class="print-page" th:attr="data-autoprint=${autoprint} ? 'true' : null">
+<div class="no-print mb-3"><button class="btn btn-primary btn-sm" data-print><i class="bi bi-printer"></i> <span th:text="#{common.print}"></span></button></div>
+<h5 class="text-center mb-0" th:text="${report.title}"></h5>
+<p class="text-center small text-muted"><span th:text="${report.subtitle}"></span>
+    | <span th:text="#{pdf.generated}"></span> <span th:text="${#temporals.format(#temporals.createNow(), 'dd-MM-yyyy HH:mm')}"></span></p>
+<div th:fragment="table" class="table-responsive bg-white border rounded">
+    <table class="table table-sm table-striped table-hover mb-0">
+        <thead class="table-light"><tr><th th:each="h : ${report.headers}" th:text="${h}"></th></tr></thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(report.rows)}"><td th:colspan="${#lists.size(report.headers)}" class="text-center text-muted py-4" th:text="#{common.noRecords}"></td></tr>
+            <tr th:each="row : ${report.rows}">
+                <td th:each="cell : ${report.cells(row)}" th:classappend="${cell.number} ? 'text-end'" dir="auto" th:text="${cell.text}"></td>
+            </tr>
+        </tbody>
+        <tfoot th:if="${report.totals != null}" class="table-secondary fw-semibold">
+            <tr><td th:each="cell : ${report.cells(report.totals)}" th:classappend="${cell.number} ? 'text-end'" th:text="${cell.text}"></td></tr>
+        </tfoot>
+    </table>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

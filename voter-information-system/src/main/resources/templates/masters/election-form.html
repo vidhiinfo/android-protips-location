@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{master.election})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1300px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h4 class="mb-3" th:text="#{master.election}"></h4>
+    <form th:object="${item}" method="post" th:action="@{/masters/elections}" class="card" style="max-width:900px" novalidate>
+        <div class="card-body row g-3">
+            <input type="hidden" th:field="*{id}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="col-12 alert alert-danger py-2 mb-0"><div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div></div>
+            <div th:replace="~{fragments/form :: input('name', 'master.electionName', 'col-md-8', 'text', true)}"></div>
+            <div class="col-md-4"><label class="form-label" th:text="#{master.electionType}"></label>
+                <select th:field="*{type}" class="form-select"><option th:each="t : ${types}" th:value="${t}" th:text="#{${'election.type.' + t}}"></option></select></div>
+            <div th:replace="~{fragments/form :: input('year', 'master.year', 'col-md-3', 'number', false)}"></div>
+            <div th:replace="~{fragments/form :: input('pollDate', 'master.pollDate', 'col-md-4', 'date', false)}"></div>
+            <div class="col-md-5 d-flex align-items-end"><div class="form-check">
+                <input type="checkbox" th:field="*{current}" class="form-check-input">
+                <label class="form-check-label" th:for="${#ids.prev('current')}" th:text="#{master.currentHelp}"></label></div></div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{common.save}"></span></button>
+            <a class="btn btn-outline-secondary" th:href="@{/masters/elections}" th:text="#{common.cancel}"></a>
+        </div>
+    </form>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

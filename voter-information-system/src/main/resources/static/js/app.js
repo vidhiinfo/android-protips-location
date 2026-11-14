@@ -15,3 +15,27 @@ if (document.body && document.body.hasAttribute('data-autoprint')) {
 document.addEventListener('change', function (e) {
   if (e.target.matches('[data-autosubmit]')) e.target.form.submit();
 });
+// Language switcher: reload the current page with ?lang=xx (server stores it in a cookie)
+document.addEventListener('change', function (e) {
+  if (e.target.matches('[data-lang-switch]')) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('lang', e.target.value);
+    url.searchParams.delete('error');
+    window.location.href = url.toString();
+  }
+});
+// House No links: show everyone at that house in a popup (falls back to a new window without JS)
+document.addEventListener('click', function (e) {
+  var link = e.target.closest('a[data-household]');
+  if (!link || !window.bootstrap) return;
+  e.preventDefault();
+  var body = document.getElementById('householdBody');
+  var href = link.getAttribute('href');
+  document.getElementById('householdOpen').setAttribute('href', href);
+  body.innerHTML = '<div class="text-center py-4"><div class="spinner-border"></div></div>';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('householdModal')).show();
+  fetch(href + (href.indexOf('?') < 0 ? '?' : '&') + 'fragment=1', { credentials: 'same-origin' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(function (html) { body.innerHTML = html; })
+    .catch(function () { window.open(href, '_blank'); });
+});

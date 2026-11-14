@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{master.candidate})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1300px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h4 class="mb-3" th:text="#{master.candidate}"></h4>
+    <form th:object="${item}" method="post" th:action="@{/masters/candidates}" class="card" style="max-width:900px" novalidate>
+        <div class="card-body row g-3">
+            <input type="hidden" th:field="*{id}">
+            <div th:if="${#fields.hasGlobalErrors()}" class="col-12 alert alert-danger py-2 mb-0"><div th:each="e : ${#fields.globalErrors()}" th:text="${e}"></div></div>
+            <div class="col-md-6"><label class="form-label" th:text="#{master.election}"></label>
+                <select name="election" class="form-select" th:classappend="${#fields.hasErrors('election')} ? 'is-invalid'">
+                    <option value="">--</option>
+                    <option th:each="e : ${elections}" th:value="${e.id}" th:selected="${item.election != null and item.election.id == e.id}" th:text="${e.name}"></option></select>
+                <div class="invalid-feedback" th:errors="*{election}"></div></div>
+            <div class="col-md-4"><label class="form-label" th:text="#{col.assemblyNo}"></label>
+                <select th:field="*{assemblyNo}" class="form-select" th:errorclass="is-invalid">
+                    <option value="">--</option>
+                    <option th:each="a : ${assemblies}" th:value="${a.assemblyNo}" th:text="${a.assemblyNo} + ' - ' + ${a.name}"></option></select>
+                <div class="invalid-feedback" th:errors="*{assemblyNo}"></div></div>
+            <div th:replace="~{fragments/form :: input('ballotNo', 'master.ballotNo', 'col-md-2', 'number', false)}"></div>
+            <div th:replace="~{fragments/form :: input('name', 'result.candidate', 'col-md-6', 'text', false)}"></div>
+            <div th:replace="~{fragments/form :: input('nameLocal', 'master.nameLocal', 'col-md-6', 'text', true)}"></div>
+            <div class="col-md-6"><label class="form-label" th:text="#{result.party}"></label>
+                <select name="party" class="form-select">
+                    <option value="" th:text="#{master.independent}"></option>
+                    <option th:each="p : ${parties}" th:value="${p.id}" th:selected="${item.party != null and item.party.id == p.id}" th:text="${p.shortName} + ' - ' + ${p.name}"></option></select></div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{common.save}"></span></button>
+            <a class="btn btn-outline-secondary" th:href="@{/masters/candidates}" th:text="#{common.cancel}"></a>
+        </div>
+    </form>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

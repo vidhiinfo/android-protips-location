@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* Reusable form controls bound to the form's th:object. local=true adds dir="auto" for regional-language text. */-->
+<div th:fragment="input(name, label, cls, type, local)" th:class="${cls}">
+    <label class="form-label" th:for="${name}" th:text="#{${label}}"></label>
+    <input th:type="${type}" th:field="*{__${name}__}" class="form-control" th:errorclass="is-invalid"
+           th:attr="dir=${local} ? 'auto' : null">
+    <div class="invalid-feedback" th:errors="*{__${name}__}"></div>
+</div>
+</body>
+</html>

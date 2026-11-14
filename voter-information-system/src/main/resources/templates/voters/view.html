@@ -1,41 +1,60 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
 <head th:replace="~{fragments/layout :: head(${voter.name})}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav}"></nav>
-<div class="container" style="max-width:900px">
+<div class="container" style="max-width:1000px">
     <div th:replace="~{fragments/layout :: flash}"></div>
-    <div class="d-flex align-items-center mb-3 no-print">
-        <a th:href="@{/voters}" class="btn btn-sm btn-outline-secondary me-auto"><i class="bi bi-arrow-left"></i> Back</a>
-        <button class="btn btn-sm btn-secondary me-2" data-print><i class="bi bi-printer"></i> Print slip</button>
-        <th:block sec:authorize="hasRole('ADMIN')">
-            <a th:href="@{/voters/{id}/edit(id=${voter.id})}" class="btn btn-sm btn-primary me-2"><i class="bi bi-pencil"></i> Edit</a>
-            <form th:action="@{/voters/{id}/delete(id=${voter.id})}" method="post" data-confirm="Delete this voter?">
-                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Delete</button>
+    <div class="d-flex align-items-center gap-2 mb-3 no-print">
+        <a th:href="@{/voters}" class="btn btn-sm btn-outline-secondary me-auto"><i class="bi bi-arrow-left"></i> <span th:text="#{common.back}"></span></a>
+        <button class="btn btn-sm btn-secondary" data-print><i class="bi bi-printer"></i> <span th:text="#{view.printSlip}"></span></button>
+        <th:block sec:authorize="hasRole('OPERATOR')">
+            <a th:href="@{/voters/{id}/edit(id=${voter.id})}" class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i> <span th:text="#{common.edit}"></span></a>
+            <form th:action="@{/voters/{id}/delete(id=${voter.id})}" method="post" th:attr="data-confirm=#{common.confirmDelete}">
+                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> <span th:text="#{common.delete}"></span></button>
             </form>
         </th:block>
     </div>
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             <h4 class="mb-0" th:text="${voter.name}"></h4>
-            <div class="text-muted mb-3" th:text="${voter.relationDisplay}"></div>
+            <div th:if="${voter.nameLocal}" class="fs-5" dir="auto" th:text="${voter.nameLocal}"></div>
+            <div class="text-muted mb-3" th:if="${voter.relativeName}">
+                <span th:text="#{${voter.relationKey}} + ' ' + ${voter.relativeName}"></span>
+                <span th:if="${voter.relativeNameLocal}" dir="auto" th:text="' / ' + ${voter.relativeNameLocal}"></span></div>
             <dl class="row detail mb-0">
-                <dt class="col-sm-3">EPIC No</dt><dd class="col-sm-9"><code th:text="${voter.epicNo}"></code></dd>
-                <dt class="col-sm-3">Gender / Age</dt><dd class="col-sm-9" th:text="${voter.gender?.label} + (${voter.age} != null ? ' / ' + ${voter.age} + ' yrs' : '')"></dd>
-                <dt class="col-sm-3">Assembly</dt><dd class="col-sm-9" th:text="${voter.assemblyNo} + (${voter.assemblyName} != null ? ' - ' + ${voter.assemblyName} : '')"></dd>
-                <dt class="col-sm-3">Booth / Part No</dt><dd class="col-sm-9" th:text="${voter.boothNo} + (${voter.boothName} != null ? ' - ' + ${voter.boothName} : '')"></dd>
-                <dt class="col-sm-3">Serial No</dt><dd class="col-sm-9" th:text="${voter.serialNo} ?: '-'"></dd>
-                <dt class="col-sm-3">Address</dt><dd class="col-sm-9" th:text="${voter.fullAddress} ?: '-'"></dd>
-                <dt class="col-sm-3">Mobile</dt><dd class="col-sm-9" th:text="${voter.mobile} ?: '-'"></dd>
-                <dt class="col-sm-3">Alternate mobile</dt><dd class="col-sm-9" th:text="${voter.altMobile} ?: '-'"></dd>
-                <dt class="col-sm-3">Email</dt><dd class="col-sm-9" th:text="${voter.email} ?: '-'"></dd>
-                <dt class="col-sm-3">Category</dt><dd class="col-sm-9" th:text="${voter.category} ?: '-'"></dd>
-                <dt class="col-sm-3">Remarks</dt><dd class="col-sm-9" th:text="${voter.remarks} ?: '-'"></dd>
-                <dt class="col-sm-3 no-print">Last updated</dt><dd class="col-sm-9 no-print" th:text="${#temporals.format(voter.updatedAt, 'dd-MM-yyyy HH:mm')}"></dd>
+                <dt class="col-sm-3" th:text="#{col.epicNo}"></dt><dd class="col-sm-9"><code th:text="${voter.epicNo}"></code></dd>
+                <dt class="col-sm-3" th:text="#{col.gender} + ' / ' + #{col.age}"></dt><dd class="col-sm-9" th:text="(${voter.gender} ? #{${'gender.' + voter.gender}} : '') + (${voter.age} != null ? ' / ' + ${voter.age} : '')"></dd>
+                <dt class="col-sm-3" th:text="#{col.assemblyNo}"></dt><dd class="col-sm-9" th:text="${voter.assemblyNo} + (${voter.assemblyName} != null ? ' - ' + ${voter.assemblyName} : '')"></dd>
+                <dt class="col-sm-3" th:text="#{col.boothNo}"></dt><dd class="col-sm-9" th:text="${voter.boothNo} + (${voter.boothName} != null ? ' - ' + ${voter.boothName} : '')"></dd>
+                <dt class="col-sm-3" th:text="#{col.serialNo}"></dt><dd class="col-sm-9" th:text="${voter.serialNo} ?: '-'"></dd>
+                <dt class="col-sm-3" th:text="#{col.houseNo}"></dt><dd class="col-sm-9">
+                    <a th:if="${voter.houseNo}" class="house-link" data-household th:href="@{/voters/{id}/household(id=${voter.id})}" th:text="${voter.houseNo}"></a>
+                    <span th:unless="${voter.houseNo}">-</span></dd>
+                <dt class="col-sm-3" th:text="#{col.address}"></dt><dd class="col-sm-9"><span th:text="${voter.fullAddress} ?: '-'"></span>
+                    <span th:if="${voter.addressLocal}" class="local-text" dir="auto" th:text="${voter.addressLocal}"></span></dd>
+                <dt class="col-sm-3" th:text="#{col.mobile}"></dt><dd class="col-sm-9" th:text="${voter.mobile} ?: '-'"></dd>
+                <dt class="col-sm-3" th:text="#{col.altMobile}"></dt><dd class="col-sm-9" th:text="${voter.altMobile} ?: '-'"></dd>
+                <dt class="col-sm-3" th:text="#{col.email}"></dt><dd class="col-sm-9" th:text="${voter.email} ?: '-'"></dd>
+                <dt class="col-sm-3" th:text="#{col.category}"></dt><dd class="col-sm-9" th:text="${voter.category} ?: '-'"></dd>
+                <dt class="col-sm-3" th:text="#{col.remarks}"></dt><dd class="col-sm-9" dir="auto" th:text="${voter.remarks} ?: '-'"></dd>
+                <dt class="col-sm-3 no-print" th:text="#{view.updated}"></dt><dd class="col-sm-9 no-print" th:text="${#temporals.format(voter.updatedAt, 'dd-MM-yyyy HH:mm')}"></dd>
             </dl>
         </div>
     </div>
+    <div class="card mb-4 no-print" th:if="${#lists.size(household) > 1}">
+        <div class="card-header fw-semibold"><i class="bi bi-house"></i> <span th:text="#{household.title}"></span>
+            <span class="badge text-bg-primary" th:text="${#lists.size(household)}"></span></div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between" th:each="h : ${household}" th:if="${h.id != voter.id}">
+                <span><a th:href="@{/voters/{id}(id=${h.id})}" th:text="${h.name}"></a>
+                    <span th:if="${h.nameLocal}" class="text-muted" dir="auto" th:text="' / ' + ${h.nameLocal}"></span></span>
+                <span class="text-muted small" th:text="(${h.gender} ? #{${'gender.' + h.gender}} : '') + ', ' + ${h.age}"></span>
+            </li>
+        </ul>
+    </div>
 </div>
+<div th:replace="~{fragments/layout :: householdModal}"></div>
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${currentLang.code}" th:dir="${currentLang.rtl} ? 'rtl' : 'ltr'">
+<head th:replace="~{fragments/layout :: head(#{result.entry})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<div class="container-fluid px-3" style="max-width:1100px">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h4 class="mb-3"><i class="bi bi-pencil-square"></i> <span th:text="#{result.entry}"></span></h4>
+    <form method="get" class="card card-body mb-3">
+        <div class="row g-2">
+            <div class="col-md-5"><label class="form-label small" th:text="#{master.election}"></label><select name="electionId" class="form-select form-select-sm" data-autosubmit>
+                <option th:if="${#lists.isEmpty(elections)}" value="" th:text="#{result.noElection}"></option>
+                <option th:each="e : ${elections}" th:value="${e.id}" th:selected="${election != null and e.id == election.id}" th:text="${e.name}"></option></select></div>
+            <div class="col-md-4"><label class="form-label small" th:text="#{col.assemblyNo}"></label>
+                <select name="assemblyNo" class="form-select form-select-sm" data-autosubmit>
+                    <option value="">--</option>
+                    <option th:each="a : ${seats}" th:value="${a.key}" th:selected="${a.key == assemblyNo}" th:text="${a.key} + ' - ' + ${a.value}"></option></select></div>
+        </div>
+    </form>
+    <div th:if="${election != null and #maps.isEmpty(seats)}" class="alert alert-info" th:text="#{result.noContests}"></div>
+
+    <div th:if="${boothList != null}" class="mb-3">
+        <div class="small text-muted mb-1" th:text="#{result.pickBooth}"></div>
+        <div class="d-flex flex-wrap gap-1">
+            <a th:each="b : ${boothList}" class="btn btn-sm"
+               th:classappend="${b.boothNo == boothNo} ? 'btn-primary' : (${#lists.contains(reported, b.boothNo)} ? 'btn-outline-success booth-done' : 'btn-outline-secondary')"
+               th:href="@{/results/entry(electionId=${election.id},assemblyNo=${assemblyNo},boothNo=${b.boothNo})}" th:title="${b.name}" th:text="${b.boothNo}"></a>
+        </div>
+        <div class="small text-muted mt-1"><span class="badge booth-done text-success border border-success">&nbsp;</span> <span th:text="#{result.reportedLegend}"></span></div>
+    </div>
+
+    <form th:if="${entries != null}" method="post" th:action="@{/results/entry}" class="card">
+        <input type="hidden" name="electionId" th:value="${election.id}">
+        <input type="hidden" name="assemblyNo" th:value="${assemblyNo}">
+        <input type="hidden" name="boothNo" th:value="${boothNo}">
+        <div class="card-header fw-semibold" th:text="#{col.boothNo} + ' ' + ${boothNo}"></div>
+        <div th:if="${#maps.isEmpty(entries)}" class="card-body text-muted" th:text="#{result.noCandidates}"></div>
+        <table class="table mb-0 align-middle" th:unless="${#maps.isEmpty(entries)}">
+            <thead class="table-light"><tr><th th:text="#{master.ballotNo}"></th><th th:text="#{result.candidate}"></th><th th:text="#{result.party}"></th><th style="width:180px" th:text="#{result.votes}"></th></tr></thead>
+            <tbody><tr th:each="en : ${entries}">
+                <td th:text="${en.key.ballotNo}"></td>
+                <td><span th:text="${en.key.name}"></span><span th:if="${en.key.nameLocal}" class="local-text" dir="auto" th:text="${en.key.nameLocal}"></span></td>
+                <td th:text="${en.key.partyShort}"></td>
+                <td><input type="text" inputmode="numeric" class="form-control text-end" th:name="'votes[' + ${en.key.id} + ']'" th:value="${en.value}" required></td>
+            </tr></tbody>
+        </table>
+        <div class="card-footer d-flex gap-2" th:unless="${#maps.isEmpty(entries)}">
+            <button class="btn btn-primary"><i class="bi bi-check-lg"></i> <span th:text="#{result.saveNext}"></span></button>
+            <a class="btn btn-outline-secondary" th:href="@{/results/contest(electionId=${election.id},assemblyNo=${assemblyNo})}" th:text="#{result.viewResult}"></a>
+        </div>
+    </form>
+</div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
