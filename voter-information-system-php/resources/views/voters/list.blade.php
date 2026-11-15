@@ -26,7 +26,7 @@
                 <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> {{ t('common.search') }}</button>
                 <a href="{{ url('/voters') }}" class="btn btn-outline-secondary" title="{{ t('common.reset') }}"><i class="bi bi-x-lg"></i></a></div>
         </div>
-        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile'])->contains(fn($k) => $f->get($k) !== null))
+        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','politicalStatus','beneficiary','membershipNo','deleted'])->contains(fn($k) => $f->get($k) !== null))
         <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#adv">{{ t('list.advanced') }} <i class="bi bi-chevron-down"></i></a>
         <div id="adv" class="collapse {{ $adv ? 'show' : '' }}"><div class="row g-2 mt-1">
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.name') }}</label><input name="name" value="{{ $f->get('name') }}" class="form-control" dir="auto"></div>
@@ -49,6 +49,17 @@
                 <select name="hasMobile" class="form-select"><option value="">{{ t('common.any') }}</option>
                     <option value="true" @selected($f->get('hasMobile') === 'true')>{{ t('filter.withMobile') }}</option>
                     <option value="false" @selected($f->get('hasMobile') === 'false')>{{ t('filter.withoutMobile') }}</option></select></div>
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('col.caste') }}</label>
+                <select name="caste" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach($castes as $c)<option value="{{ $c }}" @selected($c === $f->get('caste'))>{{ $c }}</option>@endforeach</select></div>
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('col.politicalStatus') }}</label>
+                <select name="politicalStatus" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach($politicalStatuses as $c)<option value="{{ $c }}" @selected($c === $f->get('politicalStatus'))>{{ $c }}</option>@endforeach</select></div>
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.beneficiary') }}</label><input name="beneficiary" value="{{ $f->get('beneficiary') }}" class="form-control" dir="auto"></div>
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('col.membershipNo') }}</label><input name="membershipNo" value="{{ $f->get('membershipNo') }}" class="form-control"></div>
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('col.deleted') }}</label>
+                <select name="deleted" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach(['exclude', 'only'] as $d)<option value="{{ $d }}" @selected($d === $f->get('deleted'))>{{ t('filter.deleted.'.$d) }}</option>@endforeach</select></div>
         </div></div>
         <input type="hidden" name="sort" value="{{ $f->sort }}"><input type="hidden" name="dir" value="{{ $f->dir }}"><input type="hidden" name="size" value="{{ $f->size }}">
     </div></form>

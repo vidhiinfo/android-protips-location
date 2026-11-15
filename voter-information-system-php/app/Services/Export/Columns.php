@@ -34,6 +34,7 @@ class Columns
             ['col.boothName', fn (Voter $v) => $v->booth_name, 0],
             ['col.category', fn (Voter $v) => $v->category, 0],
             ['col.remarks', fn (Voter $v) => $v->remarks, 0],
+            ...array_map(fn ($field, $d) => ['col.' . $d[0], fn (Voter $v) => $v->profileValue($field), 0], array_keys(Voter::PROFILE), Voter::PROFILE),
         ];
     }
 

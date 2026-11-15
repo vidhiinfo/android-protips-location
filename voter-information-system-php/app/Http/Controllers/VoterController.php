@@ -40,6 +40,7 @@ class VoterController extends Controller
         $a = $f->get('assemblyNo');
         return view('voters.list', ['f' => $f, 'page' => $page, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
+            'castes' => $this->voters->distinctValues('caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
             'total' => $this->voters->total($this->user()->workAssembly()), 'genderCounts' => $this->voters->genderCounts($this->user()->workAssembly())]);
     }
 
@@ -83,8 +84,10 @@ class VoterController extends Controller
             }
         });
         if ($validator->fails()) {
-            $v->fill($data);
-            return response()->view('voters.form', $this->formData($v) + ['errors' => $validator->errors()], 200);
+            // invalid dates cannot go into the model's date casts: show them back as typed
+            $bad = array_intersect_key($data, array_flip(array_keys(array_filter(Voter::PROFILE, fn ($d) => $d[1] === 'date'))), $validator->errors()->messages());
+            $v->fill(array_diff_key($data, $bad));
+            return response()->view('voters.form', $this->formData($v) + ['errors' => $validator->errors(), 'rawDates' => $bad], 200);
         }
         $v->fill($data);
         $this->voters->save($v);
@@ -113,12 +116,14 @@ class VoterController extends Controller
     {
         $s = [];
         foreach (['q' => 'filter.search', 'name' => 'col.name', 'relativeName' => 'col.relativeName', 'epicNo' => 'col.epicNo', 'mobile' => 'col.mobile',
-                     'houseNo' => 'col.houseNo', 'district' => 'col.district', 'villageWard' => 'col.villageWard'] as $k => $label) {
+                     'houseNo' => 'col.houseNo', 'district' => 'col.district', 'villageWard' => 'col.villageWard', 'caste' => 'col.caste',
+                     'politicalStatus' => 'col.politicalStatus', 'beneficiary' => 'filter.beneficiary', 'membershipNo' => 'col.membershipNo'] as $k => $label) {
             if ($v = $f->get($k)) $s[] = t($label) . ': ' . $v;
         }
         if ($g = $f->get('gender')) $s[] = t('col.gender') . ': ' . t('gender.' . $g);
         if ($f->get('ageMin') !== null || $f->get('ageMax') !== null) $s[] = t('col.age') . ': ' . ($f->get('ageMin') ?? 18) . '-' . ($f->get('ageMax') ?? '+');
         if ($m = $f->get('hasMobile')) $s[] = t($m === 'true' ? 'filter.withMobile' : 'filter.withoutMobile');
+        if ($d = $f->get('deleted')) $s[] = t('filter.deleted.' . $d);
         return implode(', ', $s);
     }
 
@@ -150,20 +155,26 @@ class VoterController extends Controller
     }
 
     // ---------------------------------------------------------------- import
-    public function importForm() { return view('voters.import'); }
+    public function importForm() { return view('voters.import', $this->importData()); }
+
+    private function importData(): array
+    {
+        return ['assemblies' => $this->voters->assemblies(), 'defaultAssembly' => $this->user()->workAssembly()];
+    }
 
     public function template(ExcelExporter $x) { return $this->download($x->template(), 'voter-import-template.xlsx', self::XLSX); }
 
     public function import(Request $r, ExcelImporter $imp)
     {
         $file = $r->file('file');
-        if (!$file || strtolower($file->getClientOriginalExtension()) !== 'xlsx') return view('voters.import', ['error' => t('import.error.file')]);
+        if (!$file || strtolower($file->getClientOriginalExtension()) !== 'xlsx') return view('voters.import', $this->importData() + ['error' => t('import.error.file')]);
         try {
-            $res = $imp->import($file->getRealPath(), $this->user()->workAssembly());
+            $default = is_numeric($r->input('defaultAssembly')) ? (int) $r->input('defaultAssembly') : null;
+            $res = $imp->import($file->getRealPath(), $this->user()->workAssembly(), $default);
         } catch (\Throwable $e) {
-            return view('voters.import', ['error' => t('import.error.read') . ' ' . $e->getMessage()]);
+            return view('voters.import', $this->importData() + ['error' => t('import.error.read') . ' ' . $e->getMessage()]);
         }
         $this->audit()->log('IMPORT', 'VOTER', null, $file->getClientOriginalName() . ": {$res['inserted']} added, {$res['updated']} updated, " . count($res['errors']) . ' errors');
-        return view('voters.import', ['result' => $res]);
+        return view('voters.import', $this->importData() + ['result' => $res]);
     }
 }

@@ -142,6 +142,54 @@ class VoterAppTest extends TestCase
         $this->assertFalse(Voter::where('epic_no', 'IMP0000002')->exists());
     }
 
+    public function test_import_ward_list_with_customer_columns(): void
+    {
+        $this->login();
+        $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $ws = $book->getActiveSheet();
+        $ws->fromArray([
+            ['Ward', 'Booth', 'V.SNo.', 'VoterID', 'Name', 'Gender', "Relative's Name", 'Age', 'Houseno', 'Address', 'Mobile(Original)', 'Mobile1',
+             'Membershipno', 'DOB', 'Marriage Anniv.', 'Deleted', 'Shift1', 'Shift2', 'Place of Origin', 'Current Place', 'Linked With',
+             'Social Status', 'Political Status', 'Organisational Status', 'Beneficiary1', 'Beneficiary2', 'Beneficiary3', 'Caste', 'Poling Station'],
+            ['Ward 12', '7', '101', 'xyz9876543', 'Mohan Lal', 'M', 'Hari Ram', '', '22/B', 'Gandhi Path', '+91 98290 12345', '9414012345',
+             'BJM-5521', '05/03/1975', '1998-11-20', 'No', 'Day', '', 'Sikar', 'Jaipur', 'Ward President', 'Influencer', 'Supporter',
+             'Booth Committee', 'PM Awas', 'Ujjwala', '', 'Saini', 'Govt. School, Gandhi Nagar'],
+            ['Ward 12', '7', '102', 'XYZ9876544', 'Kamla Devi', 'F', 'Mohan Lal', '45', '22/B', 'Gandhi Path', '', '', '', '', '', 'Yes', '', '', '', '', '', '', '', '', '', '', '', 'Saini', ''],
+            ['Ward 12', '7', '103', 'XYZ9876545', 'Bad Date', 'M', 'X', '30', '', '', '', '', '', '31/02/1990', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ]);
+        $ws->setCellValue('N4', '31/02/1990');
+        $path = tempnam(sys_get_temp_dir(), 'imp') . '.xlsx';
+        \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, 'Xlsx')->save($path);
+        $html = $this->post('/voters/import', ['file' => new UploadedFile($path, 'ward12.xlsx', null, null, true), 'defaultAssembly' => 46])->assertOk()->getContent();
+        $v = Voter::where('epic_no', 'XYZ9876543')->firstOrFail();
+        $this->assertSame([46, 7, 101, 'Ward 12', 'MALE', 'Hari Ram', '22/B', '9829012345', '9414012345'],
+            [$v->assembly_no, $v->booth_no, $v->serial_no, $v->village_ward, $v->gender, $v->relative_name, $v->house_no, $v->mobile, $v->alt_mobile]);
+        $this->assertSame(['BJM-5521', '1975-03-05', '1998-11-20', false, 'Day', 'Sikar', 'Jaipur', 'Ward President', 'Influencer', 'Supporter',
+            'Booth Committee', 'PM Awas', 'Ujjwala', 'Saini', 'Govt. School, Gandhi Nagar'],
+            [$v->membership_no, $v->dob->format('Y-m-d'), $v->anniversary->format('Y-m-d'), $v->deleted, $v->shift1, $v->place_of_origin, $v->current_place,
+             $v->linked_with, $v->social_status, $v->political_status, $v->organisational_status, $v->beneficiary1, $v->beneficiary2, $v->caste, $v->booth_name]);
+        $this->assertGreaterThan(40, $v->age);   // calculated from DOB
+        $this->assertTrue(Voter::where('epic_no', 'XYZ9876544')->value('deleted'));
+        $this->assertFalse(Voter::where('epic_no', 'XYZ9876545')->exists());   // 31 Feb rejected with a row error
+        $this->assertStringContainsString(t('validation.date'), $html);
+
+        // new fields: filters, details page, export, edit form
+        $this->get('/voters?caste=Saini&deleted=exclude')->assertOk()->assertSee('XYZ9876543')->assertDontSee('XYZ9876544');
+        $this->get('/voters?beneficiary=awas')->assertOk()->assertSee('XYZ9876543');
+        $this->get('/voters?deleted=only')->assertOk()->assertSee('XYZ9876544')->assertDontSee('XYZ9876543');
+        $this->get('/voters/' . $v->id)->assertOk()->assertSee('05-03-1975')->assertSee('Booth Committee');
+        $this->get('/voters/' . $v->id . '/edit')->assertOk()->assertSee('value="1975-03-05"', false);
+        $this->post('/voters/' . $v->id, array_merge($v->only(['epic_no', 'name', 'gender', 'assembly_no', 'booth_no']), ['dob' => '2999-01-01', 'deleted' => '1']))
+            ->assertOk()->assertSee(t('validation.date'));
+        $this->post('/voters/' . $v->id, array_merge($v->only(['epic_no', 'name', 'gender', 'assembly_no', 'booth_no']), ['dob' => '1975-03-06', 'deleted' => '1', 'caste' => 'Zz-Test-Caste']))
+            ->assertRedirect();
+        $this->assertSame(['1975-03-06', true, 'Zz-Test-Caste'], [$v->fresh()->dob->format('Y-m-d'), $v->fresh()->deleted, $v->fresh()->caste]);
+        $x = $this->get('/voters/export/excel?caste=Zz-Test-Caste')->assertOk();
+        $rows = \PhpOffice\PhpSpreadsheet\IOFactory::load($x->baseResponse->getFile()->getPathname())->getActiveSheet()->toArray();
+        $this->assertContains(t('col.caste'), $rows[3]);
+        $this->assertContains('06-03-1975', $rows[4]);
+    }
+
     public function test_admin_manages_masters_and_users(): void
     {
         $this->login();

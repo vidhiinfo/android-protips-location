@@ -16,7 +16,7 @@
         <div class="col-md-3"><label class="form-label small">{{ t('col.assemblyNo') }}</label>
             <select name="assemblyNo" class="form-select form-select-sm" @disabled($me->scoped())><option value="">{{ t('common.all') }}</option>
                 @foreach($assemblies as $no => $name)<option value="{{ $no }}" @selected($no == $assemblyNo)>{{ $no }} - {{ $name }}</option>@endforeach</select></div>
-        @if(in_array($reportId, ['age-gender', 'first-time-voters', 'senior-voters', 'phone-bank']))
+        @if(in_array($reportId, ['age-gender', 'first-time-voters', 'senior-voters', 'phone-bank', 'caste-summary', 'birthdays']))
         <div class="col-md-2"><label class="form-label small">{{ t('col.boothNo') }}</label>
             <select name="boothNo" class="form-select form-select-sm"><option value="">{{ t('common.all') }}</option>
                 @foreach($booths as $b)<option value="{{ $b }}" @selected($b == $boothNo)>{{ $b }}</option>@endforeach</select></div>

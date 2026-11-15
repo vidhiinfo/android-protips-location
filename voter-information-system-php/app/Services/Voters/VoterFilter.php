@@ -15,7 +15,7 @@ class VoterFilter
         'gender' => 'gender', 'age' => 'age', 'assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'serialNo' => 'serial_no',
         'villageWard' => 'village_ward', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
     public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
-        'district', 'villageWard', 'houseNo', 'hasMobile'];
+        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted'];
 
     public array $v = [];
     public string $sort = 'assemblyNo';
@@ -34,6 +34,7 @@ class VoterFilter
             if (isset($f->v[$k])) { if (is_numeric($f->v[$k])) $f->v[$k] = (int) $f->v[$k]; else unset($f->v[$k]); }
         }
         if (isset($f->v['gender']) && !in_array($f->v['gender'], ['MALE', 'FEMALE', 'OTHER'], true)) unset($f->v['gender']);
+        if (isset($f->v['deleted']) && !in_array($f->v['deleted'], ['exclude', 'only'], true)) unset($f->v['deleted']);
         if (isset($f->v['hasMobile'])) $f->v['hasMobile'] = filter_var($f->v['hasMobile'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
         $sort = (string) $r->input('sort', 'assemblyNo');
         $f->sort = array_key_exists($sort, self::SORTABLE) ? $sort : 'assemblyNo';
@@ -84,26 +85,30 @@ class VoterFilter
                 $l = $like($term);
                 $q->where(function ($w) use ($l) {
                     foreach (['name', 'name_local', 'relative_name', 'relative_name_local', 'epic_no', 'mobile', 'alt_mobile', 'house_no',
-                                 'address', 'address_local', 'village_ward', 'booth_name'] as $c) {
+                                 'address', 'address_local', 'village_ward', 'booth_name', 'membership_no', 'caste'] as $c) {
                         $w->orWhereRaw("lower($c) like ?", [$l]);
                     }
                 });
             }
         }
         foreach (['name' => ['name', 'name_local'], 'relativeName' => ['relative_name', 'relative_name_local'], 'epicNo' => ['epic_no'],
-                     'mobile' => ['mobile', 'alt_mobile']] as $k => $cols) {
+                     'mobile' => ['mobile', 'alt_mobile'], 'membershipNo' => ['membership_no'],
+                     'beneficiary' => ['beneficiary1', 'beneficiary2', 'beneficiary3']] as $k => $cols) {
             if ($s = $this->get($k)) {
                 $l = $like($s);
                 $q->where(function ($w) use ($cols, $l) { foreach ($cols as $c) $w->orWhereRaw("lower($c) like ?", [$l]); });
             }
         }
         if ($s = $this->get('houseNo')) $q->whereRaw('lower(house_no) = ?', [Text::lower($s)]);
-        foreach (['assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward'] as $k => $c) {
+        foreach (['assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward',
+                     'caste' => 'caste', 'politicalStatus' => 'political_status'] as $k => $c) {
             if (($val = $this->get($k)) !== null) $q->where($c, $val);
         }
         if (($a = $this->get('ageMin')) !== null) $q->where('age', '>=', $a);
         if (($a = $this->get('ageMax')) !== null) $q->where('age', '<=', $a);
         if ($this->get('hasMobile') === 'true') $q->whereNotNull('mobile')->where('mobile', '<>', '');
+        if ($this->get('deleted') === 'exclude') $q->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted'));
+        if ($this->get('deleted') === 'only') $q->where('deleted', true);
         if ($this->get('hasMobile') === 'false') $q->where(fn ($w) => $w->whereNull('mobile')->orWhere('mobile', ''));
         return $q;
     }

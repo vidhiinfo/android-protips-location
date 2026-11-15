@@ -17,13 +17,13 @@ use Illuminate\Support\Facades\DB;
 class ReportService
 {
     public const SECTIONS = [
-        'voters' => ['assembly-summary', 'booth-summary', 'village-summary', 'age-gender', 'category-summary'],
-        'outreach' => ['first-time-voters', 'senior-voters', 'large-households', 'phone-bank'],
+        'voters' => ['assembly-summary', 'booth-summary', 'village-summary', 'age-gender', 'category-summary', 'caste-summary'],
+        'outreach' => ['first-time-voters', 'senior-voters', 'large-households', 'phone-bank', 'birthdays'],
         'election' => ['results-summary', 'party-performance', 'booth-priority'],
         'quality' => ['duplicate-voters'],
     ];
     /** Sensitive personal data (social category): needs REPORT_SENSITIVE. */
-    public const ADMIN_ONLY = ['category-summary'];
+    public const ADMIN_ONLY = ['category-summary', 'caste-summary'];
     public const SWING_PCT = 10.0;
 
     public function __construct(private ResultService $results, private VoterService $voters) {}
@@ -38,6 +38,8 @@ class ReportService
             'village-summary' => $this->villageSummary($assemblyNo),
             'age-gender' => $this->ageGender($assemblyNo, $boothNo),
             'category-summary' => $this->categorySummary($assemblyNo),
+            'caste-summary' => $this->casteSummary($assemblyNo, $boothNo),
+            'birthdays' => $this->birthdays($assemblyNo, $boothNo),
             'first-time-voters' => $this->voterList($id, $assemblyNo, $boothNo, 18, 21, false),
             'senior-voters' => $this->voterList($id, $assemblyNo, $boothNo, 85, null, false),
             'phone-bank' => $this->voterList($id, $assemblyNo, $boothNo, null, null, true),
@@ -146,6 +148,68 @@ class ReportService
             foreach ($c as $g => $n) $tot[$g] += $n;
         }
         $r->totals = [t('report.total'), $tot['MALE'], $tot['FEMALE'], $tot['OTHER'], $grand, $grand ? 100.0 : 0.0];
+        return $r;
+    }
+
+    /** Voters per caste (as recorded), with gender split and mobile reach. */
+    public function casteSummary(?int $a, ?int $b): Report
+    {
+        $r = (new Report(t('report.caste-summary'), $this->h('col.caste', 'gender.MALE', 'gender.FEMALE', 'gender.OTHER', 'report.total',
+            'report.sharePct', 'report.withMobile', 'report.mobilePct')))->subtitle($this->scope($a, $b) . ' | ' . t('report.sensitiveNote'));
+        $rows = DB::table('voters')->selectRaw("trim(coalesce(caste, '')) as caste, gender, count(*) as c,
+                sum(case when mobile is not null and mobile <> '' then 1 else 0 end) as m")
+            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($b !== null, fn ($q) => $q->where('booth_no', $b))
+            ->where(fn ($q) => $q->where('deleted', false)->orWhereNull('deleted'))
+            ->groupBy(DB::raw("trim(coalesce(caste, ''))"), 'gender')->get();
+        $by = [];
+        foreach ($rows as $x) {
+            $k = mb_strtolower($x->caste) ?: '';
+            $by[$k] ??= ['name' => $x->caste !== '' ? $x->caste : t('report.cat.none'), 'g' => ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0], 'm' => 0];
+            $by[$k]['g'][in_array($x->gender, ['MALE', 'FEMALE'], true) ? $x->gender : 'OTHER'] += (int) $x->c;
+            $by[$k]['m'] += (int) $x->m;
+        }
+        $grand = array_sum(array_map(fn ($x) => array_sum($x['g']), $by));
+        uasort($by, fn ($p, $q) => array_sum($q['g']) <=> array_sum($p['g']));
+        $tot = [0, 0, 0, 0, 0];
+        foreach ($by as $k => $x) {
+            $t = array_sum($x['g']);
+            $r->add([$x['name'], $x['g']['MALE'], $x['g']['FEMALE'], $x['g']['OTHER'], $t, self::pct($t, $grand), $x['m'], self::pct($x['m'], $t)]);
+            $tot = [$tot[0] + $x['g']['MALE'], $tot[1] + $x['g']['FEMALE'], $tot[2] + $x['g']['OTHER'], $tot[3] + $t, $tot[4] + $x['m']];
+        }
+        $r->totals = [t('report.total'), $tot[0], $tot[1], $tot[2], $tot[3], $grand ? 100.0 : 0.0, $tot[4], self::pct($tot[4], $tot[3])];
+        return $r;
+    }
+
+    /** Birthdays and marriage anniversaries in the next 30 days (greetings, visits), soonest first. */
+    public function birthdays(?int $a, ?int $b): Report
+    {
+        $r = new Report(t('report.birthdays'), $this->h('report.daysLeft', 'report.occasion', 'col.assemblyNo', 'col.boothNo', 'col.serialNo',
+            'col.epicNo', 'col.name', 'col.nameLocal', 'col.relativeName', 'col.houseNo', 'col.address', 'col.mobile'));
+        $today = new \DateTimeImmutable('today');
+        $found = [];
+        $q = $this->filter($a, $b)->apply(Voter::query())->where(fn ($w) => $w->whereNotNull('dob')->orWhereNotNull('anniversary'))
+            ->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted'))->orderBy('id');
+        foreach ($q->lazy(2000) as $v) {
+            foreach (['dob' => 'birthday', 'anniversary' => 'anniversary'] as $col => $kind) {
+                if (!$v->$col) continue;
+                $date = \DateTimeImmutable::createFromInterface($v->$col);
+                [$m, $d] = [(int) $date->format('m'), (int) $date->format('d')];
+                $y = (int) $today->format('Y');
+                $next = $today->setDate($y, $m, $m === 2 && $d === 29 && !checkdate(2, 29, $y) ? 28 : $d);
+                if ($next < $today) $next = $today->setDate($y + 1, $m, $m === 2 && $d === 29 && !checkdate(2, 29, $y + 1) ? 28 : $d);
+                $days = (int) $today->diff($next)->days;
+                if ($days > 30) continue;
+                $years = (int) $next->format('Y') - (int) $date->format('Y');
+                $found[] = [$days, t('report.occasion.' . $kind) . ' ' . $date->format('d-m') . ' (' . $years . ')', $v];
+            }
+            if (count($found) >= Report::MAX_ROWS) { $r->capped = true; break; }
+        }
+        usort($found, fn ($x, $y) => [$x[0], $x[2]->booth_no, $x[2]->serial_no] <=> [$y[0], $y[2]->booth_no, $y[2]->serial_no]);
+        foreach ($found as [$days, $label, $v]) {
+            $r->add([$days, $label, $v->assembly_no, $v->booth_no, $v->serial_no, $v->epic_no, $v->name, $v->name_local, $v->relative_name,
+                $v->house_no, $v->fullAddress(), $v->mobile]);
+        }
+        $r->subtitle($this->scope($a, $b) . ' | ' . t('report.count', count($r->rows)));
         return $r;
     }
 

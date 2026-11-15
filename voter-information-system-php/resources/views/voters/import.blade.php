@@ -6,9 +6,17 @@
     <div class="card mb-3"><div class="card-body">
         <ol class="mb-3"><li><a href="{{ url('/voters/import/template') }}">{{ t('import.step1') }}</a></li><li>{{ t('import.step2') }}</li><li>{{ t('import.step3') }}</li><li>{{ t('import.step4') }}</li></ol>
         @if(!empty($error))<div class="alert alert-danger py-2">{{ $error }}</div>@endif
-        <form action="{{ url('/voters/import') }}" method="post" enctype="multipart/form-data" class="d-flex gap-2">@csrf
-            <input type="file" name="file" accept=".xlsx" class="form-control" required>
-            <button class="btn btn-primary text-nowrap"><i class="bi bi-upload"></i> {{ t('import.upload') }}</button></form>
+        <form action="{{ url('/voters/import') }}" method="post" enctype="multipart/form-data">@csrf
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5"><label class="form-label">{{ t('import.defaultAssembly') }}</label>
+                    <select name="defaultAssembly" class="form-select" @disabled($me->scoped())>
+                        <option value="">--</option>
+                        @foreach($assemblies as $no => $name)<option value="{{ $no }}" @selected($no == $defaultAssembly)>{{ $no }}{{ $name ? ' - ' . $name : '' }}</option>@endforeach
+                    </select></div>
+                <div class="col-md-7 d-flex gap-2"><input type="file" name="file" accept=".xlsx" class="form-control" required>
+                    <button class="btn btn-primary text-nowrap"><i class="bi bi-upload"></i> {{ t('import.upload') }}</button></div>
+                <div class="col-12 form-text mt-1">{{ t('import.defaultAssemblyHelp') }}</div>
+            </div></form>
     </div></div>
     @if(!empty($result))
     <div class="card"><div class="card-body">

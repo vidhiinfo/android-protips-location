@@ -46,7 +46,8 @@ In *Software → MultiPHP INI Editor* (or *Select PHP Version → Options*), set
 1. cPanel → **phpMyAdmin**.
 2. Click your database (e.g. `myacct_voter_db`) in the left column.
 3. **Import** tab → *Choose file* → select `db/schema.sql` from the zip (unzip it on your PC first) → **Go**.
-4. You should see 16 tables: `voters`, `assemblies`, `booths`, `app_users` and the rest.
+4. The database must use the character set **utf8mb4** with the collation **utf8mb4_unicode_ci** (choose it in phpMyAdmin → Operations if you are asked). Never choose `utf8` / `utf8mb3`.
+5. You should see 16 tables: `voters`, `assemblies`, `booths`, `app_users` and the rest.
 
 > The tables use **utf8mb4**, so Hindi, Urdu, Bengali, Tamil and other scripts are stored correctly. Do not change the collation.
 
@@ -120,7 +121,7 @@ On most cPanel hosts PHP runs as your own user, so `755` / `644` is enough. Neve
 Then set up your data:
 
 1. **Masters → Assemblies**, **Booths**, **Parties**, **Elections**, **Candidates**.
-2. **Voters → Bulk Import**: download the template, fill it in Excel, upload. A whole assembly (1 lakh+ rows) in one file is fine. On hosts with a short time limit, upload booth-wise files.
+2. **Voters → Bulk Import**: download the template, fill it in Excel, upload. A ward-wise sheet with columns such as *Ward, Booth, V.SNo., VoterID, Name, Gender, Relative's Name, Age, Houseno, Address, Mobile(Original), Mobile1, Membershipno, DOB, Marriage Anniv., Deleted, … Caste, Poling Station* can be uploaded as it is. Choose its assembly in "Assembly for rows without one". A whole assembly (1 lakh+ rows) in one file is fine. On hosts with a short time limit, upload booth-wise files.
 3. **Admin → Users**: create users, give them roles and lock them to an assembly if needed.
 
 ## 8. HTTPS (free SSL)
@@ -175,6 +176,13 @@ The provider keys go in `.env` too (see the comments in `.env.example`), never i
 2. Upload the new zip and extract it over the old folder. **Keep your `.env`** and the `storage` folder.
 3. If the release notes mention database changes, import the supplied SQL file in phpMyAdmin.
 4. Delete the files in `bootstrap/cache` (not the folder) so the new code is used.
+
+### Database changes in this version
+
+The voters table has 16 new columns: membership no., DOB, marriage anniversary, deleted, shift 1 / 2, place of origin, current place, linked with, social / political / organisational status, beneficiary 1–3 and caste.
+
+* **New installation**: nothing extra to do. `db/schema.sql` already has the columns.
+* **Database created with an older version**: phpMyAdmin → your database → **Import** → `db/upgrade-2026-11-voter-profile-fields.sql` (run it once). Existing voters are kept. The Java version keeps working with the upgraded table.
 
 ## 12. Backups
 

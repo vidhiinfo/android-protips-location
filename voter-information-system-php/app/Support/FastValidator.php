@@ -40,12 +40,23 @@ class FastValidator
                     'in' => in_array((string) $v, $arg, true),
                     'regex' => (bool) preg_match($arg, (string) $v),
                     'email' => filter_var($v, FILTER_VALIDATE_EMAIL) !== false,
+                    'date_format' => is_string($v) && ($d = \DateTime::createFromFormat('!' . $arg[0], $v)) !== false && $d->format($arg[0]) === $v,
+                    'before_or_equal' => ($t = self::time($v)) !== null && $t <= self::time($arg[0]),
+                    'after' => ($t = self::time($v)) !== null && $t > self::time($arg[0]),
+                    'boolean' => in_array($v, [true, false, 0, 1, '0', '1'], true),
                     default => throw new \LogicException("FastValidator: unsupported rule $name"),
                 };
                 if (!$ok) return $this->fail($field, $name, $arg);
             }
         }
         return null;
+    }
+
+    private static function time($v): ?int
+    {
+        if (!is_string($v) && !is_numeric($v)) return null;
+        $t = strtotime((string) $v);
+        return $t === false ? null : $t;
     }
 
     private function fail(string $field, string $rule, array|string|null $arg = null): array

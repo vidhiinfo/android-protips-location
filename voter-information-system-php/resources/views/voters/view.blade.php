@@ -22,7 +22,7 @@
             <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> {{ t('common.delete') }}</button></form>@endif
     </div>
     <div class="card mb-3"><div class="card-body">
-        <h4 class="mb-0">{{ $v->name }}</h4>
+        <h4 class="mb-0">{{ $v->name }} @if($v->deleted)<span class="badge text-bg-danger fs-6 align-middle">{{ t('col.deleted') }}</span>@endif</h4>
         @if($v->name_local)<div class="fs-5" dir="auto">{{ $v->name_local }}</div>@endif
         @if($v->relative_name)<div class="text-muted mb-3">{{ $v->relationDisplay() }}@if($v->relative_name_local)<span dir="auto"> / {{ $v->relative_name_local }}</span>@endif</div>@endif
         <dl class="row detail mb-0">
@@ -41,6 +41,17 @@
             <dt class="col-sm-3 no-print">{{ t('view.updated') }}</dt><dd class="col-sm-9 no-print">{{ $v->updated_at?->format('d-m-Y H:i') }}</dd>
         </dl>
     </div></div>
+    @php($profile = array_filter(array_map(fn ($f) => $v->profileValue($f), array_combine(array_keys(\App\Models\Voter::PROFILE), array_keys(\App\Models\Voter::PROFILE))), fn ($x) => $x !== null))
+    @unset($profile['deleted'])
+    @if($profile)
+    <div class="card mb-3 no-print"><div class="card-header fw-semibold"><i class="bi bi-person-vcard"></i> {{ t('form.section.profile') }}</div><div class="card-body">
+        <dl class="row detail mb-0">
+            @foreach($profile as $field => $val)
+            <dt class="col-sm-3">{{ t('col.'.\App\Models\Voter::PROFILE[$field][0]) }}</dt><dd class="col-sm-9" dir="auto">{{ $val }}</dd>
+            @endforeach
+        </dl>
+    </div></div>
+    @endif
     @if(count($household) > 1)
     <div class="card mb-4 no-print"><div class="card-header fw-semibold"><i class="bi bi-house"></i> {{ t('household.title') }} <span class="badge text-bg-primary">{{ count($household) }}</span></div>
         <ul class="list-group list-group-flush">@foreach($household as $h) @if($h->id !== $v->id)

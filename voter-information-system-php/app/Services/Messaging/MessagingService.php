@@ -60,9 +60,11 @@ class MessagingService
     {
         $blocked = $this->blocked($channel);
         $seen = []; $out = [];
-        $list = $this->voters->searchAll($f);
-        $c = ['voters' => count($list), 'noMobile' => 0, 'optedOut' => 0, 'duplicates' => 0];
-        foreach ($list as $v) {
+        $f = clone $f;
+        $f->set('deleted', 'exclude');   // never message voters deleted from the roll
+        $c = ['voters' => 0, 'noMobile' => 0, 'optedOut' => 0, 'duplicates' => 0];
+        foreach ($this->voters->searchLazy($f) as $v) {
+            $c['voters']++;
             $e = $this->e164($v->mobile);
             if (!$e) { $c['noMobile']++; continue; }
             if (isset($blocked[substr($e, -10)])) { $c['optedOut']++; continue; }

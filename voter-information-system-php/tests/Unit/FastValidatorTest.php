@@ -29,6 +29,10 @@ class FastValidatorTest extends TestCase
             $ok + ['serial_no' => 0], $ok + ['mobile' => '5876543210'], $ok + ['mobile' => '98765'], $ok + ['alt_mobile' => '98765432100'],
             $ok + ['pincode' => '30200'], $ok + ['email' => 'not-an-email'], $ok + ['relation_type' => 'UNCLE'], $ok + ['remarks' => str_repeat('a', 501)],
             $ok + ['house_no' => str_repeat('1', 31)], $ok + ['category' => null],
+            $ok + ['dob' => '1980-02-29', 'anniversary' => '2005-11-20', 'deleted' => '1', 'caste' => 'Jat', 'beneficiary1' => 'PM Awas'],
+            $ok + ['dob' => '1981-02-29'], $ok + ['dob' => '29-02-1980'], $ok + ['dob' => '2999-01-01'], $ok + ['dob' => '1899-12-31'],
+            $ok + ['anniversary' => 'tomorrow'], $ok + ['deleted' => 'yes'], $ok + ['deleted' => 0], $ok + ['caste' => str_repeat('क', 101)],
+            $ok + ['membership_no' => str_repeat('9', 51)],
         ];
         $fast = new FastValidator(VoterService::rules(), Validation::messages());
         foreach ($cases as $i => $data) {

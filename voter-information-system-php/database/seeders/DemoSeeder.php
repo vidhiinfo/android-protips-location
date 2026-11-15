@@ -29,6 +29,46 @@ class DemoSeeder extends Seeder
             ['Garden Reach:গার্ডেন রিচ', 'Khidirpur:খিদিরপুর', 'Metiabruz:মেটিয়াবুরুজ'], 'রাস্তা'],
     ];
 
+    private const CASTES = [45 => ['Saini', 'Jat', 'Brahmin', 'Meena', 'Rajput', 'Agarwal', 'Mali', 'Kumhar', 'Bairwa', 'Gurjar'],
+        46 => ['Ansari', 'Qureshi', 'Siddiqui', 'Yadav', 'Kurmi', 'Pathan', 'Brahmin', 'Kayastha'],
+        52 => ['Kayastha', 'Brahmin', 'Mahishya', 'Namasudra', 'Sheikh', 'Baidya', 'Rajbanshi']];
+    private const SCHEMES = ['PM Awas', 'Ujjwala', 'PM Kisan', 'Ayushman Bharat', 'Old Age Pension', 'Ladli Behna', 'Free Ration'];
+    private const POLITICAL = ['Supporter', 'Supporter', 'Neutral', 'Neutral', 'Neutral', 'Opposition', 'Karyakarta'];
+    private const SOCIAL = ['Influencer', 'Teacher', 'Shopkeeper', 'Farmer', 'Retired Govt. Employee', 'Doctor', 'Self-help Group'];
+    private const ORG = ['Booth President', 'Booth Committee', 'Mahila Morcha', 'Yuva Morcha', 'Ward Committee'];
+
+    /** Profile fields of one demo voter (consistent with the age; some birthdays fall in the coming weeks). */
+    private static function profile(int $ac, int $age, bool $married, string $caste): array
+    {
+        $today = now();
+        $soon = mt_rand(0, 9) === 0;   // ~10 % celebrate in the next 30 days
+        $dob = $soon ? $today->copy()->subYears($age)->addDays(mt_rand(0, 29))
+            : $today->copy()->subYears($age)->subDays(mt_rand(1, 330));
+        $ann = null;
+        if ($married && mt_rand(0, 1)) {
+            $years = mt_rand(1, max(1, $age - 21));
+            $ann = mt_rand(0, 9) === 0 ? $today->copy()->addDays(mt_rand(0, 29))->subYears($years) : $today->copy()->subYears($years)->subDays(mt_rand(1, 330));
+        }
+        $b = [];
+        foreach (array_rand(array_flip(self::SCHEMES), 3) as $sch) if (mt_rand(0, 3) === 0) $b[] = $sch;
+        $member = mt_rand(0, 6) === 0;
+        $deleted = mt_rand(0, 70) === 0;
+        return [
+            'dob' => mt_rand(0, 4) ? $dob->format('Y-m-d') : null,
+            'anniversary' => $ann?->format('Y-m-d'),
+            'caste' => mt_rand(0, 9) ? $caste : null,
+            'political_status' => mt_rand(0, 2) ? self::POLITICAL[mt_rand(0, count(self::POLITICAL) - 1)] : null,
+            'social_status' => mt_rand(0, 7) === 0 ? self::SOCIAL[mt_rand(0, count(self::SOCIAL) - 1)] : null,
+            'organisational_status' => $member && mt_rand(0, 2) === 0 ? self::ORG[mt_rand(0, count(self::ORG) - 1)] : null,
+            'membership_no' => $member ? sprintf('JVP-%d-%05d', $ac, mt_rand(1, 99999)) : null,
+            'beneficiary1' => $b[0] ?? null, 'beneficiary2' => $b[1] ?? null, 'beneficiary3' => $b[2] ?? null,
+            'place_of_origin' => mt_rand(0, 5) === 0 ? ['Sikar', 'Ajmer', 'Barabanki', 'Sitapur', 'Howrah', 'Hooghly', 'Bihar'][mt_rand(0, 6)] : null,
+            'current_place' => null, 'linked_with' => null,
+            'shift1' => null, 'shift2' => null,
+            'deleted' => $deleted,
+        ];
+    }
+
     private static function pair(string $s): array { return explode(':', $s); }
     private static function pick(array $a): array { return self::pair($a[mt_rand(0, count($a) - 1)]); }
 
@@ -48,6 +88,8 @@ class DemoSeeder extends Seeder
                 $serial = 1;
                 $rows = [];
                 $add = function (array $v) use (&$rows, &$epic, &$serial, $ac, $name, $district, $now) {
+                    $v += self::profile($ac, (int) $v['age'], in_array($v['relation_type'], ['HUSBAND'], true) || ($v['gender'] === 'MALE' && $v['age'] > 30), $v['caste_pick']);
+                    unset($v['caste_pick']);
                     $rows[] = $v + ['epic_no' => $v['epic_no'] ?? sprintf('DEM%07d', ++$epic), 'assembly_no' => $ac, 'assembly_name' => $name, 'serial_no' => $serial++,
                         'district' => $district, 'created_at' => $now, 'updated_at' => $now];
                 };
@@ -55,7 +97,7 @@ class DemoSeeder extends Seeder
                     $sur = self::pick($surnames); $area = self::pick($areas);
                     $st = mt_rand(1, 30); $house = (string) mt_rand(1, 300); $booth = mt_rand(1, $boothsPer);
                     $head = self::pick($male); $grand = self::pick($male); $headAge = mt_rand(35, 69); $members = mt_rand(1, 5);
-                    $base = ['booth_no' => $booth, 'booth_name' => $boothName($booth), 'house_no' => $house, 'address' => "Street $st",
+                    $base = ['caste_pick' => self::CASTES[$ac][mt_rand(0, count(self::CASTES[$ac]) - 1)], 'booth_no' => $booth, 'booth_name' => $boothName($booth), 'house_no' => $house, 'address' => "Street $st",
                         'address_local' => "$street $st, {$area[1]}", 'village_ward' => $area[0],
                         'pincode' => $ac == 45 ? (string) (302001 + mt_rand(0, 8)) : ($ac == 46 ? (string) (226001 + mt_rand(0, 8)) : '700024')];
                     if ($fam % 12 == 5) {

@@ -39,6 +39,22 @@ CREATE TABLE IF NOT EXISTS voters (
     email               VARCHAR(120),
     category            VARCHAR(50),
     remarks             VARCHAR(500),
+    membership_no       VARCHAR(50)           COMMENT 'party membership no.',
+    dob                 DATE,
+    anniversary         DATE                  COMMENT 'marriage anniversary',
+    deleted             TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '1 = deleted from the electoral roll',
+    shift1              VARCHAR(100),
+    shift2              VARCHAR(100),
+    place_of_origin     VARCHAR(150),
+    current_place       VARCHAR(150),
+    linked_with         VARCHAR(150),
+    social_status       VARCHAR(100),
+    political_status    VARCHAR(100),
+    organisational_status VARCHAR(100),
+    beneficiary1        VARCHAR(150)          COMMENT 'government scheme beneficiary',
+    beneficiary2        VARCHAR(150),
+    beneficiary3        VARCHAR(150),
+    caste               VARCHAR(100),
     created_at          DATETIME(6)  NOT NULL,
     updated_at          DATETIME(6)  NOT NULL,
     CONSTRAINT uk_voter_epic UNIQUE (epic_no),
@@ -47,7 +63,9 @@ CREATE TABLE IF NOT EXISTS voters (
     INDEX idx_voter_assembly_booth (assembly_no, booth_no),
     INDEX idx_voter_mobile (mobile),
     INDEX idx_voter_district (district),
-    INDEX idx_voter_village (village_ward)
+    INDEX idx_voter_village (village_ward),
+    INDEX idx_voter_caste (caste),
+    INDEX idx_voter_membership_no (membership_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------- masters

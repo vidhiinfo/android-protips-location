@@ -23,6 +23,10 @@ class Validation
             'code.regex' => t('validation.roleCode'),
             'election_year.between' => t('validation.year'),
             'unique' => t('validation.duplicate'),
+            'date_format' => t('validation.date'),
+            'before_or_equal' => t('validation.date'),
+            'after' => t('validation.date'),
+            'boolean' => t('validation.required'),
         ];
     }
 

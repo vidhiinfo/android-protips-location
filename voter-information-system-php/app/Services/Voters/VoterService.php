@@ -81,6 +81,13 @@ class VoterService
     public function districts(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('district')->where('district', '<>', '')->distinct()->orderBy('district')->pluck('district')->all(); }
     public function villages(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('village_ward')->where('village_ward', '<>', '')->distinct()->orderBy('village_ward')->pluck('village_ward')->all(); }
 
+    /** Distinct non-empty values of a column (filter drop-downs: caste, political status). */
+    public function distinctValues(string $column, ?int $a): array
+    {
+        return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull($column)->where($column, '<>', '')
+            ->distinct()->orderBy($column)->limit(300)->pluck($column)->all();
+    }
+
     public function total(?int $a): int { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->count(); }
 
     public function genderCounts(?int $a): array
@@ -118,6 +125,10 @@ class VoterService
             'email' => ['nullable', 'email', 'max:120'],
             'category' => ['nullable', 'max:50'],
             'remarks' => ['nullable', 'max:500'],
-        ];
+        ] + array_map(fn ($d) => match ($d[1]) {
+            'date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today', 'after:1900-01-01'],
+            'checkbox' => ['nullable', 'boolean'],
+            default => ['nullable', 'max:' . $d[2]],
+        }, Voter::PROFILE);
     }
 }

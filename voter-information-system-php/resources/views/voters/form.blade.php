@@ -44,6 +44,21 @@
             @include('partials.input', ['name' => 'email', 'label' => 'col.email', 'cls' => 'col-md-4', 'type' => 'email', 'value' => $v->email])
             <div class="col-12"><label class="form-label">{{ t('col.remarks') }}</label><textarea name="remarks" class="form-control" rows="2" maxlength="500" dir="auto">{{ $v->remarks }}</textarea></div>
         </div></div>
+        <div class="card mb-3"><div class="card-header fw-semibold">{{ t('form.section.profile') }}</div><div class="card-body row g-3">
+            @foreach(\App\Models\Voter::PROFILE as $field => [$key, $type])
+                @if($type === 'checkbox')
+                <div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2">
+                    <input type="hidden" name="{{ $field }}" value="0">
+                    <input class="form-check-input" type="checkbox" name="{{ $field }}" id="{{ $field }}" value="1" @checked($v->$field)>
+                    <label class="form-check-label" for="{{ $field }}">{{ t('col.'.$key) }}</label></div></div>
+                @elseif($type === 'date')
+                @include('partials.input', ['name' => $field, 'label' => 'col.'.$key, 'cls' => 'col-md-3', 'type' => 'date',
+                    'value' => $v->$field instanceof \DateTimeInterface ? $v->$field->format('Y-m-d') : ($rawDates[$field] ?? $v->getRawOriginal($field))])
+                @else
+                @include('partials.input', ['name' => $field, 'label' => 'col.'.$key, 'cls' => 'col-md-3', 'value' => $v->$field, 'local' => true])
+                @endif
+            @endforeach
+        </div></div>
         <div class="d-flex gap-2 mb-4">
             <button class="btn btn-primary"><i class="bi bi-check-lg"></i> {{ t('common.save') }}</button>
             <a href="{{ $v->exists ? url('/voters/'.$v->id) : url('/voters') }}" class="btn btn-outline-secondary">{{ t('common.cancel') }}</a>
