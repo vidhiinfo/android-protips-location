@@ -75,7 +75,8 @@ DB_CONNECTION=mysql DB_DATABASE=voter_test DB_USERNAME=... DB_PASSWORD=... php a
 | `resources/views` | Blade templates (Bootstrap 5, RTL for Urdu) |
 | `lang/messages/*.json` | all screen text, one file per language |
 | `config/voters.php` | languages, login, user source, messaging settings (read from `.env`) |
-| `db/schema.sql` | MySQL tables, the same as the Java version |
+| `db/schema.sql` | MySQL tables, empty (for your real data), the same as the Java version |
+| `db/voter_db_demo.sql` | full database **with demo data**, restore with phpMyAdmin → Import |
 | `database/seeders/DemoSeeder.php` | demo data |
 | `docs/SHARED-HOSTING.md` | hosting guide (cPanel and IIS) |
 
