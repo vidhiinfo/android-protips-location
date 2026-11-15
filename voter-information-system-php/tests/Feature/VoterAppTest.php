@@ -225,6 +225,19 @@ class VoterAppTest extends TestCase
         }
     }
 
+    public function test_age_group_counts_link_to_the_voter_list(): void
+    {
+        $this->login();
+        $html = $this->get('/reports/age-gender?assemblyNo=45')->assertOk()->getContent();
+        $this->assertStringContainsString('/voters?assemblyNo=45&amp;ageMin=26&amp;ageMax=35&amp;gender=FEMALE', $html);
+        $this->assertStringContainsString('/voters?assemblyNo=45&amp;ageMin=81&amp;gender=MALE', $html);     // 81+ has no upper limit
+        $women = Voter::where('assembly_no', 45)->whereBetween('age', [26, 35])->where('gender', 'FEMALE')->count();
+        $list = $this->get('/voters?assemblyNo=45&ageMin=26&ageMax=35&gender=FEMALE')->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/' . preg_quote(t('list.showing', $women ? 1 : 0, min(25, $women), $women), '/') . '/', $list);
+        $this->assertStringStartsWith('PK', file_get_contents($this->get('/voters/export/excel?assemblyNo=45&ageMin=26&ageMax=35&gender=FEMALE')->baseResponse->getFile()->getPathname()));
+        $this->get('/reports/age-gender?assemblyNo=45&print=1')->assertOk()->assertDontSee('ageMin=26', false);   // no links when printing
+    }
+
     public function test_duplicate_report_finds_planted_duplicates(): void
     {
         $this->login();

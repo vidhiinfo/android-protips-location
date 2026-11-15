@@ -144,10 +144,18 @@ class ReportService
             $t = array_sum($c);
             if ($i === count($groups) && $t === 0) continue;
             $label = $i === count($groups) ? t('report.ageUnknown') : ($groups[$i][1] >= 200 ? $groups[$i][0] . '+' : $groups[$i][0] . '-' . $groups[$i][1]);
-            $r->add([$label, $c['MALE'], $c['FEMALE'], $c['OTHER'], $t, self::pct($t, $grand)]);
+            // each count opens the voter list with that age group (and gender), ready for Excel / PDF / print
+            $links = [];
+            if ($i < count($groups)) {
+                $base = ['assemblyNo' => $a, 'boothNo' => $b, 'ageMin' => $groups[$i][0], 'ageMax' => $groups[$i][1] >= 200 ? null : $groups[$i][1]];
+                $links = [0 => $base, 1 => $base + ['gender' => 'MALE'], 2 => $base + ['gender' => 'FEMALE'], 3 => $base + ['gender' => 'OTHER'], 4 => $base];
+            }
+            $r->add([$label, $c['MALE'], $c['FEMALE'], $c['OTHER'], $t, self::pct($t, $grand)], $links);
             foreach ($c as $g => $n) $tot[$g] += $n;
         }
         $r->totals = [t('report.total'), $tot['MALE'], $tot['FEMALE'], $tot['OTHER'], $grand, $grand ? 100.0 : 0.0];
+        $all = ['assemblyNo' => $a, 'boothNo' => $b];
+        $r->links['totals'] = [1 => $all + ['gender' => 'MALE'], 2 => $all + ['gender' => 'FEMALE'], 3 => $all + ['gender' => 'OTHER'], 4 => $all];
         return $r;
     }
 
