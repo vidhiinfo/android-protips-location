@@ -26,3 +26,12 @@ if (!function_exists('canAny')) {
         return false;
     }
 }
+
+if (!function_exists('versioned_asset')) {
+    /** asset() + ?v=<file time>, so browsers load the new CSS / JS right after an update instead of a cached copy. */
+    function versioned_asset(string $path): string
+    {
+        $file = public_path($path);
+        return asset($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
+    }
+}

@@ -81,7 +81,7 @@
     </div>
     <div class="table-responsive bg-white border rounded"><table class="table table-hover table-striped mb-0">
         <thead class="table-light"><tr>
-            @foreach(['assemblyNo' => 'list.col.ac', 'boothNo' => 'list.col.booth', 'serialNo' => 'list.col.sr', 'epicNo' => 'col.epicNo', 'name' => 'col.name',
+            @foreach(['assemblyNo' => 'list.col.ac', 'wardNo' => 'col.wardNo', 'boothNo' => 'list.col.booth', 'serialNo' => 'list.col.sr', 'epicNo' => 'col.epicNo', 'name' => 'col.name',
                       'relativeName' => 'list.col.relative', 'gender' => 'col.gender', 'age' => 'col.age', 'villageWard' => 'col.villageWard', 'mobile' => 'col.mobile'] as $col => $label)
                 <th><a href="{{ $f->sortLink($col) }}">{{ t($label) }} @if($f->sort === $col)<i class="bi {{ $f->dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down' }}"></i>@endif</a></th>
             @endforeach
@@ -90,7 +90,7 @@
         <tbody>
         @forelse($page as $v)
             <tr>
-                <td>{{ $v->assembly_no }}</td><td>{{ $v->booth_no }}</td><td>{{ $v->serial_no }}</td><td><code>{{ $v->epic_no }}</code></td>
+                <td>{{ $v->assembly_no }}</td><td>{{ $v->ward_no }}</td><td>{{ $v->booth_no }}</td><td>{{ $v->serial_no }}</td><td><code>{{ $v->epic_no }}</code></td>
                 <td><a href="{{ url('/voters/'.$v->id) }}">{{ $v->name }}</a>@if($v->name_local)<span class="local-text" dir="auto">{{ $v->name_local }}</span>@endif</td>
                 <td>{{ $v->relationDisplay() }}@if($v->relative_name_local)<span class="local-text" dir="auto">{{ $v->relative_name_local }}</span>@endif</td>
                 <td>{{ $v->genderLabel() }}</td><td>{{ $v->age }}</td><td>{{ $v->village_ward }}</td>

@@ -250,6 +250,13 @@ class VoterAppTest extends TestCase
         $this->assertStringContainsString('name="wardNo"', $html);
         $this->assertStringContainsString('"2":' . json_encode($inWard2), html_entity_decode($html));
         $this->assertStringContainsString(t('list.showing', 1, min(25, $n), $n), $html);
+        // the Booth list itself is already limited on the server (works even with an old cached app.js)
+        preg_match('/<select name="boothNo"[^>]*>(.*?)<\/select>/s', $html, $m);
+        preg_match_all('/<option value="(\d+)"/', $m[1], $opts);
+        $this->assertSame(array_map('strval', $inWard2), $opts[1]);
+        // a booth picked before switching to another ward is dropped instead of giving an empty list
+        $this->assertStringContainsString(t('list.showing', 1, min(25, $n), $n), $this->get('/voters?assemblyNo=45&wardNo=2&boothNo=1')->getContent());
+        $this->assertStringContainsString('?v=', $html);   // versioned app.js / app.css
         // export and print follow the filter
         $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($this->get('/voters/export/excel?assemblyNo=45&wardNo=2')->baseResponse->getFile()->getPathname())->getActiveSheet()->toArray();
         $this->assertSame($n + 4, count($book));

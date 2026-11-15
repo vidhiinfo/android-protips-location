@@ -78,7 +78,13 @@ class Voter extends Model
     /** Address without the house no. (shown in its own column). */
     public function fullAddress(): string
     {
-        return implode(', ', array_filter([$this->address, $this->village_ward, $this->district, $this->pincode], fn ($p) => $p !== null && $p !== ''));
+        $parts = [];
+        foreach ([$this->address, $this->village_ward, $this->district, $this->pincode] as $p) {
+            if ($p === null || trim((string) $p) === '') continue;
+            if (in_array(mb_strtolower(trim((string) $p)), array_map(fn ($x) => mb_strtolower($x), $parts), true)) continue;   // section written as address and ward
+            $parts[] = trim((string) $p);
+        }
+        return implode(', ', $parts);
     }
 
     /** Display value of a profile field (dates as dd-mm-yyyy, the deleted flag as Yes / empty). */

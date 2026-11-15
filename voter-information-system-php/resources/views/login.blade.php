@@ -53,6 +53,6 @@
     </div>
 </div></div>
 <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ asset('js/app.js') }}"></script>
+<script src="{{ versioned_asset('js/app.js') }}"></script>
 </body>
 </html>

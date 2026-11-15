@@ -44,18 +44,17 @@ document.addEventListener('click', function (e) {
 document.querySelectorAll('select[data-ward-select]').forEach(function (ward) {
     var booth = ward.dataset.boothSelect ? document.getElementById(ward.dataset.boothSelect) : null;
     if (!booth) return;
-    var map = {};
-    try { map = JSON.parse(ward.dataset.map || '{}'); } catch (e) { map = {}; }
-    var all = Array.prototype.map.call(booth.options, function (o) { return { value: o.value, text: o.text }; });
+    var map = {}, all = [];
+    try { map = JSON.parse(ward.dataset.map || '{}'); all = JSON.parse(ward.dataset.all || '[]').map(String); } catch (e) { return; }
+    var first = booth.options.length ? booth.options[0].text : '';
     function apply() {
-        var keep = ward.value ? (map[ward.value] || []).map(String) : null;
+        var keep = ward.value ? (map[ward.value] || []).map(String) : all;
         var current = booth.value;
         booth.innerHTML = '';
-        all.forEach(function (o) {
-            if (o.value === '' || !keep || keep.indexOf(o.value) >= 0) booth.add(new Option(o.text, o.value, false, o.value === current));
-        });
-        if (keep && current && keep.indexOf(current) < 0) booth.value = '';
+        booth.add(new Option(first, ''));
+        keep.forEach(function (b) { booth.add(new Option(b, b, false, b === current)); });
+        if (keep.indexOf(current) < 0) booth.value = '';
     }
     ward.addEventListener('change', apply);
-    apply();
-});
+})
+;

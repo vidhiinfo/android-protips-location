@@ -62,5 +62,5 @@
 @endsection
 @push('scripts')
 <script src="{{ asset('vendor/chartjs/chart.umd.js') }}"></script>
-<script src="{{ asset('js/dashboard.js') }}"></script>
+<script src="{{ versioned_asset('js/dashboard.js') }}"></script>
 @endpush

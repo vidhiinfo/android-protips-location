@@ -23,6 +23,9 @@ class VoterController extends Controller
     {
         $f = VoterFilter::fromRequest($r);
         $f->set('assemblyNo', $this->user()->restrict($f->get('assemblyNo')));
+        if ($f->get('wardNo') && $f->get('boothNo') && !in_array($f->get('boothNo'), $this->voters->boothsByWard($f->get('assemblyNo'))[$f->get('wardNo')] ?? [])) {
+            $f->set('boothNo', null);   // booth chosen earlier is not in the newly chosen ward
+        }
         return $f;
     }
 

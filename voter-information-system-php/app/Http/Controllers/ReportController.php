@@ -24,8 +24,17 @@ class ReportController extends Controller
     {
         $e = $r->query('electionId') ? Election::find($r->query('electionId')) : Election::where('current', true)->first();
         $this->reports->ward = is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null;
-        return $this->reports->build($id, $this->user()->restrict($r->query('assemblyNo')), $r->query('boothNo') ? (int) $r->query('boothNo') : null,
+        return $this->reports->build($id, $this->user()->restrict($r->query('assemblyNo')), $this->booth($r),
             $e, $r->query('scope'), $r->query('party'));
+    }
+
+    /** Booth filter, dropped when it is not in the chosen ward. */
+    private function booth(Request $r): ?int
+    {
+        $b = $r->query('boothNo') ? (int) $r->query('boothNo') : null;
+        $w = is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null;
+        if ($b && $w !== null && !in_array($b, app(VoterService::class)->boothsByWard($this->user()->restrict($r->query('assemblyNo')))[$w] ?? [])) return null;
+        return $b;
     }
 
     public function index() { return view('reports.index', ['sections' => ReportService::SECTIONS, 'adminOnly' => ReportService::ADMIN_ONLY]); }
@@ -34,7 +43,7 @@ class ReportController extends Controller
     {
         $this->check($id);
         $a = $this->user()->restrict($r->query('assemblyNo'));
-        $data = ['reportId' => $id, 'report' => $this->build($r, $id), 'assemblyNo' => $a, 'boothNo' => $r->query('boothNo'),
+        $data = ['reportId' => $id, 'report' => $this->build($r, $id), 'assemblyNo' => $a, 'boothNo' => $this->booth($r),
             'wardNo' => $r->query('wardNo'), 'wards' => $voters->wards($a), 'wardMap' => $voters->boothsByWard($a),
             'electionId' => $r->query('electionId'), 'scope' => $r->query('scope'), 'party' => $r->query('party'),
             'assemblies' => $voters->assemblies(), 'booths' => $voters->booths($a), 'parties' => Party::orderBy('name')->get(),

@@ -12,6 +12,7 @@ class Columns
         return [
             ['col.assemblyNo', fn (Voter $v) => $v->assembly_no, 4],
             ['col.assemblyName', fn (Voter $v) => $v->assembly_name, 0],
+            ['col.wardNo', fn (Voter $v) => $v->ward_no, 4],
             ['col.boothNo', fn (Voter $v) => $v->booth_no, 4],
             ['col.serialNo', fn (Voter $v) => $v->serial_no, 4],
             ['col.epicNo', fn (Voter $v) => $v->epic_no, 9],
@@ -26,7 +27,6 @@ class Columns
             ['col.address', fn (Voter $v) => $v->address, 9],
             ['col.addressLocal', fn (Voter $v) => $v->address_local, 0],
             ['col.villageWard', fn (Voter $v) => $v->village_ward, 0],
-            ['col.wardNo', fn (Voter $v) => $v->ward_no, 0],
             ['col.district', fn (Voter $v) => $v->district, 0],
             ['col.pincode', fn (Voter $v) => $v->pincode, 0],
             ['col.mobile', fn (Voter $v) => $v->mobile, 8],
