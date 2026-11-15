@@ -601,5 +601,15 @@
 "col.wardNo": "Ward No",
 "field.wardNo": "Ward No",
 "report.households": "All Households",
-"report.households.desc": "Every house with its voters, in roll order. House numbers written differently (RZ-154 / R Z-154) count as one house."
+"report.households.desc": "Every house with its voters, in roll order. House numbers written differently (RZ-154 / R Z-154) count as one house.",
+"master.castes": "Castes",
+"master.caste": "Caste",
+"master.subCastes": "Sub Castes",
+"master.subCaste": "Sub Caste",
+"master.casteName": "Caste Name",
+"master.subCasteName": "Sub Caste Name",
+"master.active": "Active",
+"master.casteHint": "Castes listed here appear in the Caste drop-down of the voter form. The category (if given) fills the voter's category automatically when it is empty. A caste cannot be deleted while voters or sub castes use it; renaming it also renames it on those voters.",
+"col.subCaste": "Sub Caste",
+"field.subCaste": "Sub Caste"
 }

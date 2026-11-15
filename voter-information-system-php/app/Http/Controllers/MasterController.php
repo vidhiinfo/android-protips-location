@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Assembly, Booth, BoothResult, Candidate, Election, Party};
+use App\Models\{Assembly, Booth, BoothResult, Candidate, Caste, Election, Party, SubCaste, Voter};
 use App\Support\Validation;
 use Illuminate\Http\Request;
 
@@ -12,7 +12,8 @@ use Illuminate\Http\Request;
  */
 class MasterController extends Controller
 {
-    private const ENTITY = ['assemblies' => 'ASSEMBLY', 'booths' => 'BOOTH', 'parties' => 'PARTY', 'elections' => 'ELECTION', 'candidates' => 'CANDIDATE'];
+    private const ENTITY = ['assemblies' => 'ASSEMBLY', 'booths' => 'BOOTH', 'parties' => 'PARTY', 'elections' => 'ELECTION', 'candidates' => 'CANDIDATE',
+        'castes' => 'CASTE', 'subcastes' => 'SUB_CASTE'];
 
     private function defs(): array
     {
@@ -63,6 +64,21 @@ class MasterController extends Controller
                     'party_id' => ['result.party', 'select', ['nullable', 'integer'],
                         fn () => ['' => t('master.independent')] + Party::orderBy('name')->get()->mapWithKeys(fn ($p) => [$p->id => $p->short_name . ' - ' . $p->name])->all()]],
                 'unique' => [], 'filter' => 'assembly_no'],
+            'castes' => ['model' => Caste::class, 'title' => 'master.castes', 'one' => 'master.caste', 'order' => ['name'],
+                'fields' => [
+                    'name' => ['master.casteName', 'text', ['required', 'max:100']],
+                    'name_local' => ['master.nameLocal', 'local', ['nullable', 'max:100']],
+                    'category' => ['col.category', 'select', ['nullable', 'in:' . implode(',', Caste::CATEGORIES)],
+                        fn () => ['' => '--'] + array_combine(Caste::CATEGORIES, array_map(fn ($c) => t('report.cat.' . $c), Caste::CATEGORIES))],
+                    'active' => ['master.active', 'checkbox', ['nullable']]],
+                'unique' => [['name']], 'filter' => null, 'hint' => 'master.casteHint'],
+            'subcastes' => ['model' => SubCaste::class, 'title' => 'master.subCastes', 'one' => 'master.subCaste', 'order' => ['caste_id', 'name'],
+                'fields' => [
+                    'caste_id' => ['master.caste', 'select', ['required', 'integer', 'exists:castes,id'], fn () => Caste::orderBy('name')->pluck('name', 'id')->all()],
+                    'name' => ['master.subCasteName', 'text', ['required', 'max:100']],
+                    'name_local' => ['master.nameLocal', 'local', ['nullable', 'max:100']],
+                    'active' => ['master.active', 'checkbox', ['nullable']]],
+                'unique' => [['caste_id', 'name']], 'filter' => null],
         ];
     }
 
@@ -83,6 +99,9 @@ class MasterController extends Controller
             $field === 'type' => $v ? t('election.type.' . $v) : '',
             $field === 'current' => $v ? '✓' : '',
             $field === 'poll_date' => $v?->format('d-m-Y'),
+            $field === 'caste_id' => $item->caste?->name,
+            $field === 'active' => $v ? '✓' : '',
+            $field === 'category' => $v ? t('report.cat.' . $v) : '',
             default => $v,
         };
     }
@@ -97,6 +116,10 @@ class MasterController extends Controller
         else $electionId = $r->query('electionId');
         if ($type === 'candidates' && $electionId) $q->where('election_id', $electionId);
         if ($filterValue) $q->where($d['filter'], $filterValue);
+        // sub castes: filter by caste
+        $casteId = $type === 'subcastes' && is_numeric($r->query('casteId')) ? (int) $r->query('casteId') : null;
+        if ($casteId) $q->where('caste_id', $casteId);
+        if ($type === 'subcastes') $q->with('caste');
         // booths: Ward No filter (the ward of a booth comes from its voters)
         $wards = []; $wardNo = is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null;
         if ($type === 'booths') {
@@ -109,6 +132,7 @@ class MasterController extends Controller
         }
         foreach ($d['order'] as $o) { [$c, $dir] = explode(' ', $o . ' asc'); $q->orderBy($c, $dir); }
         return view('masters.list', ['d' => $d, 'items' => $q->get(), 'filterValue' => $filterValue, 'electionId' => $electionId, 'wards' => $wards, 'wardNo' => $wardNo,
+            'casteList' => $type === 'subcastes' ? Caste::orderBy('name')->pluck('name', 'id')->all() : [], 'casteId' => $casteId,
             'assemblies' => Assembly::orderBy('assembly_no')->get(), 'elections' => Election::orderByDesc('election_year')->get()]);
     }
 
@@ -119,6 +143,8 @@ class MasterController extends Controller
         if (!$id) {
             if ($r->query('assemblyNo')) $item->assembly_no = (int) $r->query('assemblyNo');
             if ($type === 'candidates') $item->election_id = $r->query('electionId') ?: Election::where('current', true)->value('id');
+            if ($type === 'subcastes' && $r->query('casteId')) $item->caste_id = (int) $r->query('casteId');
+            if (in_array($type, ['castes', 'subcastes'], true)) $item->active = true;
         }
         return view('masters.form', ['d' => $d, 'item' => $item]);
     }
@@ -129,7 +155,7 @@ class MasterController extends Controller
         $id = $r->input('id');
         $item = $id ? $d['model']::findOrFail($id) : new $d['model']();
         $data = Validation::clean($r->only(array_keys($d['fields'])), []);
-        if (isset($d['fields']['current'])) $data['current'] = $r->boolean('current');
+        foreach ($d['fields'] as $name => $f) if ($f[1] === 'checkbox') $data[$name] = $r->boolean($name);
         if ($type === 'parties' && isset($data['short_name'])) $data['short_name'] = strtoupper($data['short_name']);
         $rules = array_map(fn ($f) => $f[2], $d['fields']);
         $v = validator($data, $rules, Validation::messages());
@@ -143,10 +169,16 @@ class MasterController extends Controller
         });
         if ($v->fails()) { $item->fill($data); return response()->view('masters.form', ['d' => $d, 'item' => $item, 'errors' => $v->errors()]); }
         $isNew = !$item->exists;
+        $oldName = $item->getOriginal('name'); $oldCaste = $item instanceof SubCaste ? $item->caste?->name : null;
         $item->fill($data)->save();
+        // renaming a caste / sub caste also renames it on the voters that have it
+        if (!$isNew && $type === 'castes' && $oldName !== $item->name) Voter::where('caste', $oldName)->update(['caste' => $item->name]);
+        if (!$isNew && $type === 'subcastes' && $oldName !== $item->name) {
+            Voter::where('sub_caste', $oldName)->when($oldCaste, fn ($q) => $q->where('caste', $oldCaste))->update(['sub_caste' => $item->name]);
+        }
         if ($type === 'elections' && $item->current) Election::where('id', '<>', $item->id)->update(['current' => false]);
         $this->audit()->log($isNew ? 'CREATE' : 'UPDATE', self::ENTITY[$type], $item->id, $item->name ?? '');
-        $back = '/masters/' . $type . ($d['filter'] ? '?assemblyNo=' . $item->{$d['filter']} : '');
+        $back = '/masters/' . $type . ($d['filter'] ? '?assemblyNo=' . $item->{$d['filter']} : '') . ($type === 'subcastes' ? '?casteId=' . $item->caste_id : '');
         return redirect($back)->with('success', 'flash.saved');
     }
 
@@ -159,6 +191,8 @@ class MasterController extends Controller
             'parties' => Candidate::where('party_id', $id)->exists(),
             'elections' => Candidate::where('election_id', $id)->exists(),
             'candidates' => BoothResult::where('candidate_id', $id)->exists(),
+            'castes' => SubCaste::where('caste_id', $id)->exists() || Voter::where('caste', $item->name)->exists(),
+            'subcastes' => Voter::where('sub_caste', $item->name)->where('caste', $item->caste?->name)->exists(),
             default => false,
         };
         if ($inUse) return redirect('/masters/' . $type)->with('error', 'flash.inUse');

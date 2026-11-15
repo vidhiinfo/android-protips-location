@@ -52,7 +52,7 @@ class ExcelImporter
         'linkedwith' => 'linked_with', 'socialstatus' => 'social_status', 'politicalstatus' => 'political_status',
         'organisationalstatus' => 'organisational_status', 'organizationalstatus' => 'organisational_status',
         'beneficiary1' => 'beneficiary1', 'beneficiary2' => 'beneficiary2', 'beneficiary3' => 'beneficiary3', 'beneficiary' => 'beneficiary1',
-        'caste' => 'caste', 'polingstation' => 'booth_name', 'pollingstation' => 'booth_name', 'boothname' => 'booth_name', 'pollingstationname' => 'booth_name',
+        'caste' => 'caste', 'subcaste' => 'sub_caste', 'subcast' => 'sub_caste', 'polingstation' => 'booth_name', 'pollingstation' => 'booth_name', 'boothname' => 'booth_name', 'pollingstationname' => 'booth_name',
         'category' => 'category', 'remarks' => 'remarks', 'email' => 'email', 'pincode' => 'pincode', 'district' => 'district',
     ];
 

@@ -44,7 +44,7 @@ class VoterController extends Controller
         return view('voters.list', ['f' => $f, 'page' => $page, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($a),
             'wards' => $this->voters->wards($a), 'wardMap' => $this->voters->boothsByWard($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
-            'castes' => $this->voters->distinctValues('caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
+            'castes' => $this->voters->distinctValues('caste', $a), 'subCastes' => $this->voters->distinctValues('sub_caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
             'total' => $this->voters->total($this->user()->workAssembly()), 'genderCounts' => $this->voters->genderCounts($this->user()->workAssembly())]);
     }
 
@@ -62,7 +62,7 @@ class VoterController extends Controller
 
     private function formData(Voter $v): array
     {
-        return ['voter' => $v, 'masterAssemblies' => Assembly::orderBy('assembly_no')->get(),
+        return ['voter' => $v, 'casteTree' => \App\Models\Caste::tree(), 'masterAssemblies' => Assembly::orderBy('assembly_no')->get(),
             'masterBooths' => Booth::when($this->user()->scoped(), fn ($q) => $q->where('assembly_no', $this->user()->workAssembly()))->orderBy('assembly_no')->orderBy('booth_no')->get()];
     }
 
@@ -94,6 +94,9 @@ class VoterController extends Controller
             return response()->view('voters.form', $this->formData($v) + ['errors' => $validator->errors(), 'rawDates' => $bad], 200);
         }
         $v->fill($data);
+        // category from the Caste master when the voter has none
+        if ($v->caste && !$v->category) $v->category = \App\Models\Caste::where('name', $v->caste)->value('category');
+        if (!$v->caste) $v->sub_caste = null;
         $this->voters->save($v);
         return redirect('/voters/' . $v->id)->with('success', $flash);
     }
@@ -122,7 +125,7 @@ class VoterController extends Controller
         $s = [];
         if ($w = $f->get('wardNo')) $s[] = t('col.wardNo') . ': ' . $w;
         foreach (['q' => 'filter.search', 'name' => 'col.name', 'relativeName' => 'col.relativeName', 'epicNo' => 'col.epicNo', 'mobile' => 'col.mobile',
-                     'houseNo' => 'col.houseNo', 'district' => 'col.district', 'villageWard' => 'col.villageWard', 'caste' => 'col.caste',
+                     'houseNo' => 'col.houseNo', 'district' => 'col.district', 'villageWard' => 'col.villageWard', 'caste' => 'col.caste', 'subCaste' => 'col.subCaste',
                      'politicalStatus' => 'col.politicalStatus', 'beneficiary' => 'filter.beneficiary', 'membershipNo' => 'col.membershipNo'] as $k => $label) {
             if ($v = $f->get($k)) $s[] = t($label) . ': ' . $v;
         }

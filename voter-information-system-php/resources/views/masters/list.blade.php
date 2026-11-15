@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('title', t($d['title']))
 @section('content')
-@php($listFields = array_filter($d['fields'], fn($f, $k) => $f[1] !== 'checkbox' || $k === 'current', ARRAY_FILTER_USE_BOTH))
+@php($listFields = array_filter($d['fields'], fn($f, $k) => $f[1] !== 'checkbox' || in_array($k, ['current', 'active']), ARRAY_FILTER_USE_BOTH))
 <div class="container-fluid px-3" style="max-width:1300px">
     @include('partials.flash')
     <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
         <h4 class="me-auto mb-0"><i class="bi bi-database"></i> {{ t($d['title']) }}</h4>
-        @if($d['type'] === 'candidates' || $d['filter'])
+        @if($d['type'] === 'candidates' || $d['filter'] || $d['type'] === 'subcastes')
         <form method="get" class="d-flex gap-2">
             @if($d['type'] === 'candidates')
             <select name="electionId" class="form-select form-select-sm" data-autosubmit>
@@ -17,6 +17,11 @@
                 <option value="">{{ t('common.all') }}</option>
                 @foreach($assemblies as $a)<option value="{{ $a->assembly_no }}" @selected($a->assembly_no == $filterValue)>{{ $a->assembly_no }} - {{ $a->name }}</option>@endforeach</select>
             @endif
+            @if($d['type'] === 'subcastes')
+            <select name="casteId" class="form-select form-select-sm" data-autosubmit title="{{ t('master.caste') }}">
+                <option value="">{{ t('master.caste') }}: {{ t('common.all') }}</option>
+                @foreach($casteList as $cid => $cname)<option value="{{ $cid }}" @selected($cid == $casteId)>{{ $cname }}</option>@endforeach</select>
+            @endif
             @if(!empty($wards))
             <select name="wardNo" class="form-select form-select-sm" data-autosubmit title="{{ t('col.wardNo') }}">
                 <option value="">{{ t('col.wardNo') }}: {{ t('common.all') }}</option>
@@ -24,7 +29,7 @@
             @endif
         </form>
         @endif
-        @if(can('MASTER_EDIT'))<a class="btn btn-primary btn-sm text-nowrap" href="{{ url('/masters/'.$d['type'].'/new') }}?assemblyNo={{ $filterValue }}&electionId={{ $electionId }}"><i class="bi bi-plus-lg"></i> {{ t('common.add') }}</a>@endif
+        @if(can('MASTER_EDIT'))<a class="btn btn-primary btn-sm text-nowrap" href="{{ url('/masters/'.$d['type'].'/new') }}?assemblyNo={{ $filterValue }}&electionId={{ $electionId }}&casteId={{ $casteId }}"><i class="bi bi-plus-lg"></i> {{ t('common.add') }}</a>@endif
     </div>
     <div class="table-responsive bg-white border rounded"><table class="table table-striped table-hover mb-0 align-middle">
         <thead class="table-light"><tr>@if($d['type'] === 'parties')<th></th>@endif

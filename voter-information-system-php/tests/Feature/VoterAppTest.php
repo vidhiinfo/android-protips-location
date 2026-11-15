@@ -218,6 +218,49 @@ class VoterAppTest extends TestCase
         $this->login('ravi', 'secret@123')->assertRedirect('/dashboard');
     }
 
+    public function test_caste_and_sub_caste_masters(): void
+    {
+        $this->login();
+        $this->get('/masters/castes')->assertOk()->assertSee(t('master.castes'));
+        $this->post('/masters/castes', ['name' => 'Saini', 'category' => 'OBC', 'active' => 1])->assertRedirect('/masters/castes');
+        $this->post('/masters/castes', ['name' => 'Arora', 'category' => 'GEN', 'active' => 1])->assertRedirect();
+        $this->post('/masters/castes', ['name' => 'Saini'])->assertOk()->assertSee(t('validation.duplicate'));
+        $saini = \App\Models\Caste::where('name', 'Saini')->first();
+        $this->post('/masters/subcastes', ['caste_id' => $saini->id, 'name' => 'Mali Saini', 'active' => 1])->assertRedirect("/masters/subcastes?casteId={$saini->id}");
+        $this->post('/masters/subcastes', ['caste_id' => $saini->id, 'name' => 'Golla Saini', 'active' => 1])->assertRedirect();
+        $this->post('/masters/subcastes', ['caste_id' => $saini->id, 'name' => 'Mali Saini'])->assertOk()->assertSee(t('validation.duplicate'));
+        $this->get("/masters/subcastes?casteId={$saini->id}")->assertOk()->assertSee('Golla Saini')->assertSee('name="casteId"', false);
+        // voter form: drop-downs from the masters, sub castes per caste
+        $v = Voter::where('assembly_no', 45)->first();
+        $form = $this->get("/voters/{$v->id}/edit")->assertOk()->getContent();
+        $this->assertStringContainsString('data-caste-select', $form);
+        $this->assertStringContainsString('"Saini":["Golla Saini","Mali Saini"]', html_entity_decode($form));
+        // save: category comes from the caste master when empty
+        $this->post("/voters/{$v->id}", array_merge($v->only(['epic_no', 'name', 'gender', 'assembly_no', 'booth_no']), ['caste' => 'Saini', 'sub_caste' => 'Mali Saini', 'category' => '']))->assertRedirect();
+        $this->assertSame(['Saini', 'Mali Saini', 'OBC'], [$v->fresh()->caste, $v->fresh()->sub_caste, $v->fresh()->category]);
+        $this->get('/voters?subCaste=Mali+Saini')->assertOk()->assertSee($v->epic_no);
+        $this->get("/voters/{$v->id}")->assertSee('Mali Saini');
+        // delete blocked while used; renaming renames on voters too
+        $this->post("/masters/castes/{$saini->id}/delete")->assertSessionHas('error', 'flash.inUse');
+        $mali = \App\Models\SubCaste::where('name', 'Mali Saini')->first();
+        $this->post('/masters/subcastes', ['id' => $mali->id, 'caste_id' => $saini->id, 'name' => 'Maali Saini', 'active' => 1])->assertRedirect();
+        $this->assertSame('Maali Saini', $v->fresh()->sub_caste);
+        $this->post('/masters/castes', ['id' => $saini->id, 'name' => 'Saini Mali', 'category' => 'OBC', 'active' => 1])->assertRedirect();
+        $this->assertSame('Saini Mali', $v->fresh()->caste);
+        $arora = \App\Models\Caste::where('name', 'Arora')->first();
+        $this->post("/masters/castes/{$arora->id}/delete")->assertSessionHas('success', 'flash.deleted');
+        // Excel: Sub Caste column in export and import
+        $x = \PhpOffice\PhpSpreadsheet\IOFactory::load($this->get('/voters/export/excel?subCaste=Maali+Saini')->baseResponse->getFile()->getPathname())->getActiveSheet()->toArray();
+        $this->assertContains(t('col.subCaste'), $x[3]);
+        $this->assertContains('Maali Saini', $x[4]);
+        $book = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $book->getActiveSheet()->fromArray([['VoterID', 'Name', 'Gender', 'Booth', 'Caste', 'Sub Caste'], ['SUB0000001', 'Sub Test', 'M', '2', 'Saini Mali', 'Golla Saini']]);
+        $path = tempnam(sys_get_temp_dir(), 's') . '.xlsx';
+        \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, 'Xlsx')->save($path);
+        $this->post('/voters/import', ['file' => new UploadedFile($path, 's.xlsx', null, null, true), 'defaultAssembly' => 45])->assertOk();
+        $this->assertSame('Golla Saini', Voter::where('epic_no', 'SUB0000001')->value('sub_caste'));
+    }
+
     public function test_results_entry_and_view(): void
     {
         $this->login();

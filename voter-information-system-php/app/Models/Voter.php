@@ -25,6 +25,7 @@ class Voter extends Model
         'dob' => ['dob', 'date', null],
         'anniversary' => ['anniversary', 'date', null],
         'caste' => ['caste', 'text', 100],
+        'sub_caste' => ['subCaste', 'text', 100],
         'social_status' => ['socialStatus', 'text', 100],
         'political_status' => ['politicalStatus', 'text', 100],
         'organisational_status' => ['organisationalStatus', 'text', 100],
@@ -51,7 +52,7 @@ class Voter extends Model
             }
             foreach (['name', 'name_local', 'relative_name', 'relative_name_local', 'address', 'address_local', 'village_ward',
                          'district', 'assembly_name', 'booth_name', 'remarks', 'house_no', 'category', 'email',
-                         'membership_no', 'caste', 'social_status', 'political_status', 'organisational_status', 'beneficiary1',
+                         'membership_no', 'caste', 'sub_caste', 'social_status', 'political_status', 'organisational_status', 'beneficiary1',
                          'beneficiary2', 'beneficiary3', 'place_of_origin', 'current_place', 'linked_with', 'shift1', 'shift2'] as $f) {
                 $v->$f = Text::nfc($v->$f);
             }

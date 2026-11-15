@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS voters (
     beneficiary2        VARCHAR(150),
     beneficiary3        VARCHAR(150),
     caste               VARCHAR(100),
+    sub_caste           VARCHAR(100),
     created_at          DATETIME(6)  NOT NULL,
     updated_at          DATETIME(6)  NOT NULL,
     CONSTRAINT uk_voter_epic UNIQUE (epic_no),
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS voters (
     INDEX idx_voter_village (village_ward),
     INDEX idx_voter_ward_no (ward_no),
     INDEX idx_voter_caste (caste),
+    INDEX idx_voter_sub_caste (sub_caste),
     INDEX idx_voter_membership_no (membership_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -257,4 +259,25 @@ CREATE TABLE IF NOT EXISTS message_optouts (
     created_by  VARCHAR(50),
     created_at  DATETIME(6),
     CONSTRAINT uk_optout UNIQUE (mobile, channel)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------- castes (master)
+CREATE TABLE IF NOT EXISTS castes (
+    id          BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    name_local  VARCHAR(100),
+    category    VARCHAR(10)           COMMENT 'GEN / OBC / SC / ST (optional)',
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    CONSTRAINT uk_caste_name UNIQUE (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------- sub castes (master)
+CREATE TABLE IF NOT EXISTS sub_castes (
+    id          BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    caste_id    BIGINT       NOT NULL,
+    name        VARCHAR(100) NOT NULL,
+    name_local  VARCHAR(100),
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    CONSTRAINT uk_sub_caste UNIQUE (caste_id, name),
+    CONSTRAINT fk_sub_caste_caste FOREIGN KEY (caste_id) REFERENCES castes (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

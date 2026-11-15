@@ -58,3 +58,18 @@ document.querySelectorAll('select[data-ward-select]').forEach(function (ward) {
     ward.addEventListener('change', apply);
 })
 ;
+
+// Caste -> Sub Caste: the Sub Caste drop-down shows only the sub castes of the chosen caste (Caste master)
+document.querySelectorAll('select[data-caste-select]').forEach(function (caste) {
+    var sub = document.getElementById(caste.dataset.subSelect);
+    if (!sub) return;
+    var map = {};
+    try { map = JSON.parse(caste.dataset.map || '{}'); } catch (e) { return; }
+    var empty = sub.options.length ? sub.options[0].text : '--';
+    caste.addEventListener('change', function () {
+        var current = sub.value;
+        sub.innerHTML = '';
+        sub.add(new Option(empty, ''));
+        (map[caste.value] || []).forEach(function (s) { sub.add(new Option(s, s, false, s === current)); });
+    });
+});

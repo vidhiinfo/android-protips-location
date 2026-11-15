@@ -55,6 +55,24 @@
                 @elseif($type === 'date')
                 @include('partials.input', ['name' => $field, 'label' => 'col.'.$key, 'cls' => 'col-md-3', 'type' => 'date',
                     'value' => $v->$field instanceof \DateTimeInterface ? $v->$field->format('Y-m-d') : ($rawDates[$field] ?? $v->getRawOriginal($field))])
+                @elseif($field === 'caste' && $casteTree)
+                {{-- Caste from the Caste master; Sub Caste lists only the sub castes of the chosen caste (public/js/app.js) --}}
+                @php($castes = array_keys($casteTree))
+                @if($v->caste && !in_array($v->caste, $castes))@php($castes[] = $v->caste)@endif
+                <div class="col-md-3"><label class="form-label" for="caste">{{ t('col.caste') }}</label>
+                    <select name="caste" id="caste" class="form-select {{ isset($errors) && $errors->first('caste') ? 'is-invalid' : '' }}" data-caste-select data-sub-select="sub_caste"
+                            data-map='@json((object) $casteTree)'>
+                        <option value="">--</option>
+                        @foreach($castes as $c)<option value="{{ $c }}" @selected($c === $v->caste)>{{ $c }}</option>@endforeach
+                    </select></div>
+                @elseif($field === 'sub_caste' && $casteTree)
+                @php($subs = $casteTree[$v->caste] ?? [])
+                @if($v->sub_caste && !in_array($v->sub_caste, $subs))@php($subs[] = $v->sub_caste)@endif
+                <div class="col-md-3"><label class="form-label" for="sub_caste">{{ t('col.subCaste') }}</label>
+                    <select name="sub_caste" id="sub_caste" class="form-select">
+                        <option value="">--</option>
+                        @foreach($subs as $sc)<option value="{{ $sc }}" @selected($sc === $v->sub_caste)>{{ $sc }}</option>@endforeach
+                    </select></div>
                 @else
                 @include('partials.input', ['name' => $field, 'label' => 'col.'.$key, 'cls' => 'col-md-3', 'value' => $v->$field, 'local' => true])
                 @endif
