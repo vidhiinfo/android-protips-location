@@ -93,6 +93,21 @@ class VoterAppTest extends TestCase
         $this->get('/voters')->assertSee('house-link', false);
     }
 
+    public function test_house_numbers_match_ignoring_spaces_hyphens_and_dots(): void
+    {
+        $this->login();
+        $mk = fn ($epic, $house) => Voter::create(['epic_no' => $epic, 'name' => 'House ' . $epic, 'gender' => 'MALE', 'age' => 40, 'assembly_no' => 46,
+            'booth_no' => 99, 'house_no' => $house, 'address' => 'Gali 1', 'village_ward' => 'Test Ward']);
+        $a = $mk('HSE0000001', 'RZ-154'); $mk('HSE0000002', 'R Z-154'); $mk('HSE0000003', 'rz.154'); $mk('HSE0000004', 'RZ-154/FF');
+        $html = $this->get("/voters/{$a->id}/household")->assertOk()->getContent();
+        foreach (['HSE0000001', 'HSE0000002', 'HSE0000003'] as $e) $this->assertStringContainsString($e, $html);
+        $this->assertStringNotContainsString('HSE0000004', $html);   // another floor = another household
+        $before = collect($this->get('/dashboard/data?assemblyNo=46')->json('tiles'))->firstWhere('label', t('dash.tile.households'))['value'];
+        $mk('HSE0000005', 'R Z - 1 5 4');
+        $after = collect($this->get('/dashboard/data?assemblyNo=46')->json('tiles'))->firstWhere('label', t('dash.tile.households'))['value'];
+        $this->assertSame($before, $after);   // same house, no new household
+    }
+
     public function test_viewer_cannot_add_voters_or_open_admin_messages(): void
     {
         $this->login('viewer', 'viewer@123');

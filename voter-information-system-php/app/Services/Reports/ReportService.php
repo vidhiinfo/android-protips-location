@@ -291,7 +291,7 @@ class ReportService
         $houses = [];
         foreach ($this->voters->searchAll($this->filter($a, null)) as $v) {
             if (!$v->house_no) continue;
-            $k = $v->assembly_no . '|' . mb_strtolower(trim($v->house_no)) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
+            $k = $v->assembly_no . '|' . Text::houseKey($v->house_no) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
             $houses[$k][] = $v;
         }
         $houses = array_filter($houses, fn ($l) => count($l) >= 5);

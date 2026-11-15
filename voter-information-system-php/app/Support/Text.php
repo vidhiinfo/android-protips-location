@@ -30,6 +30,18 @@ class Text
     }
 
     /** Letters and digits only, lower case, NFC - key for duplicate matching. */
+    /**
+     * Household matching key for a house number: lower case, without spaces, hyphens and dots,
+     * so "RZ-154", "R Z-154" and "rz154" are one house; "RZ-174/FF" stays different from "RZ-174".
+     */
+    public static function houseKey(?string $s): string
+    {
+        return str_replace([' ', '-', '.'], '', mb_strtolower(trim((string) self::asciiDigits((string) $s))));
+    }
+
+    /** The same key computed by the database (MySQL, MariaDB and SQLite). */
+    public const HOUSE_KEY_SQL = "lower(replace(replace(replace(trim(coalesce(house_no, '')), ' ', ''), '-', ''), '.', ''))";
+
     public static function nameKey(?string $s): string
     {
         $s = mb_strtolower((string) self::nfc($s));

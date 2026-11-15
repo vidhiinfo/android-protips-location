@@ -45,7 +45,7 @@ class DashboardService
 
         $sizes = array_fill(0, 6, 0); $houses = $big = $housed = 0;
         $rows = $w(DB::table('voters')->selectRaw('count(*) as c')->where('assembly_no', $a))->whereNotNull('house_no')->where('house_no', '<>', '')
-            ->groupBy(DB::raw('lower(house_no)'), DB::raw("lower(coalesce(address, ''))"), DB::raw("lower(coalesce(village_ward, ''))"))->get();
+            ->groupBy(DB::raw(\App\Support\Text::HOUSE_KEY_SQL), DB::raw("lower(trim(coalesce(address, '')))"), DB::raw("lower(trim(coalesce(village_ward, '')))"))->get();
         foreach ($rows as $x) { $n = (int) $x->c; $sizes[min($n, 6) - 1]++; $houses++; $housed += $n; if ($n >= 5) $big++; }
         $out['household'] = ['labels' => ['1', '2', '3', '4', '5', '6+'], 'series' => [self::series(t('dash.houses'), 'single', $sizes)]];
 

@@ -45,6 +45,7 @@ class VoterService
         foreach (['house_no', 'address', 'village_ward'] as $c) {
             $val = $v->$c;
             if ($val === null || trim($val) === '') $q->where(fn ($w) => $w->whereNull($c)->orWhere($c, ''));
+            elseif ($c === 'house_no') $q->whereRaw(\App\Support\Text::HOUSE_KEY_SQL . ' = ?', [\App\Support\Text::houseKey($val)]);   // RZ-154 = R Z-154
             else $q->whereRaw("lower(trim($c)) = ?", [mb_strtolower(trim($val))]);
         }
         return $q->orderBy('serial_no')->orderBy('age')->orderBy('id')->get();
