@@ -102,7 +102,7 @@ Route::middleware('login.required')->group(function () {
         Route::post('/admin/roles', [AdminController::class, 'saveRole']);
         Route::post('/admin/roles/{id}/delete', [AdminController::class, 'deleteRole'])->whereNumber('id');
     });
-    Route::get('/admin/audit', [AdminController::class, 'audit'])->middleware('perm:AUDIT_VIEW');
+    Route::get('/admin/audit', [AdminController::class, 'auditLog'])->middleware('perm:AUDIT_VIEW');
     Route::get('/admin/system', [AdminController::class, 'system'])->middleware('perm:SYSTEM_VIEW');
 
     Route::get('/account/password', [AccountController::class, 'form']);

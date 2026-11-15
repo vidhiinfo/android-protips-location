@@ -53,7 +53,7 @@ class AdminController extends Controller
         if ($isNew) { $item->username = $data['username']; $item->created_at = now(); }
         $item->full_name = $data['full_name'];
         $item->enabled = $data['enabled'];
-        $item->assembly_no = $data['assembly_no'];
+        $item->assembly_no = $data['assembly_no'] ?? null;
         if ($pass !== '') $item->password_hash = AppUser::hashPassword($pass);
         $item->save();
         $item->roles()->sync($roles->pluck('id'));
@@ -115,7 +115,7 @@ class AdminController extends Controller
     }
 
     // ---------------------------------------------------------------- audit & system
-    public function audit(Request $r)
+    public function auditLog(Request $r)
     {
         $q = AuditLog::query()->orderByDesc('at')->orderByDesc('id');
         if ($u = $r->query('user')) $q->whereRaw('lower(username) like ?', ['%' . mb_strtolower($u) . '%']);

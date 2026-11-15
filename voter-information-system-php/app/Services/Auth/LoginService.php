@@ -52,7 +52,7 @@ class LoginService
         $u = AppUser::with('roles')->whereRaw('lower(username) = ?', [mb_strtolower($username)])->first();
         if (!$u) return null;
         return ['id' => $u->id, 'username' => $u->username, 'full_name' => $u->full_name, 'enabled' => $u->enabled,
-            'hash' => $u->password_hash, 'encoding' => 'bcrypt', 'assembly_no' => $u->assembly_no,
+            'hash' => $u->password_hash, 'encoding' => 'bcrypt', 'assembly_no' => $u->assembly_no === null ? null : (int) $u->assembly_no,
             'roles' => $u->roles->pluck('code')->all(), 'permissions' => $u->permissions()];
     }
 
@@ -78,7 +78,7 @@ class LoginService
         $perms = DB::table('role_permissions')->whereIn('role_id', $roles->pluck('id'))->distinct()->pluck('permission')->all();
         return ['username' => (string) $vals[0], 'full_name' => $row['full_name'] ?? (string) $vals[0],
             'enabled' => array_key_exists('enabled', $row) ? (bool) $row['enabled'] : true,
-            'hash' => (string) $vals[1], 'encoding' => env('USERS_PASSWORD_ENCODING', 'bcrypt'),
+            'hash' => (string) $vals[1], 'encoding' => $cfg['password_encoding'] ?? 'bcrypt',
             'assembly_no' => isset($row['assembly_no']) && $row['assembly_no'] !== null ? (int) $row['assembly_no'] : null,
             'roles' => $roles->pluck('code')->all(), 'permissions' => $perms];
     }

@@ -36,6 +36,8 @@ return [
             'role_map' => env('USERS_ROLE_MAP', ''),
             // optional separate database connection name from config/database.php (empty = default)
             'connection' => env('USERS_DB_CONNECTION', ''),
+            // how the password column is stored: bcrypt (also {bcrypt} prefixed) | sha256 | md5 | noop (plain text, not recommended)
+            'password_encoding' => env('USERS_PASSWORD_ENCODING', 'bcrypt'),
         ],
     ],
 

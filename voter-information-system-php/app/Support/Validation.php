@@ -33,6 +33,7 @@ class Validation
             if (is_string($v)) {
                 $v = trim($v);
                 if (in_array($k, $digitFields, true)) $v = preg_replace('/[\s-]/', '', (string) Text::asciiDigits($v));
+                elseif (preg_match('/^\p{Nd}+$/u', $v)) $v = (string) Text::asciiDigits($v);   // ४२ -> 42 for number fields
                 $data[$k] = $v === '' ? null : $v;
             }
         }
