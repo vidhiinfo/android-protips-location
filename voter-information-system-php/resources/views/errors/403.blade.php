@@ -1,0 +1,2 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>403</title><link rel="stylesheet" href="{{ asset('vendor/bootstrap/css/bootstrap.min.css') }}"></head>
+<body class="d-flex align-items-center justify-content-center" style="min-height:100vh"><div class="text-center"><h1 class="display-4">403</h1><p>Access denied / प्रवेश वर्जित</p><a href="{{ url('/') }}" class="btn btn-primary">Home</a></div></body></html>
