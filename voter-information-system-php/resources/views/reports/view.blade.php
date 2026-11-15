@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $report->title)
 @section('content')
-@php($q = http_build_query(['assemblyNo' => $assemblyNo, 'boothNo' => $boothNo, 'electionId' => $electionId, 'scope' => $scope, 'party' => $party]))
+@php($q = http_build_query(['assemblyNo' => $assemblyNo, 'wardNo' => $wardNo, 'boothNo' => $boothNo, 'electionId' => $electionId, 'scope' => $scope, 'party' => $party]))
 @php($electionReport = in_array($reportId, ['results-summary', 'party-performance', 'booth-priority']))
 <div class="container-fluid px-3" style="max-width:1400px">
     <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
@@ -16,11 +16,10 @@
         <div class="col-md-3"><label class="form-label small">{{ t('col.assemblyNo') }}</label>
             <select name="assemblyNo" class="form-select form-select-sm" @disabled($me->scoped())><option value="">{{ t('common.all') }}</option>
                 @foreach($assemblies as $no => $name)<option value="{{ $no }}" @selected($no == $assemblyNo)>{{ $no }} - {{ $name }}</option>@endforeach</select></div>
-        @if(in_array($reportId, ['age-gender', 'first-time-voters', 'senior-voters', 'phone-bank', 'caste-summary', 'birthdays']))
-        <div class="col-md-2"><label class="form-label small">{{ t('col.boothNo') }}</label>
-            <select name="boothNo" class="form-select form-select-sm"><option value="">{{ t('common.all') }}</option>
-                @foreach($booths as $b)<option value="{{ $b }}" @selected($b == $boothNo)>{{ $b }}</option>@endforeach</select></div>
-        @endif
+        @unless(in_array($reportId, ['results-summary', 'party-performance']))
+        @include('partials.ward-booth', ['wards' => $wards, 'wardNo' => $wardNo, 'wardMap' => $wardMap, 'booths' => $booths, 'boothNo' => $boothNo, 'small' => true,
+            'cls' => 'col-md-2', 'showBooth' => in_array($reportId, ['age-gender', 'first-time-voters', 'senior-voters', 'phone-bank', 'caste-summary', 'birthdays'])])
+        @endunless
         @if($reportId === 'duplicate-voters')
         <div class="col-md-3"><label class="form-label small">{{ t('report.dup.match') }}</label>
             <select name="scope" class="form-select form-select-sm"><option value="assembly">{{ t('report.dup.byAssembly') }}</option>

@@ -18,11 +18,15 @@ class ResultService
     /**
      * Result of one seat: totals per candidate (sorted, with share and rank), booth rows, winner, margin, turnout.
      */
-    public function contest(Election $e, int $assemblyNo): array
+    /** Seat result; with $ward only the booths of that ward are counted. */
+    public function contest(Election $e, int $assemblyNo, ?int $ward = null): array
     {
         $cands = Candidate::with('party')->where('election_id', $e->id)->where('assembly_no', $assemblyNo)
             ->orderByRaw('ballot_no is null')->orderBy('ballot_no')->orderBy('name')->get();
-        $rows = BoothResult::where('election_id', $e->id)->where('assembly_no', $assemblyNo)->get();
+        $wardBooths = $ward === null ? null
+            : Voter::where('assembly_no', $assemblyNo)->where('ward_no', $ward)->distinct()->pluck('booth_no')->map(fn ($b) => (int) $b)->all();
+        $rows = BoothResult::where('election_id', $e->id)->where('assembly_no', $assemblyNo)
+            ->when($wardBooths !== null, fn ($q) => $q->whereIn('booth_no', $wardBooths ?: [0]))->get();
         $perCand = [];
         $perBooth = [];
         foreach ($rows as $r) {
@@ -46,12 +50,13 @@ class ResultService
             $booths[] = ['booth_no' => $no, 'booth_name' => $boothNames[$no] ?? '', 'votes' => $perBooth[$no], 'total' => array_sum($votes),
                 'leader' => $leaderId ? $byId[$leaderId] ?? null : null];
         }
-        $boothsTotal = $boothNames ? count($boothNames) : Voter::where('assembly_no', $assemblyNo)->distinct()->count('booth_no');
-        $electors = Voter::where('assembly_no', $assemblyNo)->count();
+        $boothsTotal = $wardBooths !== null ? count($wardBooths)
+            : ($boothNames ? count($boothNames) : Voter::where('assembly_no', $assemblyNo)->distinct()->count('booth_no'));
+        $electors = Voter::where('assembly_no', $assemblyNo)->when($ward !== null, fn ($q) => $q->where('ward_no', $ward))->count();
         $winner = $totals && $total ? $totals[0] : null;
         $runner = count($totals) > 1 && $total ? $totals[1] : null;
         return [
-            'election' => $e, 'assembly_no' => $assemblyNo, 'assembly_name' => Assembly::where('assembly_no', $assemblyNo)->value('name') ?? '',
+            'election' => $e, 'assembly_no' => $assemblyNo, 'ward_no' => $ward, 'assembly_name' => Assembly::where('assembly_no', $assemblyNo)->value('name') ?? '',
             'totals' => $totals, 'total_votes' => $total, 'electors' => $electors, 'booths' => $booths,
             'booths_reported' => count($perBooth), 'booths_total' => $boothsTotal,
             'winner' => $winner, 'runner_up' => $runner,

@@ -29,6 +29,7 @@
             <dt class="col-sm-3">{{ t('col.epicNo') }}</dt><dd class="col-sm-9"><code>{{ $v->epic_no }}</code></dd>
             <dt class="col-sm-3">{{ t('col.gender') }} / {{ t('col.age') }}</dt><dd class="col-sm-9">{{ $v->genderLabel() }}{{ $v->age ? ' / '.$v->age : '' }}</dd>
             <dt class="col-sm-3">{{ t('col.assemblyNo') }}</dt><dd class="col-sm-9">{{ $v->assembly_no }}{{ $v->assembly_name ? ' - '.$v->assembly_name : '' }}</dd>
+            @if($v->ward_no)<dt class="col-sm-3">{{ t('col.wardNo') }}</dt><dd class="col-sm-9">{{ $v->ward_no }}</dd>@endif
             <dt class="col-sm-3">{{ t('col.boothNo') }}</dt><dd class="col-sm-9">{{ $v->booth_no }}{{ $v->booth_name ? ' - '.$v->booth_name : '' }}</dd>
             <dt class="col-sm-3">{{ t('col.serialNo') }}</dt><dd class="col-sm-9">{{ $v->serial_no ?? '-' }}</dd>
             <dt class="col-sm-3">{{ t('col.houseNo') }}</dt><dd class="col-sm-9">@if($v->house_no)<a class="house-link" data-household href="{{ url('/voters/'.$v->id.'/household') }}">{{ $v->house_no }}</a>@else - @endif</dd>

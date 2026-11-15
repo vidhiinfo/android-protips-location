@@ -21,7 +21,7 @@ class ExcelImporter
         'col.assemblyNo' => 'assembly_no', 'col.assemblyName' => 'assembly_name', 'col.boothNo' => 'booth_no', 'col.serialNo' => 'serial_no',
         'col.epicNo' => 'epic_no', 'col.name' => 'name', 'col.nameLocal' => 'name_local', 'col.relation' => 'relation_type',
         'col.relativeName' => 'relative_name', 'col.relativeNameLocal' => 'relative_name_local', 'col.gender' => 'gender', 'col.age' => 'age',
-        'col.houseNo' => 'house_no', 'col.address' => 'address', 'col.addressLocal' => 'address_local', 'col.villageWard' => 'village_ward',
+        'col.houseNo' => 'house_no', 'col.address' => 'address', 'col.addressLocal' => 'address_local', 'col.villageWard' => 'village_ward', 'col.wardNo' => 'ward_no',
         'col.district' => 'district', 'col.pincode' => 'pincode', 'col.mobile' => 'mobile', 'col.altMobile' => 'alt_mobile', 'col.email' => 'email',
         'col.boothName' => 'booth_name', 'col.category' => 'category', 'col.remarks' => 'remarks',
     ];
@@ -34,7 +34,7 @@ class ExcelImporter
      */
     private const ALIASES = [
         'assembly' => 'assembly_no', 'assemblyno' => 'assembly_no', 'acno' => 'assembly_no', 'ac' => 'assembly_no', 'vidhansabha' => 'assembly_no',
-        'ward' => 'village_ward', 'wardno' => 'village_ward', 'village' => 'village_ward',
+        'ward' => 'ward', 'wardno' => 'ward_no', 'wardnumber' => 'ward_no', 'village' => 'village_ward', 'villageward' => 'village_ward',
         'booth' => 'booth_no', 'boothno' => 'booth_no', 'partno' => 'booth_no', 'part' => 'booth_no',
         'vsno' => 'serial_no', 'sno' => 'serial_no', 'slno' => 'serial_no', 'serialno' => 'serial_no', 'voterserialno' => 'serial_no',
         'voterid' => 'epic_no', 'epic' => 'epic_no', 'epicno' => 'epic_no', 'votercardno' => 'epic_no', 'idcardno' => 'epic_no',
@@ -96,7 +96,7 @@ class ExcelImporter
         $reader->open($path);
         $validator = null;
         $idx = null; $inserted = 0; $updated = 0; $errors = []; $buf = [];
-        $fields = array_flip(array_values($keys));
+        $fields = array_flip(array_values($keys));   // includes ward_no
         // saves 500 rows per transaction, looking up their EPIC numbers with one query
         $save = function () use (&$buf, &$inserted, &$updated, &$errors, $onlyAssembly, $fields) {
             $epic = fn ($d) => strtoupper((string) Text::asciiDigits($d['epic_no']));
@@ -137,7 +137,15 @@ class ExcelImporter
             foreach ($idx as $field => $i) $data[$field] = $get($field);
             $data['gender'] = $genders[self::norm($data['gender'] ?? '')] ?? match (strtoupper(substr($data['gender'] ?? '', 0, 1))) { 'M' => 'MALE', 'F' => 'FEMALE', 'O', 'T' => 'OTHER', default => null };
             $data['relation_type'] = $relations[self::norm($data['relation_type'] ?? '')] ?? 'FATHER';
-            foreach (['age', 'assembly_no', 'booth_no', 'serial_no'] as $n) {
+            // a "Ward" column holds the ward number (e.g. 102) or a ward / locality name (e.g. "Ward 12", "Vishnu Garden")
+            if (array_key_exists('ward', $data)) {
+                $w = trim((string) Text::asciiDigits($data['ward']));
+                if (preg_match('/^(?:ward\s*(?:no\.?)?\s*)?(\d{1,4})$/i', $w, $wm)) $data['ward_no'] ??= $wm[1];
+                elseif ($w !== '') $data['village_ward'] = ($data['village_ward'] ?? '') !== '' ? $data['village_ward'] : $w;
+                if (preg_match('/^ward\s*\d+$/i', $w) && ($data['village_ward'] ?? '') === '') $data['village_ward'] = $w;
+                unset($data['ward']);
+            }
+            foreach (['age', 'assembly_no', 'booth_no', 'serial_no', 'ward_no'] as $n) {
                 $v = Text::asciiDigits($data[$n] ?? '');
                 $data[$n] = is_numeric($v) ? (int) $v : null;
             }

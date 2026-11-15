@@ -98,7 +98,7 @@ class DemoSeeder extends Seeder
                     $st = mt_rand(1, 30); $house = (string) mt_rand(1, 300); $booth = mt_rand(1, $boothsPer);
                     $head = self::pick($male); $grand = self::pick($male); $headAge = mt_rand(35, 69); $members = mt_rand(1, 5);
                     $base = ['caste_pick' => self::CASTES[$ac][mt_rand(0, count(self::CASTES[$ac]) - 1)], 'booth_no' => $booth, 'booth_name' => $boothName($booth), 'house_no' => $house, 'address' => "Street $st",
-                        'address_local' => "$street $st, {$area[1]}", 'village_ward' => $area[0],
+                        'address_local' => "$street $st, {$area[1]}", 'village_ward' => $area[0], 'ward_no' => intdiv($booth - 1, 4) + 1,
                         'pincode' => $ac == 45 ? (string) (302001 + mt_rand(0, 8)) : ($ac == 46 ? (string) (226001 + mt_rand(0, 8)) : '700024')];
                     if ($fam % 12 == 5) {
                         $gm = (bool) mt_rand(0, 1); $gf = $gm ? $grand : self::pick($female); $rel = self::pick($male);

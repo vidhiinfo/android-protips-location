@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "বিবাহবার্ষিকী",
 "validation.date": "সঠিক তারিখ লিখুন",
 "import.defaultAssembly": "বিধানসভা (যে সারিতে নেই)",
-"import.defaultAssemblyHelp": "ফাইলে বিধানসভা নং কলাম না থাকলে (যেমন ওয়ার্ড/বুথ তালিকা) এটি ব্যবহার হবে।"
+"import.defaultAssemblyHelp": "ফাইলে বিধানসভা নং কলাম না থাকলে (যেমন ওয়ার্ড/বুথ তালিকা) এটি ব্যবহার হবে।",
+"col.wardNo": "ওয়ার্ড নং",
+"field.wardNo": "ওয়ার্ড নং"
 }

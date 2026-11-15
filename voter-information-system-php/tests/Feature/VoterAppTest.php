@@ -238,6 +238,52 @@ class VoterAppTest extends TestCase
         $this->get('/reports/age-gender?assemblyNo=45&print=1')->assertOk()->assertDontSee('ageMin=26', false);   // no links when printing
     }
 
+    public function test_ward_filter_on_every_screen(): void
+    {
+        $this->login();
+        $inWard2 = Voter::where('assembly_no', 45)->where('ward_no', 2)->distinct()->orderBy('booth_no')->pluck('booth_no')->all();
+        $this->assertNotEmpty($inWard2);
+        $this->assertEmpty(array_diff($inWard2, [5, 6, 7, 8]));   // demo: booths 5-8 form ward 2
+        $n = Voter::where('assembly_no', 45)->where('ward_no', 2)->count();
+        // voter list: ward drop-down, ward -> booth map for the Booth drop-down, filtered rows
+        $html = $this->get('/voters?assemblyNo=45&wardNo=2')->assertOk()->getContent();
+        $this->assertStringContainsString('name="wardNo"', $html);
+        $this->assertStringContainsString('"2":' . json_encode($inWard2), html_entity_decode($html));
+        $this->assertStringContainsString(t('list.showing', 1, min(25, $n), $n), $html);
+        // export and print follow the filter
+        $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($this->get('/voters/export/excel?assemblyNo=45&wardNo=2')->baseResponse->getFile()->getPathname())->getActiveSheet()->toArray();
+        $this->assertSame($n + 4, count($book));
+        $this->assertContains(t('col.wardNo'), $book[3]);
+        // reports: only the ward's booths
+        $rep = $this->get('/reports/booth-summary?assemblyNo=45&wardNo=2')->assertOk()->getContent();
+        $this->assertStringContainsString(t('col.wardNo') . ' 2', $rep);
+        $this->assertStringContainsString('name="wardNo"', $rep);
+        $rs = app(\App\Services\Reports\ReportService::class); $rs->ward = 2;
+        $this->assertSame($inWard2, array_map(fn ($r) => $r[1], $rs->build('booth-summary', 45, null, null)->rows));
+        $rs->ward = null;
+        // dashboard: booth charts of the ward only
+        $this->assertSame(array_map('strval', $inWard2), $this->get('/dashboard/data?assemblyNo=45&wardNo=2')->assertOk()->json('boothVoters.labels'));
+        $this->get('/dashboard?assemblyNo=45&wardNo=2')->assertOk()->assertSee('name="wardNo"', false);
+        // results: seat result and entry limited to the ward's booths
+        $e = Election::first();
+        $c = app(\App\Services\Results\ResultService::class)->contest($e, 45, 2);
+        $this->assertEmpty(array_diff(array_column($c['booths'], 'booth_no'), $inWard2));
+        $this->assertSame($n, $c['electors']);
+        $this->get("/results/contest?electionId={$e->id}&assemblyNo=45&wardNo=2")->assertOk()->assertSee(t('col.wardNo') . ' 2');
+        $entry = $this->get("/results/entry?electionId={$e->id}&assemblyNo=45&wardNo=2")->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/wardNo=2&(amp;)?boothNo=' . $inWard2[0] . '"/', $entry);
+        $this->assertStringNotContainsString('boothNo=9"', $entry);
+        // masters: booths of the ward
+        $this->get('/masters/booths?assemblyNo=45&wardNo=2')->assertOk()->assertSee('Govt. School Room 1, ')->assertSee('name="wardNo"', false);
+        // import: a numeric "Ward" column becomes the ward number
+        $book2 = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $book2->getActiveSheet()->fromArray([['Ward', 'Booth', 'V.SNo.', 'VoterID', 'Name', 'Gender'], ['102', '3', '9', 'WRD0000001', 'Ward Test', 'F']]);
+        $path = tempnam(sys_get_temp_dir(), 'w') . '.xlsx';
+        \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book2, 'Xlsx')->save($path);
+        $this->post('/voters/import', ['file' => new UploadedFile($path, 'w.xlsx', null, null, true), 'defaultAssembly' => 45])->assertOk();
+        $this->assertSame(102, Voter::where('epic_no', 'WRD0000001')->value('ward_no'));
+    }
+
     public function test_duplicate_report_finds_planted_duplicates(): void
     {
         $this->login();

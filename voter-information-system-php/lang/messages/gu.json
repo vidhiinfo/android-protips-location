@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "લગ્ન વર્ષગાંઠ",
 "validation.date": "માન્ય તારીખ દાખલ કરો",
 "import.defaultAssembly": "વિધાનસભા (જે પંક્તિઓમાં નથી)",
-"import.defaultAssemblyHelp": "ફાઇલમાં વિધાનસભા નં. કૉલમ ન હોય (જેમ કે વોર્ડ/બૂથ યાદી) ત્યારે વપરાશે."
+"import.defaultAssemblyHelp": "ફાઇલમાં વિધાનસભા નં. કૉલમ ન હોય (જેમ કે વોર્ડ/બૂથ યાદી) ત્યારે વપરાશે.",
+"col.wardNo": "વોર્ડ નં.",
+"field.wardNo": "વોર્ડ નં."
 }

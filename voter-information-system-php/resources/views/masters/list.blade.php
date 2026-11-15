@@ -17,6 +17,11 @@
                 <option value="">{{ t('common.all') }}</option>
                 @foreach($assemblies as $a)<option value="{{ $a->assembly_no }}" @selected($a->assembly_no == $filterValue)>{{ $a->assembly_no }} - {{ $a->name }}</option>@endforeach</select>
             @endif
+            @if(!empty($wards))
+            <select name="wardNo" class="form-select form-select-sm" data-autosubmit title="{{ t('col.wardNo') }}">
+                <option value="">{{ t('col.wardNo') }}: {{ t('common.all') }}</option>
+                @foreach($wards as $w)<option value="{{ $w }}" @selected($w == $wardNo)>{{ t('col.wardNo') }} {{ $w }}</option>@endforeach</select>
+            @endif
         </form>
         @endif
         @if(can('MASTER_EDIT'))<a class="btn btn-primary btn-sm text-nowrap" href="{{ url('/masters/'.$d['type'].'/new') }}?assemblyNo={{ $filterValue }}&electionId={{ $electionId }}"><i class="bi bi-plus-lg"></i> {{ t('common.add') }}</a>@endif

@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS voters (
     address             VARCHAR(300),
     address_local       VARCHAR(300),
     village_ward        VARCHAR(100),
+    ward_no             INT                   COMMENT 'municipal ward no.',
     district            VARCHAR(100),
     pincode             VARCHAR(6),
     mobile              VARCHAR(10),
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS voters (
     INDEX idx_voter_mobile (mobile),
     INDEX idx_voter_district (district),
     INDEX idx_voter_village (village_ward),
+    INDEX idx_voter_ward_no (ward_no),
     INDEX idx_voter_caste (caste),
     INDEX idx_voter_membership_no (membership_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

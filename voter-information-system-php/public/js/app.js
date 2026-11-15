@@ -39,3 +39,23 @@ document.addEventListener('click', function (e) {
     .then(function (html) { body.innerHTML = html; })
     .catch(function () { window.open(href, '_blank'); });
 });
+
+// Ward No filter: show only the booths of the chosen ward in the Booth drop-down next to it
+document.querySelectorAll('select[data-ward-select]').forEach(function (ward) {
+    var booth = ward.dataset.boothSelect ? document.getElementById(ward.dataset.boothSelect) : null;
+    if (!booth) return;
+    var map = {};
+    try { map = JSON.parse(ward.dataset.map || '{}'); } catch (e) { map = {}; }
+    var all = Array.prototype.map.call(booth.options, function (o) { return { value: o.value, text: o.text }; });
+    function apply() {
+        var keep = ward.value ? (map[ward.value] || []).map(String) : null;
+        var current = booth.value;
+        booth.innerHTML = '';
+        all.forEach(function (o) {
+            if (o.value === '' || !keep || keep.indexOf(o.value) >= 0) booth.add(new Option(o.text, o.value, false, o.value === current));
+        });
+        if (keep && current && keep.indexOf(current) < 0) booth.value = '';
+    }
+    ward.addEventListener('change', apply);
+    apply();
+});

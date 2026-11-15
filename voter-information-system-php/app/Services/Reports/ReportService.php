@@ -26,6 +26,9 @@ class ReportService
     public const ADMIN_ONLY = ['category-summary', 'caste-summary'];
     public const SWING_PCT = 10.0;
 
+    /** Ward No filter for the report being built (null = all wards). */
+    public ?int $ward = null;
+
     public function __construct(private ResultService $results, private VoterService $voters) {}
 
     public static function all(): array { return array_merge(...array_values(self::SECTIONS)); }
@@ -59,6 +62,7 @@ class ReportService
     {
         $s = [];
         if ($a !== null) $s[] = t('col.assemblyNo') . " $a " . $this->assemblyName($a);
+        if ($this->ward !== null) $s[] = t('col.wardNo') . " {$this->ward}";
         if ($b !== null) $s[] = t('col.boothNo') . " $b";
         return $s ? trim(implode(', ', $s)) : t('report.allAssemblies');
     }
@@ -80,6 +84,7 @@ class ReportService
         $q = DB::table('voters')->selectRaw('assembly_no, max(assembly_name) as aname, count(distinct booth_no) as booths, ' . self::COUNTS)
             ->groupBy('assembly_no')->orderBy('assembly_no');
         if ($only !== null) $q->where('assembly_no', $only);
+        if ($this->ward !== null) $q->where('ward_no', $this->ward);
         foreach ($q->get() as $x) {
             $vals = [(int) $x->booths, (int) $x->total, (int) $x->male, (int) $x->female, (int) $x->other, (int) $x->with_mobile, (int) $x->young, (int) $x->senior];
             $r->add([(int) $x->assembly_no, $this->assemblyName((int) $x->assembly_no, $x->aname), $vals[0], $vals[1], $vals[2], $vals[3], $vals[4],
@@ -93,7 +98,7 @@ class ReportService
     public function boothRows(?int $a)
     {
         return DB::table('voters')->selectRaw('assembly_no, booth_no, max(booth_name) as bname, ' . self::COUNTS)
-            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->groupBy('assembly_no', 'booth_no')->orderBy('assembly_no')->orderBy('booth_no')->get();
+            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->groupBy('assembly_no', 'booth_no')->orderBy('assembly_no')->orderBy('booth_no')->get();
     }
 
     public function boothSummary(?int $a): Report
@@ -119,7 +124,7 @@ class ReportService
         $r = (new Report(t('report.village-summary'), $this->h('col.villageWard', 'report.total', 'gender.MALE', 'gender.FEMALE', 'gender.OTHER',
             'report.withMobile', 'report.mobilePct', 'report.age18to25', 'report.age60plus')))->subtitle($this->scope($a, null));
         $rows = DB::table('voters')->selectRaw("coalesce(village_ward, '-') as vw, " . self::COUNTS)
-            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->groupBy('village_ward')->orderByDesc('total')->get();
+            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->groupBy('village_ward')->orderByDesc('total')->get();
         foreach ($rows as $x) $r->add([$x->vw, (int) $x->total, (int) $x->male, (int) $x->female, (int) $x->other, (int) $x->with_mobile,
             self::pct($x->with_mobile, $x->total), (int) $x->young, (int) $x->senior]);
         return $r;
@@ -129,7 +134,7 @@ class ReportService
     {
         $groups = [[18, 25], [26, 35], [36, 45], [46, 60], [61, 80], [81, 200]];
         $counts = array_fill(0, count($groups) + 1, ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0]);
-        $rows = DB::table('voters')->selectRaw('age, gender, count(*) as c')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))
+        $rows = DB::table('voters')->selectRaw('age, gender, count(*) as c')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))
             ->when($b !== null, fn ($q) => $q->where('booth_no', $b))->groupBy('age', 'gender')->get();
         foreach ($rows as $x) {
             $idx = count($groups);
@@ -147,14 +152,14 @@ class ReportService
             // each count opens the voter list with that age group (and gender), ready for Excel / PDF / print
             $links = [];
             if ($i < count($groups)) {
-                $base = ['assemblyNo' => $a, 'boothNo' => $b, 'ageMin' => $groups[$i][0], 'ageMax' => $groups[$i][1] >= 200 ? null : $groups[$i][1]];
+                $base = ['assemblyNo' => $a, 'wardNo' => $this->ward, 'boothNo' => $b, 'ageMin' => $groups[$i][0], 'ageMax' => $groups[$i][1] >= 200 ? null : $groups[$i][1]];
                 $links = [0 => $base, 1 => $base + ['gender' => 'MALE'], 2 => $base + ['gender' => 'FEMALE'], 3 => $base + ['gender' => 'OTHER'], 4 => $base];
             }
             $r->add([$label, $c['MALE'], $c['FEMALE'], $c['OTHER'], $t, self::pct($t, $grand)], $links);
             foreach ($c as $g => $n) $tot[$g] += $n;
         }
         $r->totals = [t('report.total'), $tot['MALE'], $tot['FEMALE'], $tot['OTHER'], $grand, $grand ? 100.0 : 0.0];
-        $all = ['assemblyNo' => $a, 'boothNo' => $b];
+        $all = ['assemblyNo' => $a, 'wardNo' => $this->ward, 'boothNo' => $b];
         $r->links['totals'] = [1 => $all + ['gender' => 'MALE'], 2 => $all + ['gender' => 'FEMALE'], 3 => $all + ['gender' => 'OTHER'], 4 => $all];
         return $r;
     }
@@ -166,7 +171,7 @@ class ReportService
             'report.sharePct', 'report.withMobile', 'report.mobilePct')))->subtitle($this->scope($a, $b) . ' | ' . t('report.sensitiveNote'));
         $rows = DB::table('voters')->selectRaw("trim(coalesce(caste, '')) as caste, gender, count(*) as c,
                 sum(case when mobile is not null and mobile <> '' then 1 else 0 end) as m")
-            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($b !== null, fn ($q) => $q->where('booth_no', $b))
+            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->when($b !== null, fn ($q) => $q->where('booth_no', $b))
             ->where(fn ($q) => $q->where('deleted', false)->orWhereNull('deleted'))
             ->groupBy(DB::raw("trim(coalesce(caste, ''))"), 'gender')->get();
         $by = [];
@@ -227,7 +232,7 @@ class ReportService
             'report.cat.SC', 'report.cat.ST', 'report.cat.other', 'report.cat.none', 'report.total')))
             ->subtitle($this->scope($a, null) . ' | ' . t('report.sensitiveNote'));
         $rows = DB::table('voters')->selectRaw("assembly_no, booth_no, upper(trim(coalesce(category, ''))) as cat, count(*) as c")
-            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->groupBy('assembly_no', 'booth_no', DB::raw("upper(trim(coalesce(category, '')))"))
+            ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->groupBy('assembly_no', 'booth_no', DB::raw("upper(trim(coalesce(category, '')))"))
             ->orderBy('assembly_no')->orderBy('booth_no')->get();
         $by = [];
         foreach ($rows as $x) {
@@ -253,6 +258,7 @@ class ReportService
     {
         $f = new VoterFilter();
         $f->set('assemblyNo', $a);
+        $f->set('wardNo', $this->ward);
         $f->set('boothNo', $b);
         $f->sort = 'boothNo';
         return $f;
@@ -352,7 +358,9 @@ class ReportService
             foreach ($c['totals'] as $t) $partyOf[$t['candidate']->id] = $t['candidate']->partyShort();
             $electors = [];
             foreach ($this->boothRows($c['assembly_no']) as $b) $electors[$b->booth_no] = (int) $b->total;
+            $inWard = $this->ward !== null ? ($this->voters->boothsByWard($c['assembly_no'])[$this->ward] ?? []) : null;
             foreach ($c['booths'] as $b) {
+                if ($inWard !== null && !in_array($b['booth_no'], $inWard)) continue;
                 $mine = 0; $rival = 0; $rp = '';
                 foreach ($b['votes'] as $cid => $v) {
                     $p = $partyOf[$cid] ?? '';

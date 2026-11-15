@@ -12,6 +12,12 @@
                     @foreach($assemblies as $no => $name)<option value="{{ $no }}" @selected($no == $assemblyNo)>{{ $no }} - {{ $name }}</option>@endforeach
                 </select></div>
             @endunless
+            @if($wards)
+            <div><label class="form-label small mb-0">{{ t('col.wardNo') }}</label>
+                <select name="wardNo" class="form-select form-select-sm" data-autosubmit><option value="">{{ t('common.all') }}</option>
+                    @foreach($wards as $w)<option value="{{ $w }}" @selected($w == $wardNo)>{{ $w }}</option>@endforeach
+                </select></div>
+            @endif
             <div><label class="form-label small mb-0">{{ t('master.election') }}</label>
                 <select name="electionId" class="form-select form-select-sm" data-autosubmit>
                     @foreach($elections as $e)<option value="{{ $e->id }}" @selected($election && $e->id == $election->id)>{{ $e->name }}</option>@endforeach

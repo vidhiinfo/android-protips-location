@@ -3,11 +3,19 @@
 @section('content')
 <div class="container-fluid px-3" style="max-width:1300px">
     <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-        <h4 class="me-auto mb-0"><i class="bi bi-trophy"></i> {{ $c['assembly_no'] }} - {{ $c['assembly_name'] }} <small class="text-muted fs-6">{{ $c['election']->name }}</small></h4>
-        <a class="btn btn-sm btn-success no-print" href="{{ url('/results/contest/export/xlsx') }}?electionId={{ $c['election']->id }}&assemblyNo={{ $c['assembly_no'] }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
-        <a class="btn btn-sm btn-danger no-print" href="{{ url('/results/contest/export/pdf') }}?electionId={{ $c['election']->id }}&assemblyNo={{ $c['assembly_no'] }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        <h4 class="me-auto mb-0"><i class="bi bi-trophy"></i> {{ $c['assembly_no'] }} - {{ $c['assembly_name'] }}@if($c['ward_no']) <span class="badge text-bg-info fs-6">{{ t('col.wardNo') }} {{ $c['ward_no'] }}</span>@endif <small class="text-muted fs-6">{{ $c['election']->name }}</small></h4>
+        <a class="btn btn-sm btn-success no-print" href="{{ url('/results/contest/export/xlsx') }}?electionId={{ $c['election']->id }}&assemblyNo={{ $c['assembly_no'] }}{{ $c['ward_no'] ? '&wardNo='.$c['ward_no'] : '' }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a class="btn btn-sm btn-danger no-print" href="{{ url('/results/contest/export/pdf') }}?electionId={{ $c['election']->id }}&assemblyNo={{ $c['assembly_no'] }}{{ $c['ward_no'] ? '&wardNo='.$c['ward_no'] : '' }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <button class="btn btn-sm btn-secondary no-print" data-print><i class="bi bi-printer"></i> {{ t('common.print') }}</button>
     </div>
+    @if($wards)
+    <form method="get" class="d-flex gap-2 align-items-end mb-3 no-print">
+        <input type="hidden" name="electionId" value="{{ $c['election']->id }}"><input type="hidden" name="assemblyNo" value="{{ $c['assembly_no'] }}">
+        <div><label class="form-label small mb-0">{{ t('col.wardNo') }}</label>
+            <select name="wardNo" class="form-select form-select-sm" data-autosubmit><option value="">{{ t('common.all') }}</option>
+                @foreach($wards as $w)<option value="{{ $w }}" @selected($w == $wardNo)>{{ $w }}</option>@endforeach</select></div>
+    </form>
+    @endif
     <div class="row g-2 mb-3">
         <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('result.totalVotes') }}</div><div class="num">{{ $c['total_votes'] }}</div></div></div>
         <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('result.electors') }}</div><div class="num">{{ $c['electors'] }}</div></div></div>

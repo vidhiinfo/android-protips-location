@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "ਵਿਆਹ ਦੀ ਵਰ੍ਹੇਗੰਢ",
 "validation.date": "ਸਹੀ ਮਿਤੀ ਦਰਜ ਕਰੋ",
 "import.defaultAssembly": "ਵਿਧਾਨ ਸਭਾ (ਜਿਨ੍ਹਾਂ ਕਤਾਰਾਂ ਵਿੱਚ ਨਹੀਂ)",
-"import.defaultAssemblyHelp": "ਜਦੋਂ ਫਾਈਲ ਵਿੱਚ ਵਿਧਾਨ ਸਭਾ ਨੰ. ਕਾਲਮ ਨਾ ਹੋਵੇ (ਜਿਵੇਂ ਵਾਰਡ/ਬੂਥ ਸੂਚੀ) ਤਾਂ ਵਰਤੀ ਜਾਵੇਗੀ।"
+"import.defaultAssemblyHelp": "ਜਦੋਂ ਫਾਈਲ ਵਿੱਚ ਵਿਧਾਨ ਸਭਾ ਨੰ. ਕਾਲਮ ਨਾ ਹੋਵੇ (ਜਿਵੇਂ ਵਾਰਡ/ਬੂਥ ਸੂਚੀ) ਤਾਂ ਵਰਤੀ ਜਾਵੇਗੀ।",
+"col.wardNo": "ਵਾਰਡ ਨੰ.",
+"field.wardNo": "ਵਾਰਡ ਨੰ."
 }

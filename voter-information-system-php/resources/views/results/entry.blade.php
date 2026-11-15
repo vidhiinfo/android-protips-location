@@ -9,19 +9,24 @@
         <div class="col-md-4"><label class="form-label small">{{ t('col.assemblyNo') }}</label>
             <select name="assemblyNo" class="form-select form-select-sm" data-autosubmit><option value="">--</option>
                 @foreach($seats as $no => $name)<option value="{{ $no }}" @selected($no == $assemblyNo)>{{ $no }} - {{ $name }}</option>@endforeach</select></div>
+        @if($wards)
+        <div class="col-md-3"><label class="form-label small">{{ t('col.wardNo') }}</label>
+            <select name="wardNo" class="form-select form-select-sm" data-autosubmit><option value="">{{ t('common.all') }}</option>
+                @foreach($wards as $w)<option value="{{ $w }}" @selected($w == $wardNo)>{{ $w }}</option>@endforeach</select></div>
+        @endif
     </div></form>
     @if($election && !$seats)<div class="alert alert-info">{{ t('result.noContests') }}</div>@endif
     @if($boothList)
     <div class="mb-3"><div class="small text-muted mb-1">{{ t('result.pickBooth') }}</div>
         <div class="d-flex flex-wrap gap-1">@foreach($boothList as $b)
             <a class="btn btn-sm {{ $b->booth_no == $boothNo ? 'btn-primary' : (in_array($b->booth_no, $reported) ? 'btn-outline-success booth-done' : 'btn-outline-secondary') }}"
-               href="{{ url('/results/entry') }}?electionId={{ $election->id }}&assemblyNo={{ $assemblyNo }}&boothNo={{ $b->booth_no }}" title="{{ $b->name }}">{{ $b->booth_no }}</a>
+               href="{{ url('/results/entry') }}?electionId={{ $election->id }}&assemblyNo={{ $assemblyNo }}{{ $wardNo ? '&wardNo='.$wardNo : '' }}&boothNo={{ $b->booth_no }}" title="{{ $b->name }}">{{ $b->booth_no }}</a>
         @endforeach</div>
         <div class="small text-muted mt-1"><span class="badge booth-done text-success border border-success">&nbsp;</span> {{ t('result.reportedLegend') }}</div></div>
     @endif
     @if($entries !== null)
     <form method="post" action="{{ url('/results/entry') }}" class="card">@csrf
-        <input type="hidden" name="electionId" value="{{ $election->id }}"><input type="hidden" name="assemblyNo" value="{{ $assemblyNo }}"><input type="hidden" name="boothNo" value="{{ $boothNo }}">
+        <input type="hidden" name="electionId" value="{{ $election->id }}"><input type="hidden" name="assemblyNo" value="{{ $assemblyNo }}"><input type="hidden" name="boothNo" value="{{ $boothNo }}"><input type="hidden" name="wardNo" value="{{ $wardNo }}">
         <div class="card-header fw-semibold">{{ t('col.boothNo') }} {{ $boothNo }}</div>
         @if(!$entries)<div class="card-body text-muted">{{ t('result.noCandidates') }}</div>
         @else

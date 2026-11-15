@@ -23,6 +23,7 @@ class ReportController extends Controller
     private function build(Request $r, string $id)
     {
         $e = $r->query('electionId') ? Election::find($r->query('electionId')) : Election::where('current', true)->first();
+        $this->reports->ward = is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null;
         return $this->reports->build($id, $this->user()->restrict($r->query('assemblyNo')), $r->query('boothNo') ? (int) $r->query('boothNo') : null,
             $e, $r->query('scope'), $r->query('party'));
     }
@@ -34,6 +35,7 @@ class ReportController extends Controller
         $this->check($id);
         $a = $this->user()->restrict($r->query('assemblyNo'));
         $data = ['reportId' => $id, 'report' => $this->build($r, $id), 'assemblyNo' => $a, 'boothNo' => $r->query('boothNo'),
+            'wardNo' => $r->query('wardNo'), 'wards' => $voters->wards($a), 'wardMap' => $voters->boothsByWard($a),
             'electionId' => $r->query('electionId'), 'scope' => $r->query('scope'), 'party' => $r->query('party'),
             'assemblies' => $voters->assemblies(), 'booths' => $voters->booths($a), 'parties' => Party::orderBy('name')->get(),
             'elections' => Election::orderByDesc('election_year')->get(), 'autoprint' => $r->has('print')];

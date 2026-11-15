@@ -77,7 +77,26 @@ class VoterService
         return $m;
     }
 
-    public function booths(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->distinct()->orderBy('booth_no')->pluck('booth_no')->all(); }
+    public function booths(?int $a, ?int $ward = null): array
+    {
+        return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->when($ward, fn ($q) => $q->where('ward_no', $ward))
+            ->distinct()->orderBy('booth_no')->pluck('booth_no')->all();
+    }
+
+    /** Ward numbers present in the voter data (of one assembly, or all). */
+    public function wards(?int $a): array
+    {
+        return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('ward_no')->distinct()->orderBy('ward_no')->pluck('ward_no')->all();
+    }
+
+    /** Which booths lie in which ward: [ward_no => [booth_no, ...]] - drives the Booth drop-down when a ward is chosen. */
+    public function boothsByWard(?int $a): array
+    {
+        $map = [];
+        foreach (Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('ward_no')->select('ward_no', 'booth_no')->distinct()
+                     ->orderBy('ward_no')->orderBy('booth_no')->get() as $r) $map[$r->ward_no][] = $r->booth_no;
+        return $map;
+    }
     public function districts(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('district')->where('district', '<>', '')->distinct()->orderBy('district')->pluck('district')->all(); }
     public function villages(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('village_ward')->where('village_ward', '<>', '')->distinct()->orderBy('village_ward')->pluck('village_ward')->all(); }
 
@@ -118,6 +137,7 @@ class VoterService
             'address' => ['nullable', 'max:300'],
             'address_local' => ['nullable', 'max:300'],
             'village_ward' => ['nullable', 'max:100'],
+            'ward_no' => ['nullable', 'integer', 'min:1'],
             'district' => ['nullable', 'max:100'],
             'pincode' => ['nullable', 'regex:/^[0-9]{6}$/'],
             'mobile' => ['nullable', 'regex:/^[6-9][0-9]{9}$/'],

@@ -39,6 +39,7 @@ class VoterController extends Controller
         $page = $this->voters->search($f);
         $a = $f->get('assemblyNo');
         return view('voters.list', ['f' => $f, 'page' => $page, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($a),
+            'wards' => $this->voters->wards($a), 'wardMap' => $this->voters->boothsByWard($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
             'castes' => $this->voters->distinctValues('caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
             'total' => $this->voters->total($this->user()->workAssembly()), 'genderCounts' => $this->voters->genderCounts($this->user()->workAssembly())]);
@@ -108,6 +109,7 @@ class VoterController extends Controller
             $name = $this->voters->assemblies()[$a] ?? '';
             $t .= ' - ' . t('col.assemblyNo') . " $a" . ($name ? " ($name)" : '');
         }
+        if ($w = $f->get('wardNo')) $t .= ' - ' . t('col.wardNo') . " $w";
         if ($b = $f->get('boothNo')) $t .= ' - ' . t('col.boothNo') . " $b";
         return $t;
     }
@@ -115,6 +117,7 @@ class VoterController extends Controller
     public static function summary(VoterFilter $f): string
     {
         $s = [];
+        if ($w = $f->get('wardNo')) $s[] = t('col.wardNo') . ': ' . $w;
         foreach (['q' => 'filter.search', 'name' => 'col.name', 'relativeName' => 'col.relativeName', 'epicNo' => 'col.epicNo', 'mobile' => 'col.mobile',
                      'houseNo' => 'col.houseNo', 'district' => 'col.district', 'villageWard' => 'col.villageWard', 'caste' => 'col.caste',
                      'politicalStatus' => 'col.politicalStatus', 'beneficiary' => 'filter.beneficiary', 'membershipNo' => 'col.membershipNo'] as $k => $label) {

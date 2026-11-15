@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "వివాహ వార్షికోత్సవం",
 "validation.date": "సరైన తేదీని నమోదు చేయండి",
 "import.defaultAssembly": "నియోజకవర్గం (లేని వరుసలకు)",
-"import.defaultAssemblyHelp": "ఫైల్‌లో నియోజకవర్గ సంఖ్య కాలమ్ లేకపోతే (ఉదా. వార్డు/బూత్ జాబితా) ఉపయోగించబడుతుంది."
+"import.defaultAssemblyHelp": "ఫైల్‌లో నియోజకవర్గ సంఖ్య కాలమ్ లేకపోతే (ఉదా. వార్డు/బూత్ జాబితా) ఉపయోగించబడుతుంది.",
+"col.wardNo": "వార్డు సంఖ్య",
+"field.wardNo": "వార్డు సంఖ్య"
 }

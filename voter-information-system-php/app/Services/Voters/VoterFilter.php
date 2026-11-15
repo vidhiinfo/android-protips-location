@@ -13,8 +13,8 @@ class VoterFilter
 {
     public const SORTABLE = ['epicNo' => 'epic_no', 'name' => 'name', 'nameLocal' => 'name_local', 'relativeName' => 'relative_name',
         'gender' => 'gender', 'age' => 'age', 'assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'serialNo' => 'serial_no',
-        'villageWard' => 'village_ward', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
-    public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
+        'villageWard' => 'village_ward', 'wardNo' => 'ward_no', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
+    public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'wardNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
         'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted'];
 
     public array $v = [];
@@ -30,7 +30,7 @@ class VoterFilter
             $val = $r->query($k, $r->input($k));
             if ($val !== null && $val !== '') $f->v[$k] = is_string($val) ? trim($val) : $val;
         }
-        foreach (['assemblyNo', 'boothNo', 'ageMin', 'ageMax'] as $k) {
+        foreach (['assemblyNo', 'wardNo', 'boothNo', 'ageMin', 'ageMax'] as $k) {
             if (isset($f->v[$k])) { if (is_numeric($f->v[$k])) $f->v[$k] = (int) $f->v[$k]; else unset($f->v[$k]); }
         }
         if (isset($f->v['gender']) && !in_array($f->v['gender'], ['MALE', 'FEMALE', 'OTHER'], true)) unset($f->v['gender']);
@@ -100,7 +100,7 @@ class VoterFilter
             }
         }
         if ($s = $this->get('houseNo')) $q->whereRaw('lower(house_no) = ?', [Text::lower($s)]);
-        foreach (['assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward',
+        foreach (['assemblyNo' => 'assembly_no', 'wardNo' => 'ward_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward',
                      'caste' => 'caste', 'politicalStatus' => 'political_status'] as $k => $c) {
             if (($val = $this->get($k)) !== null) $q->where($c, $val);
         }

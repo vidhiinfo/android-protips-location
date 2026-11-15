@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "Anniversary",
 "validation.date": "Enter a valid date",
 "import.defaultAssembly": "Assembly for rows without one",
-"import.defaultAssemblyHelp": "Used when the file has no Assembly No column (e.g. a ward/booth list)."
+"import.defaultAssemblyHelp": "Used when the file has no Assembly No column (e.g. a ward/booth list).",
+"col.wardNo": "Ward No",
+"field.wardNo": "Ward No"
 }

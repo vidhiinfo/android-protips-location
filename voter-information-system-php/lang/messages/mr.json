@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "लग्नाचा वाढदिवस",
 "validation.date": "वैध तारीख टाका",
 "import.defaultAssembly": "विधानसभा (ज्या ओळींमध्ये नाही)",
-"import.defaultAssemblyHelp": "फाइलमध्ये विधानसभा क्र. स्तंभ नसल्यास (उदा. वॉर्ड/बूथ यादी) वापरली जाईल."
+"import.defaultAssemblyHelp": "फाइलमध्ये विधानसभा क्र. स्तंभ नसल्यास (उदा. वॉर्ड/बूथ यादी) वापरली जाईल.",
+"col.wardNo": "प्रभाग क्र.",
+"field.wardNo": "प्रभाग क्र."
 }

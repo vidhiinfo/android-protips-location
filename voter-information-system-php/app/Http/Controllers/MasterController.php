@@ -97,8 +97,18 @@ class MasterController extends Controller
         else $electionId = $r->query('electionId');
         if ($type === 'candidates' && $electionId) $q->where('election_id', $electionId);
         if ($filterValue) $q->where($d['filter'], $filterValue);
+        // booths: Ward No filter (the ward of a booth comes from its voters)
+        $wards = []; $wardNo = is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null;
+        if ($type === 'booths') {
+            $vs = app(\App\Services\Voters\VoterService::class);
+            $wards = $vs->wards($filterValue);
+            if ($wardNo !== null) {
+                $map = $vs->boothsByWard($filterValue);
+                $q->whereIn('booth_no', ($map[$wardNo] ?? []) ?: [0]);
+            }
+        }
         foreach ($d['order'] as $o) { [$c, $dir] = explode(' ', $o . ' asc'); $q->orderBy($c, $dir); }
-        return view('masters.list', ['d' => $d, 'items' => $q->get(), 'filterValue' => $filterValue, 'electionId' => $electionId,
+        return view('masters.list', ['d' => $d, 'items' => $q->get(), 'filterValue' => $filterValue, 'electionId' => $electionId, 'wards' => $wards, 'wardNo' => $wardNo,
             'assemblies' => Assembly::orderBy('assembly_no')->get(), 'elections' => Election::orderByDesc('election_year')->get()]);
     }
 

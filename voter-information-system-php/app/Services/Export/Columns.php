@@ -26,6 +26,7 @@ class Columns
             ['col.address', fn (Voter $v) => $v->address, 9],
             ['col.addressLocal', fn (Voter $v) => $v->address_local, 0],
             ['col.villageWard', fn (Voter $v) => $v->village_ward, 0],
+            ['col.wardNo', fn (Voter $v) => $v->ward_no, 0],
             ['col.district', fn (Voter $v) => $v->district, 0],
             ['col.pincode', fn (Voter $v) => $v->pincode, 0],
             ['col.mobile', fn (Voter $v) => $v->mobile, 8],

@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "विवाह वर्षगांठ",
 "validation.date": "मान्य तिथि दर्ज करें",
 "import.defaultAssembly": "विधानसभा (जिन पंक्तियों में नहीं है)",
-"import.defaultAssemblyHelp": "जब फ़ाइल में विधानसभा सं. का कॉलम न हो (जैसे वार्ड/बूथ सूची) तब उपयोग होगी।"
+"import.defaultAssemblyHelp": "जब फ़ाइल में विधानसभा सं. का कॉलम न हो (जैसे वार्ड/बूथ सूची) तब उपयोग होगी।",
+"col.wardNo": "वार्ड सं.",
+"field.wardNo": "वार्ड सं."
 }

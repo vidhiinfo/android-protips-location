@@ -19,9 +19,7 @@
                     <option value="">{{ t('common.all') }}</option>
                     @foreach($assemblies as $no => $name)<option value="{{ $no }}" @selected($no == $f->get('assemblyNo'))>{{ $no }}{{ $name ? ' - '.$name : '' }}</option>@endforeach
                 </select></div>
-            <div class="col-6 col-md-2"><label class="form-label">{{ t('col.boothNo') }}</label>
-                <select name="boothNo" class="form-select"><option value="">{{ t('common.all') }}</option>
-                    @foreach($booths as $b)<option value="{{ $b }}" @selected($b == $f->get('boothNo'))>{{ $b }}</option>@endforeach</select></div>
+            @include('partials.ward-booth', ['wards' => $wards, 'wardNo' => $f->get('wardNo'), 'wardMap' => $wardMap, 'booths' => $booths, 'boothNo' => $f->get('boothNo'), 'cls' => 'col-6 col-md-1'])
             <div class="col-md-2 d-flex gap-2">
                 <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> {{ t('common.search') }}</button>
                 <a href="{{ url('/voters') }}" class="btn btn-outline-secondary" title="{{ t('common.reset') }}"><i class="bi bi-x-lg"></i></a></div>

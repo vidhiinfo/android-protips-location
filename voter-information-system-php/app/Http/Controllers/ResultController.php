@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Voters\VoterService;
+
 use App\Models\Assembly;
 use App\Models\Booth;
 use App\Models\Election;
@@ -29,21 +31,24 @@ class ResultController extends Controller
         return view('results.overview', $this->common($e) + ['contests' => $contests]);
     }
 
+    private function ward(Request $r): ?int { return is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null; }
+
     public function contest(Request $r)
     {
         $e = Election::currentOrLatest($r->query('electionId') ? (int) $r->query('electionId') : null);
         if (!$e) return redirect('/results');
         $a = $this->user()->restrict($r->query('assemblyNo'));
         abort_if($a === null, 404);
-        return view('results.contest', $this->common($e) + ['c' => $this->results->contest($e, $a)]);
+        $w = $this->ward($r);
+        return view('results.contest', $this->common($e) + ['c' => $this->results->contest($e, $a, $w), 'wards' => app(VoterService::class)->wards($a), 'wardNo' => $w]);
     }
 
     public function exportContest(Request $r, string $format, ExcelExporter $x, PdfExporter $p)
     {
         $e = Election::findOrFail($r->query('electionId'));
         $a = $this->user()->restrict($r->query('assemblyNo'));
-        $c = $this->results->contest($e, $a);
-        $rep = (new Report(t('result.title') . ' - ' . t('col.assemblyNo') . " $a " . $c['assembly_name'],
+        $c = $this->results->contest($e, $a, $this->ward($r));
+        $rep = (new Report(t('result.title') . ' - ' . t('col.assemblyNo') . " $a " . $c['assembly_name'] . ($c['ward_no'] ? ' - ' . t('col.wardNo') . ' ' . $c['ward_no'] : ''),
             [t('result.rank'), t('result.candidate'), t('result.party'), t('result.votes'), t('result.voteSharePct')]))
             ->subtitle($e->name . ' | ' . t('result.turnoutPct') . ': ' . number_format($c['turnout'], 2) . ' | ' . t('result.margin') . ': ' . $c['margin']);
         foreach ($c['totals'] as $t) $rep->add([$t['rank'], $t['candidate']->name . ($t['candidate']->name_local ? ' / ' . $t['candidate']->name_local : ''),
@@ -58,9 +63,12 @@ class ResultController extends Controller
         $e = Election::currentOrLatest($r->query('electionId') ? (int) $r->query('electionId') : null);
         $a = $this->user()->restrict($r->query('assemblyNo'));
         $b = $r->query('boothNo') ? (int) $r->query('boothNo') : null;
-        $data = $this->common($e) + ['assemblyNo' => $a, 'boothNo' => $b, 'boothList' => null, 'entries' => null, 'reported' => []];
+        $w = $this->ward($r);
+        $data = $this->common($e) + ['assemblyNo' => $a, 'boothNo' => $b, 'boothList' => null, 'entries' => null, 'reported' => [], 'wards' => [], 'wardNo' => $w];
         if ($e && $a) {
-            $data['boothList'] = Booth::where('assembly_no', $a)->orderBy('booth_no')->get();
+            $data['wards'] = app(VoterService::class)->wards($a);
+            $inWard = $w !== null ? (app(VoterService::class)->boothsByWard($a)[$w] ?? []) : null;
+            $data['boothList'] = Booth::where('assembly_no', $a)->when($inWard !== null, fn ($q) => $q->whereIn('booth_no', $inWard ?: [0]))->orderBy('booth_no')->get();
             $data['reported'] = $this->results->reportedBooths($e->id, $a);
             if ($b) $data['entries'] = $this->results->boothEntry($e->id, $a, $b);
         }
@@ -72,7 +80,10 @@ class ResultController extends Controller
         $e = (int) $r->input('electionId'); $a = (int) $r->input('assemblyNo'); $b = (int) $r->input('boothNo');
         abort_unless($this->user()->allows($a), 403);
         $this->results->saveBooth($e, $a, $b, (array) $r->input('votes', []), $this->user()->username());
-        $next = Booth::where('assembly_no', $a)->where('booth_no', '>', $b)->orderBy('booth_no')->value('booth_no') ?? $b;
-        return redirect("/results/entry?electionId=$e&assemblyNo=$a&boothNo=$next")->with('success', 'flash.saved');
+        $w = is_numeric($r->input('wardNo')) ? (int) $r->input('wardNo') : null;
+        $inWard = $w !== null ? (app(VoterService::class)->boothsByWard($a)[$w] ?? []) : null;   // stay inside the chosen ward
+        $next = Booth::where('assembly_no', $a)->where('booth_no', '>', $b)->when($inWard !== null, fn ($q) => $q->whereIn('booth_no', $inWard ?: [0]))
+            ->orderBy('booth_no')->value('booth_no') ?? $b;
+        return redirect("/results/entry?electionId=$e&assemblyNo=$a" . ($w !== null ? "&wardNo=$w" : '') . "&boothNo=$next")->with('success', 'flash.saved');
     }
 }

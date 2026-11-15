@@ -19,17 +19,20 @@ class DashboardController extends Controller
         return $r->query('electionId') ? Election::find($r->query('electionId')) : Election::where('current', true)->first();
     }
 
+    private function ward(Request $r): ?int { return is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null; }
+
     public function page(Request $r, VoterService $v, DashboardService $d)
     {
         $a = $this->assembly($r, $v);
         $e = $this->election($r);
         return view('dashboard', ['assemblyNo' => $a, 'assemblies' => $v->assemblies(), 'elections' => Election::orderByDesc('election_year')->orderBy('name')->get(),
-            'election' => $e, 'data' => $a ? $d->build($a, $e, $r->query('party')) : null]);
+            'election' => $e, 'wards' => $v->wards($a), 'wardNo' => $this->ward($r),
+            'data' => $a ? $d->build($a, $e, $r->query('party'), $this->ward($r)) : null]);
     }
 
     public function data(Request $r, VoterService $v, DashboardService $d)
     {
         $a = $this->assembly($r, $v);
-        return response()->json($a ? $d->build($a, $this->election($r), $r->query('party')) : []);
+        return response()->json($a ? $d->build($a, $this->election($r), $r->query('party'), $this->ward($r)) : []);
     }
 }

@@ -597,5 +597,7 @@
 "report.occasion.anniversary": "شادی کی سالگرہ",
 "validation.date": "درست تاریخ درج کریں",
 "import.defaultAssembly": "اسمبلی (جن قطاروں میں نہیں ہے)",
-"import.defaultAssemblyHelp": "جب فائل میں اسمبلی نمبر کا کالم نہ ہو (مثلاً وارڈ/بوتھ فہرست) تب استعمال ہوگی۔"
+"import.defaultAssemblyHelp": "جب فائل میں اسمبلی نمبر کا کالم نہ ہو (مثلاً وارڈ/بوتھ فہرست) تب استعمال ہوگی۔",
+"col.wardNo": "وارڈ نمبر",
+"field.wardNo": "وارڈ نمبر"
 }
