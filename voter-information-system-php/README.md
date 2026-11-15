@@ -1,59 +1,87 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Voter Information System: PHP (Laravel 12) version
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The PHP version of the Voter Information System. It has the same screens, the same features and the same MySQL tables as the Java (Spring Boot) version, and it runs on **ordinary shared hosting** (GoDaddy, HostGator, Hostinger … with cPanel) without SSH.
 
-## About Laravel
+**To put it online, follow [docs/SHARED-HOSTING.md](docs/SHARED-HOSTING.md).**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+* **Voters**: search across English and local-language names, father/husband name, EPIC, mobile, house no. and address. Filters by assembly, booth, gender, age, district, village/ward and mobile. Sortable columns, paging, add / edit / delete, voter slip.
+* **House No popup**: click a house number to see everyone at that house number and address.
+* **Export and print**: Excel (any size, streamed) and PDF (Hindi, Bengali, Urdu, Tamil … correctly shaped), plus print view, for voter lists and every report.
+* **Bulk import** from Excel. The template and column names work in all 9 languages.
+* **9 languages**: English, हिन्दी, বাংলা, اردو (right-to-left), मराठी, ગુજરાતી, ਪੰਜਾਬੀ, தமிழ், తెలుగు, chosen on every page. Data is stored as utf8mb4 Unicode.
+* **Login**: username, password and an Assembly drop-down. A user can be locked to one assembly, and all work is limited to the chosen assembly.
+* **Role-based access**: Admin, Operator, Viewer, plus your own roles from 17 permissions. Users can also come from **your existing users / roles tables** (`USER_SOURCE=external`).
+* **Campaign dashboard**: 8 charts (age/gender, booth sizes, lead/trail by booth, vote share, turnout, mobile reach, young voters, households).
+* **13 reports**: assembly / booth / village summaries, age-gender, social category, first-time voters, voters 85+, large households, phone-bank list, results summary, party performance, swing booths, possible duplicate voters (same assembly or same village/ward).
+* **Results**: booth-wise result entry, seat results with winner, margin and turnout.
+* **SMS and WhatsApp**: templates, campaigns from any voter filter, opt-out list, sending window, rate limit and election silence period. Providers: Twilio, Meta WhatsApp Cloud API, or any HTTP SMS gateway. Dry-run mode until a provider is set.
+* **Audit log** of logins and every change.
+* **Masters**: assemblies, booths, parties, elections, candidates.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+* PHP **8.2+** with `pdo_mysql, mbstring, gd, zip, xml, dom, fileinfo, openssl, ctype, iconv, tokenizer`.
+* MySQL 5.7+ / 8 or MariaDB 10.3+.
+* That's all: no Node.js build, no queue worker, no Redis. SMS sending uses a cron job that runs every minute.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Run it on your PC (demo data, no MySQL needed)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install                     # only if the vendor folder is missing
+cp .env.demo .env                    # SQLite demo settings
+touch database/demo.sqlite
+php artisan migrate
+php artisan db:seed --class=DemoSeeder
+php artisan serve                    # http://localhost:8000
+```
 
-## Laravel Sponsors
+Demo logins:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| User | Password | Role | Assembly |
+|---|---|---|---|
+| admin | admin@123 | Administrator | any |
+| operator | operator@123 | Operator | any |
+| viewer | viewer@123 | Viewer | any |
+| jaipur | jaipur@123 | Operator | locked to 45 |
+| agent | agent@1234 | Booth Agent (custom role) | locked to 52 |
 
-### Premium Partners
+The demo data is fictional: three assemblies with Hindi, Urdu and Bengali names, about 2,000 voters, and an election with booth results.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Run it with MySQL
 
-## Contributing
+1. Create a utf8mb4 database and import `db/schema.sql` (phpMyAdmin → Import).
+2. `cp .env.example .env`, then set `DB_*`, `APP_URL`, `ADMIN_USER` and `ADMIN_PASSWORD`.
+3. Open the site. The first administrator is created from `ADMIN_USER` / `ADMIN_PASSWORD`.
+4. Optional, for SMS / WhatsApp: add a cron job every minute running `php artisan messages:send`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Tests
 
-## Code of Conduct
+```bash
+php artisan test        # 31 tests on in-memory SQLite
+# the same suite on MySQL:
+DB_CONNECTION=mysql DB_DATABASE=voter_test DB_USERNAME=... DB_PASSWORD=... php artisan test
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Where things are
 
-## Security Vulnerabilities
+| Path | What |
+|---|---|
+| `routes/web.php` | every URL, with the permission it needs |
+| `app/Http/Controllers` | one controller per menu (Voters, Masters, Results, Reports, Messages, Admin) |
+| `app/Services` | voter search and filters, reports, dashboard, results, Excel / PDF, messaging, login |
+| `app/Models` | one model per table |
+| `resources/views` | Blade templates (Bootstrap 5, RTL for Urdu) |
+| `lang/messages/*.json` | all screen text, one file per language |
+| `config/voters.php` | languages, login, user source, messaging settings (read from `.env`) |
+| `db/schema.sql` | MySQL tables, the same as the Java version |
+| `database/seeders/DemoSeeder.php` | demo data |
+| `docs/SHARED-HOSTING.md` | hosting guide (cPanel and IIS) |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Security notes
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+* Passwords are stored with bcrypt (`{bcrypt}$2y$…`, the same format as the Java version).
+* Provider keys (Twilio, WhatsApp, SMS gateway) are read only from `.env`, never stored in the database.
+* All SQL uses bound parameters. Forms have CSRF tokens. Logins are rate-limited (10 per minute) and every login is audited.
+* The social-category report needs the separate *Sensitive reports* permission.
