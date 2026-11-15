@@ -11,6 +11,7 @@
         <a class="btn btn-sm btn-secondary" target="_blank" href="{{ url('/reports/'.$reportId) }}?{{ $q }}&print=1"><i class="bi bi-printer"></i> {{ t('common.print') }}</a>
     </div>
     <p class="text-muted small">{{ $report->subtitle }}</p>
+    @include('partials.flash')
     <form method="get" class="card card-body py-2 mb-3"><div class="row g-2 align-items-end">
         <div class="col-md-3"><label class="form-label small">{{ t('col.assemblyNo') }}</label>
             <select name="assemblyNo" class="form-select form-select-sm" @disabled($me->scoped())><option value="">{{ t('common.all') }}</option>

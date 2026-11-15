@@ -14,12 +14,15 @@ class PdfExporter
 {
     private function mpdf(bool $landscape): Mpdf
     {
+        // big lists: ask for more memory / time where the host allows it (ignored otherwise)
+        if ((int) ini_get('memory_limit') > 0 && (int) ini_get('memory_limit') < 512) @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
         $tmp = storage_path('app/mpdf');
         if (!is_dir($tmp)) @mkdir($tmp, 0775, true);
         $m = new Mpdf([
             'mode' => 'utf-8', 'format' => $landscape ? 'A4-L' : 'A4', 'margin_left' => 8, 'margin_right' => 8, 'margin_top' => 10, 'margin_bottom' => 12,
             'autoScriptToLang' => true, 'autoLangToFont' => true, 'baseScript' => 1, 'autoArabic' => true,
-            'default_font' => 'freesans', 'tempDir' => $tmp, 'directionality' => Lang::rtl() ? 'rtl' : 'ltr',
+            'default_font' => 'freesans', 'tempDir' => $tmp, 'packTableData' => true, 'directionality' => Lang::rtl() ? 'rtl' : 'ltr',
         ]);
         $m->setFooter('{PAGENO}');
         return $m;
@@ -27,9 +30,9 @@ class PdfExporter
 
     private static function e($s): string { return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8'); }
 
-    private function table(array $headers, array $rows, ?array $totals, array $widths = []): string
+    private function table(array $headers, array $rows, ?array $totals, array $widths = [], bool $continued = false): string
     {
-        $h = '<table class="t" repeat_header="1"><thead><tr>';
+        $h = '<table class="t' . ($continued ? ' c' : '') . '" repeat_header="1"><thead><tr>';
         foreach ($headers as $i => $x) $h .= '<th' . (isset($widths[$i]) ? ' width="' . $widths[$i] . '%"' : '') . '>' . self::e($x) . '</th>';
         $h .= '</tr></thead><tbody>';
         foreach ($rows as $n => $row) {
@@ -45,7 +48,7 @@ class PdfExporter
         return $h . '</tbody></table>';
     }
 
-    private const CSS = '<style>
+    private const CSS = '
         body { font-family: freesans; font-size: 7.5pt; }
         h1 { font-size: 13pt; text-align: center; margin: 0 0 1mm; }
         .meta { text-align: center; color: #555; font-size: 7.5pt; margin-bottom: 3mm; }
@@ -55,7 +58,7 @@ class PdfExporter
         .t tr.z td { background: #f2f5fa; }
         .t td.n { text-align: right; }
         .t tr.tot td { font-weight: bold; background: #e1e6f0; }
-    </style>';
+        table.c { margin-top: 0; }';
 
     public function voters(iterable $voters, string $title, string $filterSummary): string
     {
@@ -73,7 +76,7 @@ class PdfExporter
         $meta = t('pdf.generated') . ' ' . now()->format('d-m-Y H:i') . '   |   ' . t('pdf.records') . ': ' . count($rows)
             . ($filterSummary !== '' ? '   |   ' . t('pdf.filters') . ': ' . $filterSummary : '');
         $m = $this->mpdf(true);
-        $m->WriteHTML(self::CSS . '<h1>' . self::e($title) . '</h1><div class="meta">' . self::e($meta) . '</div>' . $this->table($headers, $rows, null, $widths));
+        $this->write($m, '<h1>' . self::e($title) . '</h1><div class="meta">' . self::e($meta) . '</div>', $headers, $rows, null, $widths);
         return $m->Output('', 'S');
     }
 
@@ -81,7 +84,18 @@ class PdfExporter
     {
         $meta = ($r->subtitle !== '' ? $r->subtitle . '   |   ' : '') . t('pdf.generated') . ' ' . now()->format('d-m-Y H:i');
         $m = $this->mpdf(count($r->headers) > 7);
-        $m->WriteHTML(self::CSS . '<h1>' . self::e($r->title) . '</h1><div class="meta">' . self::e($meta) . '</div>' . $this->table($r->headers, $r->rows, $r->totals));
+        $this->write($m, '<h1>' . self::e($r->title) . '</h1><div class="meta">' . self::e($meta) . '</div>', $r->headers, $r->rows, $r->totals);
         return $m->Output('', 'S');
+    }
+
+    /** mPDF lays out a whole table in memory: write big lists as consecutive 150-row tables (same columns, header repeated on each page). */
+    private function write(Mpdf $m, string $top, array $headers, array $rows, ?array $totals, array $widths = []): void
+    {
+        $m->WriteHTML(self::CSS, \Mpdf\HTMLParserMode::HEADER_CSS);
+        $m->WriteHTML($top);
+        $chunks = array_chunk($rows, 150, true) ?: [[]];
+        foreach ($chunks as $i => $chunk) {
+            $m->WriteHTML($this->table($headers, $chunk, $i === count($chunks) - 1 ? $totals : null, $widths, $i > 0));
+        }
     }
 }

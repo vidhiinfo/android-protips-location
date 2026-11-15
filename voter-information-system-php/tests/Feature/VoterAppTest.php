@@ -106,10 +106,20 @@ class VoterAppTest extends TestCase
         $this->login();
         $x = $this->get('/voters/export/excel?assemblyNo=45')->assertOk();
         $this->assertStringContainsString('spreadsheetml', $x->headers->get('content-type'));
-        $this->assertStringStartsWith('PK', $x->getContent());
+        $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($x->baseResponse->getFile()->getPathname())->getActiveSheet()->toArray();
+        $this->assertSame(Voter::where('assembly_no', 45)->count() + 4, count($book));   // title, 2 blank, header
+        $v = Voter::where('assembly_no', 45)->whereNotNull('mobile')->orderBy('booth_no')->orderBy('serial_no')->first();
+        $this->assertContains($v->name_local, array_merge(...$book));
+        $this->assertContains($v->mobile, array_merge(...$book));
         $p = $this->get('/voters/export/pdf?assemblyNo=45&lang=hi')->assertOk();
         $this->assertStringStartsWith('%PDF', $p->getContent());
         $this->get('/voters/print?assemblyNo=45&autoprint=1')->assertOk()->assertSee('data-autoprint', false);
+        // big lists: PDF / print refused with a message, Excel still works
+        config(['voters.export.pdf_max_rows' => 100]);
+        $this->get('/voters/export/pdf')->assertRedirect()->assertSessionHas('error', 'export.pdf.tooMany');
+        $this->get('/voters/print')->assertRedirect();
+        $this->get('/reports/phone-bank/export/pdf')->assertRedirect()->assertSessionHas('error', 'export.pdf.tooMany');
+        $this->get('/reports/phone-bank/export/excel')->assertOk();
     }
 
     public function test_import_accepts_template_in_any_language(): void

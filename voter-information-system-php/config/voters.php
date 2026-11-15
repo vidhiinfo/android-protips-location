@@ -41,6 +41,11 @@ return [
         ],
     ],
 
+    'export' => [
+        // PDF / print of voter lists needs about 4.5 MB of PHP memory per 1,000 rows
+        'pdf_max_rows' => (int) env('PDF_MAX_ROWS', 5000),
+    ],
+
     'branding' => [
         'banner_image' => env('BRAND_BANNER', '/images/login-banner.svg'),
         'organisation' => env('BRAND_ORGANISATION', ''),

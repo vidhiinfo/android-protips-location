@@ -1,3 +1,4 @@
+@if($report->capped)<div class="alert alert-warning py-2 small">{{ t('report.capped', number_format(\App\Services\Reports\Report::MAX_ROWS)) }}</div>@endif
 @if($report->truncated() && empty($autoprint))<div class="alert alert-warning py-2 small">{{ t('report.truncated', \App\Services\Reports\Report::DISPLAY_LIMIT, count($report->rows)) }}</div>@endif
 <div class="table-responsive bg-white border rounded"><table class="table table-sm table-striped table-hover mb-0">
     <thead class="table-light"><tr>@foreach($report->headers as $h)<th>{{ $h }}</th>@endforeach</tr></thead>

@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class VoterService
 {
-    public const MAX_EXPORT_ROWS = 100000;
+    /** Excel streams rows, so a whole assembly fits. */
+    public const MAX_EXPORT_ROWS = 500000;
+    /** PDF lays out every page in memory: about 4.5 MB per 1,000 rows (PDF_MAX_ROWS in .env). */
+    public static function maxPdfRows(): int { return max(100, (int) config('voters.export.pdf_max_rows', 5000)); }
 
     public function __construct(private AuditService $audit) {}
 
@@ -19,9 +22,20 @@ class VoterService
         return $f->applySort($f->apply(Voter::query()))->paginate($f->size, ['*'], 'page', $f->page + 1);
     }
 
-    public function searchAll(VoterFilter $f)
+    public function searchAll(VoterFilter $f, int $max = self::MAX_EXPORT_ROWS)
     {
-        return $f->applySort($f->apply(Voter::query()))->limit(self::MAX_EXPORT_ROWS)->get();
+        return $f->applySort($f->apply(Voter::query()))->limit($max)->get();
+    }
+
+    /** Same rows read 2,000 at a time, for streaming exports. */
+    public function searchLazy(VoterFilter $f, int $max = self::MAX_EXPORT_ROWS)
+    {
+        return $f->applySort($f->apply(Voter::query()))->limit($max)->lazy(2000);
+    }
+
+    public function count(VoterFilter $f): int
+    {
+        return $f->apply(Voter::query())->count();
     }
 
     /** Everyone at the same assembly, house no., address and village/ward (ignoring case and spaces). */

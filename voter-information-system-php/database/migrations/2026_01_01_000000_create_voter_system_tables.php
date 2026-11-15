@@ -12,6 +12,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // tables already created from db/schema.sql (phpMyAdmin) or by the Java version
+        if (Schema::hasTable('voters')) return;
         Schema::create('voters', function (Blueprint $t) {
             $t->id();
             $t->string('epic_no', 20)->unique('uk_voter_epic');

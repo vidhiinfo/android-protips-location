@@ -45,6 +45,9 @@ class ReportController extends Controller
         $this->check($id);
         $rep = $this->build($r, $id);
         $file = $id . '-' . date('Y-m-d');
+        if ($format === 'pdf' && count($rep->rows) > \App\Services\Voters\VoterService::maxPdfRows()) {
+            return redirect('/reports/' . $id . '?' . http_build_query($r->except('lang')))->with('error', 'export.pdf.tooMany');
+        }
         return $format === 'pdf' ? $this->download($p->report($rep), "$file.pdf", 'application/pdf')
             : $this->download($x->report($rep), "$file.xlsx", self::XLSX);
     }

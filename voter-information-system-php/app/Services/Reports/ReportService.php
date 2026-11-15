@@ -196,8 +196,9 @@ class ReportService
         $r = (new Report(t('report.' . $id), $this->h('col.assemblyNo', 'col.boothNo', 'col.serialNo', 'col.epicNo', 'col.name', 'col.nameLocal',
             'col.relativeName', 'col.gender', 'col.age', 'col.houseNo', 'col.address', 'col.mobile')))->subtitle($this->scope($a, $b));
         $skipped = 0;
-        foreach ($this->voters->searchAll($f) as $v) {
+        foreach ($this->voters->searchLazy($f) as $v) {
             if ($phoneBank && isset($blocked[$v->mobile])) { $skipped++; continue; }
+            if (count($r->rows) >= Report::MAX_ROWS) { $r->capped = true; break; }
             $r->add([$v->assembly_no, $v->booth_no, $v->serial_no, $v->epic_no, $v->name, $v->name_local, $v->relative_name, $v->genderLabel(),
                 $v->age, $v->house_no, $v->fullAddress(), $v->mobile]);
         }
@@ -304,20 +305,33 @@ class ReportService
     {
         $r = new Report(t('report.duplicate-voters'), $this->h('report.group', 'col.assemblyNo', 'col.villageWard', 'col.boothNo', 'col.serialNo',
             'col.epicNo', 'col.name', 'col.relativeName', 'col.gender', 'col.age', 'col.houseNo', 'col.address', 'col.mobile'));
+        // pass 1: only the matching key per voter (a whole assembly fits in memory)
         $groups = [];
-        foreach ($this->voters->searchAll($this->filter($a, null)) as $v) {
+        $q = $this->filter($a, null)->apply(Voter::query())->select('id', 'assembly_no', 'village_ward', 'name', 'relative_name')
+            ->orderBy('assembly_no')->orderBy('booth_no')->orderBy('serial_no')->orderBy('id')->toBase();
+        foreach ($q->lazy(5000) as $v) {
             $n = Text::nameKey($v->name);
             if ($n === '') continue;
-            $k = $v->assembly_no . '|' . ($byWard ? Text::nameKey($v->village_ward) . '|' : '') . $n . '|' . Text::nameKey($v->relative_name);
-            $groups[$k][] = $v;
+            $groups[$v->assembly_no . '|' . ($byWard ? Text::nameKey($v->village_ward) . '|' : '') . $n . '|' . Text::nameKey($v->relative_name)][] = $v->id;
         }
-        $g = 0; $people = 0;
-        foreach ($groups as $list) {
-            if (count($list) < 2) continue;
-            $g++; $people += count($list);
-            foreach ($list as $v) $r->add([$g, $v->assembly_no, $v->village_ward, $v->booth_no, $v->serial_no, $v->epic_no, $v->name, $v->relative_name,
-                $v->genderLabel(), $v->age, $v->house_no, $v->fullAddress(), $v->mobile]);
+        $groups = array_filter($groups, fn ($ids) => count($ids) > 1);
+        // pass 2: full details only for the duplicates, 1,000 voters at a time, up to the report row limit
+        $g = 0; $people = 0; $batch = [];
+        $flush = function () use (&$batch, $r) {
+            if (!$batch) return;
+            $models = Voter::whereIn('id', array_column($batch, 1))->get()->keyBy('id');
+            foreach ($batch as [$group, $id]) if ($v = $models[$id] ?? null) $r->add([$group, $v->assembly_no, $v->village_ward, $v->booth_no, $v->serial_no,
+                $v->epic_no, $v->name, $v->relative_name, $v->genderLabel(), $v->age, $v->house_no, $v->fullAddress(), $v->mobile]);
+            $batch = [];
+        };
+        foreach ($groups as $ids) {
+            $g++; $people += count($ids);
+            if (count($r->rows) + count($batch) >= Report::MAX_ROWS) { $r->capped = true; continue; }
+            foreach ($ids as $id) $batch[] = [$g, $id];
+            if (count($batch) >= 1000) $flush();
         }
+        $flush();
+        unset($groups);
         $r->subtitle($this->scope($a, null) . ' | ' . t($byWard ? 'report.dup.byWard' : 'report.dup.byAssembly') . ' | ' . t('report.dup.found', $g, $people));
         return $r;
     }

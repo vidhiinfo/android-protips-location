@@ -7,8 +7,9 @@ use App\Services\Voters\VoterService;
 use App\Support\Lang;
 use App\Support\Text;
 use App\Support\Validation;
-use Illuminate\Support\Facades\Validator;
-use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Support\FastValidator;
+use Illuminate\Support\Facades\DB;
+use OpenSpout\Reader\XLSX\Reader;
 
 /**
  * Bulk upload from .xlsx. Headers and gender / relation values are recognised in every supported language,
@@ -37,20 +38,48 @@ class ExcelImporter
             foreach (Voter::GENDERS as $g) $genders[self::norm(Lang::get("gender.$g", [], $code))] = $g;
             foreach (Voter::RELATIONS as $r) $relations[self::norm(Lang::get("relation.$r", [], $code))] = $r;
         }
-        $sheet = IOFactory::load($path)->getActiveSheet()->toArray(null, true, true, false);
-        $idx = null; $headerRow = null;
-        foreach (array_slice($sheet, 0, 6) as $r => $row) {
-            $m = [];
-            foreach ($row as $i => $cell) if (isset($headerMap[self::norm($cell)])) $m[$headerMap[self::norm($cell)]] ??= $i;
-            if (isset($m['epic_no'], $m['name'])) { $idx = $m; $headerRow = $r; break; }
-        }
-        if ($idx === null) return ['inserted' => 0, 'updated' => 0, 'errors' => [t('import.error.header')]];
-
-        $inserted = 0; $updated = 0; $errors = [];
-        foreach (array_slice($sheet, $headerRow + 1, null, true) as $r => $row) {
+        @set_time_limit(0);
+        $reader = new Reader();
+        $reader->open($path);
+        $validator = null;
+        $idx = null; $inserted = 0; $updated = 0; $errors = []; $buf = [];
+        $fields = array_flip(array_values(self::FIELD_BY_KEY));
+        // saves 500 rows per transaction, looking up their EPIC numbers with one query
+        $save = function () use (&$buf, &$inserted, &$updated, &$errors, $onlyAssembly, $fields) {
+            $epic = fn ($d) => strtoupper((string) Text::asciiDigits($d['epic_no']));
+            $existing = Voter::whereIn('epic_no', array_map(fn ($b) => $epic($b[1]), $buf))->get()->keyBy('epic_no')->all();
+            foreach ($buf as [$label, $data]) {
+                $voter = $existing[$epic($data)] ?? new Voter();
+                if ($onlyAssembly !== null && ($data['assembly_no'] !== $onlyAssembly || ($voter->exists && $voter->assembly_no !== $onlyAssembly))) {
+                    $errors[] = t('import.row', $label) . ': ' . t('import.error.assembly', $onlyAssembly);
+                    continue;
+                }
+                $isNew = !$voter->exists;
+                $voter->fill(array_intersect_key($data, $fields));
+                try { $voter->save(); $isNew ? $inserted++ : $updated++; $existing[$voter->epic_no] = $voter; }
+                catch (\Throwable $e) { $errors[] = t('import.row', $label) . ': ' . $e->getMessage(); }
+            }
+            $buf = [];
+            DB::commit();
+            DB::beginTransaction();
+        };
+        DB::beginTransaction();
+        try {
+        foreach ($reader->getSheetIterator() as $sheet) {
+        // rows are streamed one by one: a file with lakhs of voters does not have to fit in memory
+        foreach ($sheet->getRowIterator() as $rowNo => $rowObj) {
+            $row = array_map(fn ($c) => $c instanceof \DateTimeInterface ? $c->format('Y-m-d') : $c, $rowObj->toArray());
+            if ($idx === null) {
+                if ($rowNo > 6) break;
+                $m = [];
+                foreach ($row as $i => $cell) if (isset($headerMap[self::norm($cell)])) $m[$headerMap[self::norm($cell)]] ??= $i;
+                if (isset($m['epic_no'], $m['name'])) $idx = $m;
+                continue;
+            }
+            $r = $rowNo - 1;
             $get = fn ($f) => isset($idx[$f]) ? trim((string) ($row[$idx[$f]] ?? '')) : '';
             if ($get('epic_no') === '' && $get('name') === '') continue;
-            $label = t('import.row', $r + 1);
+            $label = $r + 1;
             $data = [];
             foreach ($idx as $field => $i) $data[$field] = $get($field);
             $data['gender'] = $genders[self::norm($data['gender'] ?? '')] ?? match (strtoupper(substr($data['gender'] ?? '', 0, 1))) { 'M' => 'MALE', 'F' => 'FEMALE', 'O', 'T' => 'OTHER', default => null };
@@ -64,23 +93,26 @@ class ExcelImporter
                 $data[$m] = strlen($d) === 12 && str_starts_with($d, '91') ? substr($d, 2) : ($d ?: null);
             }
             $data = Validation::clean($data);
-            $v = Validator::make($data, VoterService::rules(), Validation::messages());
-            if ($v->fails()) {
-                $field = array_key_first($v->errors()->messages());
-                $errors[] = $label . ': ' . t('field.' . \Illuminate\Support\Str::camel($field)) . ' - ' . $v->errors()->first($field);
+            $validator ??= new FastValidator(VoterService::rules(), Validation::messages());
+            if ($err = $validator->firstError($data)) {
+                $errors[] = t('import.row', $label) . ': ' . t('field.' . \Illuminate\Support\Str::camel($err[0])) . ' - ' . $err[1];
                 continue;
             }
-            $voter = Voter::where('epic_no', strtoupper((string) Text::asciiDigits($data['epic_no'])))->first() ?? new Voter();
-            if ($onlyAssembly !== null && ($data['assembly_no'] !== $onlyAssembly || ($voter->exists && $voter->assembly_no !== $onlyAssembly))) {
-                $errors[] = $label . ': ' . t('import.error.assembly', $onlyAssembly);
-                continue;
-            }
-            $isNew = !$voter->exists;
-            $voter->fill(array_intersect_key($data, array_flip(array_values(self::FIELD_BY_KEY))));
-            try { $voter->save(); $isNew ? $inserted++ : $updated++; }
-            catch (\Throwable $e) { $errors[] = $label . ': ' . $e->getMessage(); }
+            $buf[] = [$label, $data];
+            if (count($buf) >= 500) $save();
             if (count($errors) > 200) { $errors[] = t('import.error.tooMany'); break; }
         }
+        break;   // first sheet only
+        }
+        if ($buf) $save();
+        DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        } finally {
+            $reader->close();
+        }
+        if ($idx === null) return ['inserted' => 0, 'updated' => 0, 'errors' => [t('import.error.header')]];
         return compact('inserted', 'updated', 'errors');
     }
 }

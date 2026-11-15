@@ -6,6 +6,9 @@ namespace App\Services\Reports;
 class Report
 {
     public const DISPLAY_LIMIT = 1000;
+    /** Voter-list reports stop here (memory on shared hosting); narrow by booth for more. */
+    public const MAX_ROWS = 50000;
+    public bool $capped = false;
     public string $subtitle = '';
     public array $rows = [];
     public ?array $totals = null;

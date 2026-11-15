@@ -1,0 +1,15 @@
+# Used ONLY when the whole folder is uploaded into public_html and the domain's
+# document root cannot be pointed at the "public" folder (see docs/SHARED-HOSTING.md).
+# It sends every request into public/ and blocks the application files.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # public/vendor holds the CSS/JS libraries; everything else under vendor/ is PHP code
+    RewriteCond %{REQUEST_URI} !/vendor/(bootstrap|bootstrap-icons|chartjs)/ [NC]
+    RewriteRule ^(\.env|\.git|app|bootstrap|config|database|db|lang|resources|routes|storage|tests|vendor|artisan|composer\.(json|lock)|phpunit\.xml|package\.json|vite\.config\.js|README\.md|docs) - [F,L,NC]
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+Options -Indexes

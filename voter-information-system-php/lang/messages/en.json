@@ -546,5 +546,7 @@
 "validation.username": "3-50 characters: letters, digits, dot, dash or underscore",
 "validation.year": "Enter a valid year",
 "view.printSlip": "Print Slip",
-"view.updated": "Last updated"
+"view.updated": "Last updated",
+"export.pdf.tooMany": "PDF and Print are limited to 5,000 voters. Narrow the list (for example by booth) or use Excel, which has no limit.",
+"report.capped": "Only the first {0} rows are included. Select a booth to see the rest."
 }

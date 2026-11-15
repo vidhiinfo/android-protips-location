@@ -125,19 +125,27 @@ class VoterController extends Controller
     public function exportExcel(Request $r, ExcelExporter $x)
     {
         $f = $this->filter($r);
-        return $this->download($x->voters($this->voters->searchAll($f), $this->title($f)), 'voters-' . date('Y-m-d') . '.xlsx', self::XLSX);
+        @set_time_limit(600);
+        $file = $x->votersFile($this->voters->searchLazy($f), $this->title($f));
+        return response()->download($file, 'voters-' . date('Y-m-d') . '.xlsx', ['Content-Type' => self::XLSX])->deleteFileAfterSend();
     }
 
     public function exportPdf(Request $r, PdfExporter $p)
     {
         $f = $this->filter($r);
-        return $this->download($p->voters($this->voters->searchAll($f), $this->title($f), self::summary($f)), 'voters-' . date('Y-m-d') . '.pdf', 'application/pdf');
+        if ($this->voters->count($f) > VoterService::maxPdfRows()) {
+            return redirect('/voters?' . $f->queryWithSort())->with('error', 'export.pdf.tooMany');
+        }
+        return $this->download($p->voters($this->voters->searchAll($f, VoterService::maxPdfRows()), $this->title($f), self::summary($f)), 'voters-' . date('Y-m-d') . '.pdf', 'application/pdf');
     }
 
     public function print(Request $r)
     {
         $f = $this->filter($r);
-        return view('voters.print', ['f' => $f, 'voters' => $this->voters->searchAll($f), 'title' => $this->title($f), 'summary' => self::summary($f),
+        if ($this->voters->count($f) > VoterService::maxPdfRows()) {
+            return redirect('/voters?' . $f->queryWithSort())->with('error', 'export.pdf.tooMany');
+        }
+        return view('voters.print', ['f' => $f, 'voters' => $this->voters->searchAll($f, VoterService::maxPdfRows()), 'title' => $this->title($f), 'summary' => self::summary($f),
             'autoprint' => $r->has('autoprint')]);
     }
 
