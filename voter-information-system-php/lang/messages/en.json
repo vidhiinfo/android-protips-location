@@ -599,5 +599,7 @@
 "import.defaultAssembly": "Assembly for rows without one",
 "import.defaultAssemblyHelp": "Used when the file has no Assembly No column (e.g. a ward/booth list).",
 "col.wardNo": "Ward No",
-"field.wardNo": "Ward No"
+"field.wardNo": "Ward No",
+"report.households": "All Households",
+"report.households.desc": "Every house with its voters, in roll order. House numbers written differently (RZ-154 / R Z-154) count as one house."
 }

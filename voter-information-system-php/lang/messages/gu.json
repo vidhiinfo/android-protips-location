@@ -599,5 +599,7 @@
 "import.defaultAssembly": "વિધાનસભા (જે પંક્તિઓમાં નથી)",
 "import.defaultAssemblyHelp": "ફાઇલમાં વિધાનસભા નં. કૉલમ ન હોય (જેમ કે વોર્ડ/બૂથ યાદી) ત્યારે વપરાશે.",
 "col.wardNo": "વોર્ડ નં.",
-"field.wardNo": "વોર્ડ નં."
+"field.wardNo": "વોર્ડ નં.",
+"report.households": "તમામ ઘરો",
+"report.households.desc": "દરેક ઘર અને તેના મતદારો, યાદીના ક્રમમાં. જુદી રીતે લખાયેલા મકાન નંબર (RZ-154 / R Z-154) એક જ ઘર ગણાય છે."
 }

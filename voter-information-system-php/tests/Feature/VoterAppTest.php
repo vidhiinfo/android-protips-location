@@ -321,6 +321,28 @@ class VoterAppTest extends TestCase
         $this->get('/dashboard/data?assemblyNo=45')->assertOk()->assertJsonStructure(['tiles', 'ageGender', 'boothVoters', 'election', 'household', 'mobile', 'young']);
     }
 
+    public function test_dashboard_tiles_open_the_matching_lists(): void
+    {
+        $this->login();
+        foreach ([null, 2] as $ward) {
+            $tiles = collect($this->get('/dashboard/data?assemblyNo=45' . ($ward ? "&wardNo=$ward" : ''))->assertOk()->json('tiles'))->keyBy('label');
+            foreach (['dash.tile.young', 'dash.tile.senior', 'dash.tile.mobile', 'list.totalVoters'] as $k) {
+                $tile = $tiles[t($k)];
+                $this->assertNotEmpty($tile['url'], $k);
+                if ($ward) $this->assertStringContainsString("wardNo=$ward", $tile['url']);
+                $n = (int) $tile['value'];
+                $html = $this->get(substr($tile['url'], strlen(url('/'))))->assertOk()->getContent();
+                $this->assertStringContainsString(t('list.showing', $n ? 1 : 0, min(25, $n), $n), $html, "$k ward=$ward");
+            }
+            $houses = $tiles[t('dash.tile.households')];
+            $rep = app(\App\Services\Reports\ReportService::class); $rep->ward = $ward;
+            $this->assertSame((int) $houses['value'], count($rep->build('households', 45, null, null)->rows));
+            $rep->ward = null;
+            $this->get(substr($houses['url'], strlen(url('/'))))->assertOk()->assertSee(t('report.households'));
+        }
+        $this->get('/dashboard?assemblyNo=45')->assertOk()->assertSee('stretched-link', false);
+    }
+
     public function test_compose_queue_and_send_in_dry_run(): void
     {
         $this->login();

@@ -99,7 +99,7 @@ class VoterFilter
                 $q->where(function ($w) use ($cols, $l) { foreach ($cols as $c) $w->orWhereRaw("lower($c) like ?", [$l]); });
             }
         }
-        if ($s = $this->get('houseNo')) $q->whereRaw('lower(house_no) = ?', [Text::lower($s)]);
+        if ($s = $this->get('houseNo')) $q->whereRaw(Text::HOUSE_KEY_SQL . ' = ?', [Text::houseKey($s)]);   // RZ-154 = R Z-154
         foreach (['assemblyNo' => 'assembly_no', 'wardNo' => 'ward_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward',
                      'caste' => 'caste', 'politicalStatus' => 'political_status'] as $k => $c) {
             if (($val = $this->get($k)) !== null) $q->where($c, $val);

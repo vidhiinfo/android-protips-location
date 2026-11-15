@@ -36,7 +36,8 @@
     @else
         <div class="row g-2 mb-3">
             @foreach($data['tiles'] as $tile)
-            <div class="col-6 col-md-4 col-xl-2"><div class="stat h-100"><div class="text-muted small">{{ $tile['label'] }}</div><div class="num fs-5">{{ $tile['value'] }}</div></div></div>
+            <div class="col-6 col-md-4 col-xl-2"><div class="stat h-100 position-relative {{ !empty($tile['url']) ? 'stat-link' : '' }}"><div class="text-muted small">{{ $tile['label'] }}</div>
+                <div class="num fs-5">@if(!empty($tile['url']))<a href="{{ $tile['url'] }}" class="stretched-link text-decoration-none">{{ $tile['value'] }}</a>@else{{ $tile['value'] }}@endif</div></div></div>
             @endforeach
         </div>
         <div class="row g-3 mb-3">

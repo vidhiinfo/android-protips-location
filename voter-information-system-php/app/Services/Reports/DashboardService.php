@@ -49,6 +49,19 @@ class DashboardService
         foreach ($rows as $x) { $n = (int) $x->c; $sizes[min($n, 6) - 1]++; $houses++; $housed += $n; if ($n >= 5) $big++; }
         $out['household'] = ['labels' => ['1', '2', '3', '4', '5', '6+'], 'series' => [self::series(t('dash.houses'), 'single', $sizes)]];
 
+        $scope = array_filter(['assemblyNo' => $a, 'wardNo' => $ward], fn ($v) => $v !== null);
+        $to = fn (string $path, array $extra = []) => url($path) . '?' . http_build_query($scope + $extra);
+        // every tile opens the list behind its number (same filters as the count)
+        $links = [
+            'list.totalVoters' => $to('/voters'),
+            'report.booths' => $to('/reports/booth-summary'),
+            'dash.tile.young' => $to('/voters', ['ageMin' => 18, 'ageMax' => 25]),
+            'dash.tile.senior' => $to('/voters', ['ageMin' => 60]),
+            'dash.tile.mobile' => $to('/voters', ['hasMobile' => 'true']),
+            'dash.tile.households' => $to('/reports/households'),
+            'dash.tile.avgHousehold' => $to('/reports/households'),
+            'dash.tile.bigHouseholds' => $to('/reports/large-households'),
+        ];
         $tiles = [
             'list.totalVoters' => $total, 'report.booths' => count($booths),
             'dash.tile.young' => $youngAll . ' (' . self::pct($youngAll, $total) . '%)',
@@ -85,10 +98,11 @@ class DashboardService
                     'turnout' => ['labels' => $bl, 'series' => [self::series(t('result.turnoutPct'), 'single', $turnout)]]];
                 $tiles['dash.tile.share'] = self::pct($focusVotes, $c['total_votes']) . "% ($focus)";
                 $tiles['dash.tile.boothsAhead'] = $ahead . ' / ' . count($c['booths']);
+                $links['dash.tile.share'] = $links['dash.tile.boothsAhead'] = $to('/results/contest', ['electionId' => $e->id]);
             }
         }
         $out['election'] = $el;
-        $out['tiles'] = array_map(fn ($k, $v) => ['label' => t($k), 'value' => $v], array_keys($tiles), $tiles);
+        $out['tiles'] = array_map(fn ($k, $v) => ['label' => t($k), 'value' => $v, 'url' => $links[$k] ?? null], array_keys($tiles), $tiles);
         $out['text'] = ['booth' => t('col.boothNo'), 'voters' => t('dash.voters'), 'houses' => t('dash.houses'), 'lead' => t('dash.lead'),
             'trail' => t('dash.trail'), 'pct' => '%', 'ageGroup' => t('report.ageGroup'), 'table' => t('dash.showTable'), 'chart' => t('dash.showChart'),
             'party' => t('result.party')];

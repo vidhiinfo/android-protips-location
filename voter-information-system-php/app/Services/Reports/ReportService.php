@@ -18,7 +18,7 @@ class ReportService
 {
     public const SECTIONS = [
         'voters' => ['assembly-summary', 'booth-summary', 'village-summary', 'age-gender', 'category-summary', 'caste-summary'],
-        'outreach' => ['first-time-voters', 'senior-voters', 'large-households', 'phone-bank', 'birthdays'],
+        'outreach' => ['first-time-voters', 'senior-voters', 'households', 'large-households', 'phone-bank', 'birthdays'],
         'election' => ['results-summary', 'party-performance', 'booth-priority'],
         'quality' => ['duplicate-voters'],
     ];
@@ -47,6 +47,7 @@ class ReportService
             'senior-voters' => $this->voterList($id, $assemblyNo, $boothNo, 85, null, false),
             'phone-bank' => $this->voterList($id, $assemblyNo, $boothNo, null, null, true),
             'large-households' => $this->largeHouseholds($assemblyNo),
+            'households' => $this->largeHouseholds($assemblyNo, 1, 'households'),
             'results-summary' => $this->resultsSummary($e, $assemblyNo),
             'party-performance' => $this->partyPerformance($e, $assemblyNo),
             'booth-priority' => $this->boothPriority($e, $assemblyNo, $party),
@@ -284,9 +285,10 @@ class ReportService
         return $r;
     }
 
-    public function largeHouseholds(?int $a): Report
+    /** Houses with at least $min voters (1 = every household). House numbers match ignoring spaces / hyphens / dots. */
+    public function largeHouseholds(?int $a, int $min = 5, string $id = 'large-households'): Report
     {
-        $r = (new Report(t('report.large-households'), $this->h('col.assemblyNo', 'col.boothNo', 'col.houseNo', 'col.address', 'col.villageWard',
+        $r = (new Report(t('report.' . $id), $this->h('col.assemblyNo', 'col.boothNo', 'col.houseNo', 'col.address', 'col.villageWard',
             'report.votersInHouse', 'report.withMobile', 'report.members')))->subtitle($this->scope($a, null));
         $houses = [];
         foreach ($this->voters->searchAll($this->filter($a, null)) as $v) {
@@ -294,12 +296,17 @@ class ReportService
             $k = $v->assembly_no . '|' . Text::houseKey($v->house_no) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
             $houses[$k][] = $v;
         }
-        $houses = array_filter($houses, fn ($l) => count($l) >= 5);
-        usort($houses, fn ($x, $y) => count($y) <=> count($x));
+        $houses = array_filter($houses, fn ($l) => count($l) >= $min);
+        if ($min > 1) usort($houses, fn ($x, $y) => count($y) <=> count($x));   // biggest first
+        else usort($houses, fn ($x, $y) => [$x[0]->booth_no, $x[0]->serial_no] <=> [$y[0]->booth_no, $y[0]->serial_no]);   // roll order
         foreach ($houses as $l) {
             $v = $l[0];
+            // House No opens the voter list of that house
+            $link = ['assemblyNo' => $v->assembly_no, 'houseNo' => $v->house_no, 'villageWard' => $v->village_ward];
             $r->add([$v->assembly_no, $v->booth_no, $v->house_no, $v->address, $v->village_ward, count($l),
-                count(array_filter($l, fn ($x) => $x->mobile)), implode(', ', array_map(fn ($x) => $x->name . ($x->age ? " ({$x->age})" : ''), $l))]);
+                count(array_filter($l, fn ($x) => $x->mobile)), implode(', ', array_map(fn ($x) => $x->name . ($x->age ? " ({$x->age})" : ''), $l))],
+                [2 => $link, 5 => $link]);
+            if (count($r->rows) >= Report::MAX_ROWS) { $r->capped = true; break; }
         }
         $r->subtitle .= ' | ' . t('report.count', count($r->rows));
         return $r;

@@ -88,3 +88,9 @@ a.house-link:hover { border-bottom-style: solid; }
   .navbar .navbar-nav .nav-link { padding-left: .45rem; padding-right: .45rem; font-size: .95rem; }
   .navbar select[data-lang-switch] { max-width: 150px; }
 }
+
+/* clickable dashboard tiles */
+.stat-link { cursor: pointer; transition: box-shadow .15s, border-color .15s; }
+.stat-link:hover { box-shadow: 0 .25rem .75rem rgba(13, 110, 253, .15); border-color: #86b7fe; }
+.stat-link .num a { color: inherit; }
+.stat-link:hover .num a { color: #0d6efd; }

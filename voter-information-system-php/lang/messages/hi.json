@@ -599,5 +599,7 @@
 "import.defaultAssembly": "विधानसभा (जिन पंक्तियों में नहीं है)",
 "import.defaultAssemblyHelp": "जब फ़ाइल में विधानसभा सं. का कॉलम न हो (जैसे वार्ड/बूथ सूची) तब उपयोग होगी।",
 "col.wardNo": "वार्ड सं.",
-"field.wardNo": "वार्ड सं."
+"field.wardNo": "वार्ड सं.",
+"report.households": "सभी घर",
+"report.households.desc": "हर घर और उसके मतदाता, सूची क्रम में। अलग तरह से लिखे मकान नंबर (RZ-154 / R Z-154) एक ही घर गिने जाते हैं।"
 }
