@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Models\AppUser;
 use App\Models\Role;
 use App\Support\Permission;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -17,17 +18,24 @@ class Defaults
 {
     public function __construct(private AuditService $audit) {}
 
+    /** Bump when a release adds database changes, so existing installations re-check once. */
+    private const VERSION = 'vis.defaults.2026-11';
+
     public function ensure(bool $force = false): void
     {
-        if (!$force && Cache::get('vis.defaults.ok')) return;
+        if (!$force && Cache::get(self::VERSION)) return;
         if (!Schema::hasTable('roles')) return;
+        // database created from an older db/schema.sql: add the new columns (no SSH / phpMyAdmin step needed)
+        if (Schema::hasTable('voters') && !Schema::hasColumn('voters', 'caste')) {
+            Artisan::call('migrate', ['--force' => true]);
+        }
         DB::transaction(function () {
             $this->role('ADMIN', 'Administrator', 'Everything, including users, roles, masters and the audit log', Permission::codes());
             $this->role('OPERATOR', 'Operator', 'Voter data entry and import, results entry, messaging', Permission::OPERATOR);
             $this->role('VIEWER', 'Viewer', 'Search, view, reports, export and print', Permission::VIEWER);
             if (config('voters.security.user_source') !== 'external') $this->firstAdmin();
         });
-        Cache::forever('vis.defaults.ok', true);
+        Cache::forever(self::VERSION, true);
     }
 
     private function role(string $code, string $name, string $desc, array $perms): void
