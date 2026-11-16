@@ -11,6 +11,10 @@ class Report
     public bool $capped = false;
     /** Optional voter-list filters per cell: [row index => [column index => query params]]; 'totals' for the totals row. */
     public array $links = [];
+    /** Optional chart above the table: ['type' => bar|doughnut|line, 'labels' => [...], 'series' => [['name', [values]], ...], 'stacked' => bool, 'horizontal' => bool]. */
+    public ?array $chart = null;
+    /** Optional explanation shown under the title (how the figures are calculated). */
+    public string $note = '';
     public string $subtitle = '';
     public array $rows = [];
     public ?array $totals = null;

@@ -28,7 +28,9 @@ class AppServiceProvider extends ServiceProvider
                 'rtl' => Lang::rtl(),
                 'me' => $user,
                 'branding' => config('voters.branding'),
-                'reportIds' => array_values(array_filter(ReportService::all(),
+                'reportIds' => array_values(array_filter(array_diff(ReportService::all(), \App\Services\Reports\AnalyticsService::IDS),
+                    fn ($r) => !in_array($r, ReportService::ADMIN_ONLY, true) || $user->can('REPORT_SENSITIVE'))),
+                'analyticsIds' => array_values(array_filter(\App\Services\Reports\AnalyticsService::IDS,
                     fn ($r) => !in_array($r, ReportService::ADMIN_ONLY, true) || $user->can('REPORT_SENSITIVE'))),
             ]);
         });

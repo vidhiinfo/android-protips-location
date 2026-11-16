@@ -65,6 +65,7 @@ Route::middleware('login.required')->group(function () {
     // ---- reports
     Route::middleware('perm:REPORT_VIEW')->group(function () {
         Route::get('/reports', [ReportController::class, 'index']);
+        Route::get('/analytics', [\App\Http\Controllers\AnalyticsController::class, 'index']);
         Route::get('/reports/{id}', [ReportController::class, 'view']);
         Route::get('/reports/{id}/export/{format}', [ReportController::class, 'export']);
     });

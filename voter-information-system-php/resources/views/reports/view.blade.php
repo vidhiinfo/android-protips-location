@@ -2,10 +2,10 @@
 @section('title', $report->title)
 @section('content')
 @php($q = http_build_query(['assemblyNo' => $assemblyNo, 'wardNo' => $wardNo, 'boothNo' => $boothNo, 'electionId' => $electionId, 'scope' => $scope, 'party' => $party]))
-@php($electionReport = in_array($reportId, ['results-summary', 'party-performance', 'booth-priority']))
+@php($electionReport = in_array($reportId, ['results-summary', 'party-performance', 'booth-priority', 'booth-scorecard', 'turnout-profile']))
 <div class="container-fluid px-3" style="max-width:1400px">
     <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-        <h4 class="me-auto mb-0">{{ $report->title }}</h4>
+        <h4 class="me-auto mb-0">@if(in_array($reportId, \App\Services\Reports\AnalyticsService::IDS))<a href="{{ url('/analytics') }}" class="text-decoration-none small"><i class="bi bi-graph-up-arrow"></i></a> @endif{{ $report->title }}</h4>
         <a class="btn btn-sm btn-success" href="{{ url('/reports/'.$reportId.'/export/xlsx') }}?{{ $q }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
         <a class="btn btn-sm btn-danger" href="{{ url('/reports/'.$reportId.'/export/pdf') }}?{{ $q }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <a class="btn btn-sm btn-secondary" target="_blank" href="{{ url('/reports/'.$reportId) }}?{{ $q }}&print=1"><i class="bi bi-printer"></i> {{ t('common.print') }}</a>
@@ -16,16 +16,16 @@
         <div class="col-md-3"><label class="form-label small">{{ t('col.assemblyNo') }}</label>
             <select name="assemblyNo" class="form-select form-select-sm" @disabled($me->scoped())><option value="">{{ t('common.all') }}</option>
                 @foreach($assemblies as $no => $name)<option value="{{ $no }}" @selected($no == $assemblyNo)>{{ $no }} - {{ $name }}</option>@endforeach</select></div>
-        @unless(in_array($reportId, ['results-summary', 'party-performance']))
+        @unless(in_array($reportId, ['results-summary', 'party-performance', 'team-activity']))
         @include('partials.ward-booth', ['wards' => $wards, 'wardNo' => $wardNo, 'wardMap' => $wardMap, 'booths' => $booths, 'boothNo' => $boothNo, 'small' => true,
-            'cls' => 'col-md-2', 'showBooth' => in_array($reportId, ['age-gender', 'first-time-voters', 'senior-voters', 'phone-bank', 'caste-summary', 'birthdays'])])
+            'cls' => 'col-md-2', 'showBooth' => in_array($reportId, ['age-gender', 'first-time-voters', 'senior-voters', 'phone-bank', 'caste-summary', 'birthdays', 'voter-sentiment', 'beneficiaries', 'origin'])])
         @endunless
         @if($reportId === 'duplicate-voters')
         <div class="col-md-3"><label class="form-label small">{{ t('report.dup.match') }}</label>
             <select name="scope" class="form-select form-select-sm"><option value="assembly">{{ t('report.dup.byAssembly') }}</option>
                 <option value="ward" @selected($scope === 'ward')>{{ t('report.dup.byWard') }}</option></select></div>
         @endif
-        @if($reportId === 'booth-priority')
+        @if(in_array($reportId, ['booth-priority', 'booth-scorecard', 'turnout-profile']))
         <div class="col-md-2"><label class="form-label small">{{ t('dash.focusParty') }}</label>
             <select name="party" class="form-select form-select-sm"><option value="">{{ t('report.seatWinner') }}</option>
                 @foreach($parties as $p)<option value="{{ $p->short_name }}" @selected($p->short_name === $party)>{{ $p->short_name }}</option>@endforeach</select></div>
@@ -37,6 +37,7 @@
         @endif
         <div class="col-md-2"><button class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel"></i> {{ t('common.apply') }}</button></div>
     </div></form>
+    @include('reports._chart')
     @include('reports._table')
 </div>
 @endsection

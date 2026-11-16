@@ -21,9 +21,10 @@ class ReportService
         'outreach' => ['first-time-voters', 'senior-voters', 'households', 'large-households', 'phone-bank', 'birthdays'],
         'election' => ['results-summary', 'party-performance', 'booth-priority'],
         'quality' => ['duplicate-voters'],
+        'analytics' => AnalyticsService::IDS,
     ];
     /** Sensitive personal data (social category): needs REPORT_SENSITIVE. */
-    public const ADMIN_ONLY = ['category-summary', 'caste-summary'];
+    public const ADMIN_ONLY = ['category-summary', 'caste-summary', 'caste-booth', 'team-activity'];
     public const SWING_PCT = 10.0;
 
     /** Ward No filter for the report being built (null = all wards). */
@@ -35,6 +36,10 @@ class ReportService
 
     public function build(string $id, ?int $assemblyNo, ?int $boothNo, ?Election $e, ?string $scope = null, ?string $party = null): Report
     {
+        if (in_array($id, AnalyticsService::IDS, true)) {
+            $an = app(AnalyticsService::class); $an->ward = $this->ward;
+            return $an->build($id, $assemblyNo, $boothNo, $e, $party);
+        }
         return match ($id) {
             'assembly-summary' => $this->assemblySummary($assemblyNo),
             'booth-summary' => $this->boothSummary($assemblyNo),
@@ -59,7 +64,7 @@ class ReportService
     private static function pct($part, $whole): float { return $whole ? round(10000 * $part / $whole) / 100 : 0.0; }
     private function assemblyName(int $no, ?string $fallback = ''): string { return Assembly::where('assembly_no', $no)->value('name') ?? (string) $fallback; }
 
-    private function scope(?int $a, ?int $b): string
+    public function scope(?int $a, ?int $b): string
     {
         $s = [];
         if ($a !== null) $s[] = t('col.assemblyNo') . " $a " . $this->assemblyName($a);

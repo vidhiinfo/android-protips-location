@@ -15,7 +15,7 @@ class VoterFilter
         'gender' => 'gender', 'age' => 'age', 'assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'serialNo' => 'serial_no',
         'villageWard' => 'village_ward', 'wardNo' => 'ward_no', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
     public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'wardNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
-        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted'];
+        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment'];
 
     public array $v = [];
     public string $sort = 'assemblyNo';
@@ -35,6 +35,7 @@ class VoterFilter
         }
         if (isset($f->v['gender']) && !in_array($f->v['gender'], ['MALE', 'FEMALE', 'OTHER'], true)) unset($f->v['gender']);
         if (isset($f->v['deleted']) && !in_array($f->v['deleted'], ['exclude', 'only'], true)) unset($f->v['deleted']);
+        if (isset($f->v['sentiment']) && !in_array($f->v['sentiment'], ['S', 'N', 'O', 'X', 'U'], true)) unset($f->v['sentiment']);
         if (isset($f->v['hasMobile'])) $f->v['hasMobile'] = filter_var($f->v['hasMobile'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
         $sort = (string) $r->input('sort', 'assemblyNo');
         $f->sort = array_key_exists($sort, self::SORTABLE) ? $sort : 'assemblyNo';
@@ -106,6 +107,7 @@ class VoterFilter
         }
         if (($a = $this->get('ageMin')) !== null) $q->where('age', '>=', $a);
         if (($a = $this->get('ageMax')) !== null) $q->where('age', '<=', $a);
+        if ($s = $this->get('sentiment')) $q->whereRaw(\App\Services\Reports\AnalyticsService::SENTIMENT_SQL . ' = ?', [$s]);   // support / neutral / opposition (Analytics)
         if ($this->get('hasMobile') === 'true') $q->whereNotNull('mobile')->where('mobile', '<>', '');
         if ($this->get('deleted') === 'exclude') $q->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted'));
         if ($this->get('deleted') === 'only') $q->where('deleted', true);
