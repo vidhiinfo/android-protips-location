@@ -1,0 +1,52 @@
+# Builds the Android and iOS apps (voter-mobile-app/) on GitHub's machines.
+# Android: debug APK always; signed release APK + AAB when the ANDROID_KEYSTORE_* secrets are set.
+# iOS: checks that the Xcode project compiles (signing for the App Store is done in Xcode on a Mac).
+name: Mobile app
+
+# Started by hand: GitHub > Actions > Mobile app > Run workflow. Running it accepts the Android SDK licence
+# (https://developer.android.com/studio/terms) for that build.
+on:
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: voter-mobile-app } }
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npx cap sync android
+      - name: Release keystore (optional)
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/voter-system.jks
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' "$PWD/android/voter-system.jks" \
+            "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" "${{ secrets.ANDROID_KEY_ALIAS }}" "${{ secrets.ANDROID_KEY_PASSWORD }}" > android/keystore.properties
+      - run: cd android && ./gradlew assembleDebug
+      - if: env.HAS_KEYSTORE == 'true'
+        run: cd android && ./gradlew assembleRelease bundleRelease
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-app
+          path: |
+            voter-mobile-app/android/app/build/outputs/apk/**/*.apk
+            voter-mobile-app/android/app/build/outputs/bundle/**/*.aab
+
+  ios:
+    runs-on: macos-15
+    defaults: { run: { working-directory: voter-mobile-app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npx cap sync ios
+      - run: cd ios/App && pod install
+      - run: xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -20

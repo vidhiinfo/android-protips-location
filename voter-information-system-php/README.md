@@ -23,6 +23,7 @@ The PHP version of the Voter Information System. It has the same screens, the sa
 * **Poll day**: booth agents mark voters as voted by serial / EPIC no. or by tapping a serial grid on a phone; the war room shows live turnout per booth, votes per hour, and the supporters who have not voted yet (one click to message them).
 * **Voter slips**: printable slips, 8 per A4 page, English + Hindi, for any voter list (no party name or symbol).
 * **Grievances**: log voters' complaints, assign a worker, track Open > In progress > Resolved, with a booth-wise analysis.
+* **Mobile app**: installable on Android and iPhone from the browser (page `/mobile-app`, works offline-aware with an app icon), plus a native Android / iOS app project in `../voter-mobile-app` (Capacitor) for the Play Store and App Store; Excel / PDF downloads open in the phone's share sheet.
 * **Results**: booth-wise result entry, seat results with winner, margin and turnout.
 * **SMS and WhatsApp**: templates, campaigns from any voter filter, opt-out list, sending window, rate limit and election silence period. Providers: Twilio, Meta WhatsApp Cloud API, or any HTTP SMS gateway. Dry-run mode until a provider is set.
 * **Audit log** of logins and every change, with the user's IP address and browser / device; filter by IP.
@@ -67,7 +68,7 @@ The demo data is fictional: three assemblies with Hindi, Urdu and Bengali names,
 ## Tests
 
 ```bash
-php artisan test        # 54 tests on in-memory SQLite
+php artisan test        # 56 tests on in-memory SQLite
 # the same suite on MySQL:
 DB_CONNECTION=mysql DB_DATABASE=voter_test DB_USERNAME=... DB_PASSWORD=... php artisan test
 ```

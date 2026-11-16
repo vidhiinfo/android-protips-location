@@ -94,6 +94,7 @@
                 <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ $me->username() }}</a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item" href="{{ url('/account/password') }}">{{ t('account.changePassword') }}</a></li>
+                    <li class="native-hide"><a class="dropdown-item" href="{{ url('/mobile-app') }}"><i class="bi bi-phone"></i> {{ t('app.install.link') }}</a></li>
                     <li><form action="{{ url('/logout') }}" method="post">@csrf<button class="dropdown-item">{{ t('nav.logout') }}</button></form></li>
                 </ul>
             </div>

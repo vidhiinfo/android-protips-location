@@ -927,5 +927,20 @@
 "report.grievances": "बूथवार शिकायतें",
 "report.grievances.desc": "हर बूथ की शिकायतें: खुली, हल, हल होने में दिन, मुख्य समस्याएँ",
 "an.note.grievances": "शिकायत रजिस्टर से। दिन शिकायत दर्ज होने के दिन से गिने जाते हैं।",
-"worker.name": "नाम"
+"worker.name": "नाम",
+"app.install.title": "ऐप इंस्टॉल करें",
+"app.install.subtitle": "Android और iPhone पर ऐप की तरह इस्तेमाल करें",
+"app.install.already": "यह ऐप इस डिवाइस पर इंस्टॉल है।",
+"app.install.play": "Google Play पर पाएँ",
+"app.install.apk": "Android ऐप डाउनलोड करें (APK)",
+"app.install.now": "अभी इंस्टॉल करें",
+"app.install.apkStep1": "डाउनलोड दबाएँ, फिर डाउनलोड हुई फ़ाइल खोलें।",
+"app.install.apkStep2": "पूछे जाने पर ब्राउज़र के लिए \"अज्ञात ऐप इंस्टॉल करें\" की अनुमति दें, फिर इंस्टॉल दबाएँ।",
+"app.install.chromeStep": "यह साइट Chrome में खोलें, मेनू (⋮) दबाएँ और \"ऐप इंस्टॉल करें\" / \"होम स्क्रीन पर जोड़ें\" चुनें।",
+"app.install.appStore": "App Store से डाउनलोड करें",
+"app.install.ios1": "यह साइट Safari में खोलें।",
+"app.install.ios2": "नीचे शेयर बटन {0} दबाएँ।",
+"app.install.ios3": "\"होम स्क्रीन पर जोड़ें\" चुनें, फिर जोड़ें दबाएँ। ऐप का आइकन होम स्क्रीन पर आ जाएगा।",
+"app.install.privacy": "मतदाता डेटा फ़ोन पर नहीं रखा जाता: ऐप वही सुरक्षित साइट दिखाता है, वही लॉगिन और अनुमतियाँ।",
+"app.install.link": "मोबाइल ऐप इंस्टॉल करें"
 }

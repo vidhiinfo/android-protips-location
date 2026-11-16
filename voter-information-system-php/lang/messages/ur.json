@@ -921,5 +921,20 @@
 "report.grievances": "بوتھ وار شکایات",
 "report.grievances.desc": "ہر بوتھ کی شکایات: کھلی، حل، دن، اہم مسائل",
 "an.note.grievances": "شکایت رجسٹر سے۔ دن شکایت درج ہونے کے دن سے گنے جاتے ہیں۔",
-"worker.name": "نام"
+"worker.name": "نام",
+"app.install.title": "ایپ انسٹال کریں",
+"app.install.subtitle": "Android اور iPhone پر ایپ کی طرح استعمال کریں",
+"app.install.already": "یہ ایپ اس آلے پر انسٹال ہے۔",
+"app.install.play": "Google Play پر حاصل کریں",
+"app.install.apk": "Android ایپ ڈاؤن لوڈ (APK)",
+"app.install.now": "ابھی انسٹال کریں",
+"app.install.apkStep1": "ڈاؤن لوڈ دبائیں، پھر فائل کھولیں۔",
+"app.install.apkStep2": "پوچھے جانے پر براؤزر کے لیے \"نامعلوم ایپس انسٹال\" کی اجازت دیں، پھر انسٹال دبائیں۔",
+"app.install.chromeStep": "یہ سائٹ Chrome میں کھولیں، مینو (⋮) دبائیں اور \"ایپ انسٹال کریں\" منتخب کریں۔",
+"app.install.appStore": "App Store سے ڈاؤن لوڈ کریں",
+"app.install.ios1": "یہ سائٹ Safari میں کھولیں۔",
+"app.install.ios2": "نیچے شیئر بٹن {0} دبائیں۔",
+"app.install.ios3": "\"ہوم اسکرین میں شامل کریں\" منتخب کریں، پھر شامل کریں دبائیں۔",
+"app.install.privacy": "ووٹر ڈیٹا فون پر محفوظ نہیں ہوتا: ایپ وہی محفوظ سائٹ دکھاتی ہے۔",
+"app.install.link": "موبائل ایپ انسٹال کریں"
 }

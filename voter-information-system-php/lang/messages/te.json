@@ -921,5 +921,20 @@
 "report.grievances": "బూత్ వారీ ఫిర్యాదులు",
 "report.grievances.desc": "ప్రతి బూత్ ఫిర్యాదులు: తెరిచినవి, పరిష్కృతం, రోజులు, ప్రధాన సమస్యలు",
 "an.note.grievances": "ఫిర్యాదుల రిజిస్టర్ నుండి. నమోదైన రోజు నుండి రోజులు లెక్కిస్తారు.",
-"worker.name": "పేరు"
+"worker.name": "పేరు",
+"app.install.title": "యాప్ ఇన్‌స్టాల్ చేయండి",
+"app.install.subtitle": "Android, iPhone లో యాప్‌లా వాడండి",
+"app.install.already": "ఈ పరికరంలో యాప్ ఇన్‌స్టాల్ అయింది.",
+"app.install.play": "Google Play లో పొందండి",
+"app.install.apk": "Android యాప్ డౌన్‌లోడ్ (APK)",
+"app.install.now": "ఇప్పుడే ఇన్‌స్టాల్ చేయండి",
+"app.install.apkStep1": "డౌన్‌లోడ్ నొక్కి, ఫైల్ తెరవండి.",
+"app.install.apkStep2": "అడిగితే బ్రౌజర్‌కు \"తెలియని యాప్‌లు ఇన్‌స్టాల్\" అనుమతి ఇచ్చి ఇన్‌స్టాల్ నొక్కండి.",
+"app.install.chromeStep": "Chrome లో సైట్ తెరిచి, మెనూ (⋮) నొక్కి \"యాప్ ఇన్‌స్టాల్ చేయండి\" ఎంచుకోండి.",
+"app.install.appStore": "App Store లో డౌన్‌లోడ్ చేయండి",
+"app.install.ios1": "ఈ సైట్‌ను Safari లో తెరవండి.",
+"app.install.ios2": "కింద షేర్ బటన్ {0} నొక్కండి.",
+"app.install.ios3": "\"హోమ్ స్క్రీన్‌కు జోడించు\" ఎంచుకుని జోడించు నొక్కండి.",
+"app.install.privacy": "ఓటర్ డేటా ఫోన్‌లో నిల్వ చేయబడదు: యాప్ అదే సురక్షిత సైట్‌ను చూపుతుంది.",
+"app.install.link": "మొబైల్ యాప్ ఇన్‌స్టాల్ చేయండి"
 }

@@ -921,5 +921,20 @@
 "report.grievances": "বুথভিত্তিক অভিযোগ",
 "report.grievances.desc": "প্রতি বুথের অভিযোগ: খোলা, সমাধান, দিন, প্রধান সমস্যা",
 "an.note.grievances": "অভিযোগ রেজিস্টার থেকে। দিন গোনা হয় অভিযোগ লেখার দিন থেকে।",
-"worker.name": "নাম"
+"worker.name": "নাম",
+"app.install.title": "অ্যাপ ইনস্টল করুন",
+"app.install.subtitle": "Android ও iPhone-এ অ্যাপের মতো ব্যবহার করুন",
+"app.install.already": "এই ডিভাইসে অ্যাপ ইনস্টল আছে।",
+"app.install.play": "Google Play-তে পান",
+"app.install.apk": "Android অ্যাপ ডাউনলোড (APK)",
+"app.install.now": "এখনই ইনস্টল করুন",
+"app.install.apkStep1": "ডাউনলোড চাপুন, তারপর ফাইলটি খুলুন।",
+"app.install.apkStep2": "জিজ্ঞাসা করলে ব্রাউজারের জন্য \"অজানা অ্যাপ ইনস্টল\" অনুমতি দিন, তারপর ইনস্টল চাপুন।",
+"app.install.chromeStep": "Chrome-এ সাইটটি খুলুন, মেনু (⋮) চেপে \"অ্যাপ ইনস্টল করুন\" বাছুন।",
+"app.install.appStore": "App Store থেকে ডাউনলোড করুন",
+"app.install.ios1": "Safari-তে সাইটটি খুলুন।",
+"app.install.ios2": "নিচে শেয়ার বোতাম {0} চাপুন।",
+"app.install.ios3": "\"হোম স্ক্রিনে যোগ করুন\" বেছে যোগ করুন চাপুন।",
+"app.install.privacy": "ভোটার তথ্য ফোনে রাখা হয় না: অ্যাপ একই সুরক্ষিত সাইট দেখায়।",
+"app.install.link": "মোবাইল অ্যাপ ইনস্টল করুন"
 }

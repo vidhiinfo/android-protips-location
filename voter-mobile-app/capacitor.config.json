@@ -1,0 +1,33 @@
+{
+  "appId": "in.electionsoft.vis",
+  "appName": "Voter System",
+  "webDir": "www",
+  "server": {
+    "url": "https://electionsoft.in/vis/login",
+    "androidScheme": "https",
+    "cleartext": false,
+    "allowNavigation": ["electionsoft.in", "www.electionsoft.in"],
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#0d6efd",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0d6efd",
+      "overlaysWebView": false
+    }
+  }
+}

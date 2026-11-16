@@ -136,3 +136,76 @@ document.addEventListener('click', function (e) {
             .finally(function () { b.disabled = false; });
     });
 })();
+
+// ---------------------------------------------------------------- mobile app
+// 1. Installable web app (PWA): register the service worker (offline page, app icon on the home screen).
+(function () {
+    if (!('serviceWorker' in navigator) || location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
+    var app = document.querySelector('script[src*="js/app.js"]');
+    if (!app) return;
+    var base = app.src.replace(/js\/app\.js.*$/, '');   // works from a subfolder (/vis/)
+    navigator.serviceWorker.register(base + 'sw.js', { scope: base }).catch(function () {});
+})();
+
+// 2. "Install now" button where the browser supports it (Android Chrome / Edge); hidden once installed.
+(function () {
+    var deferred = null;
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    if (standalone) document.querySelectorAll('[data-installed]').forEach(function (e) { e.classList.remove('d-none'); });
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault(); deferred = e;
+        document.querySelectorAll('[data-install-app]').forEach(function (b) { b.classList.remove('d-none'); });
+    });
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('[data-install-app]');
+        if (!b || !deferred) return;
+        deferred.prompt();
+        deferred.userChoice.finally(function () { deferred = null; b.classList.add('d-none'); });
+    });
+})();
+
+// 3. Inside the Android / iOS app (Capacitor): Excel / PDF downloads are saved and offered to share / open,
+//    because a phone app's web view cannot download files by itself.
+(function () {
+    var C = window.Capacitor;
+    if (!C || !C.isNativePlatform || !C.isNativePlatform()) return;
+    document.documentElement.classList.add('native-app', 'native-' + C.getPlatform());
+    var P = C.Plugins || {};
+    var isDownload = function (href) { return /\/export\/|\/import\/template|\/export\?/.test(href); };
+    function toBase64(blob) {
+        return new Promise(function (ok, fail) {
+            var r = new FileReader();
+            r.onload = function () { ok(String(r.result).split(',')[1]); };
+            r.onerror = fail; r.readAsDataURL(blob);
+        });
+    }
+    function fileName(res, href) {
+        var cd = res.headers.get('Content-Disposition') || '';
+        var m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+        return m ? decodeURIComponent(m[1]) : (href.split('/').pop().split('?')[0] || 'download');
+    }
+    function busy(on) {
+        var el = document.getElementById('native-busy');
+        if (!el) { el = document.createElement('div'); el.id = 'native-busy'; el.innerHTML = '<div class="spinner-border text-light"></div>'; document.body.appendChild(el); }
+        el.style.display = on ? 'flex' : 'none';
+    }
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href]');
+        if (!a || !isDownload(a.href) || !P.Filesystem || !P.Share) return;
+        e.preventDefault();
+        busy(true);
+        fetch(a.href, { credentials: 'include' }).then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            var type = res.headers.get('Content-Type') || '';
+            if (type.indexOf('text/html') === 0) { location.href = res.url; return null; }   // e.g. "too many rows" message page
+            var name = fileName(res, a.href);
+            return res.blob().then(toBase64).then(function (data) {
+                return P.Filesystem.writeFile({ path: name, data: data, directory: 'CACHE' });
+            }).then(function (f) {
+                return P.Share.share({ title: name, files: [f.uri], dialogTitle: name });
+            });
+        }).catch(function (err) {
+            if (!/cancel/i.test(String(err && err.message))) alert(String(err && err.message || err));
+        }).finally(function () { busy(false); });
+    });
+})();

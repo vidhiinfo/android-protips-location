@@ -25,6 +25,9 @@ return [
     ],
 
     // users: "app" = tables app_users / roles / role_permissions / user_roles; "external" = your existing tables
+    // mobile app store links shown on the /mobile-app page (empty = not published yet)
+    'app' => ['play_url' => env('APP_PLAY_URL'), 'app_store_url' => env('APP_STORE_URL')],
+
     // printed at the bottom of every voter slip (Voters > Slips)
     'slip_note' => env('SLIP_NOTE', 'Poll: 7:00 AM to 6:00 PM. Carry your EPIC card or another approved photo ID.'),
 

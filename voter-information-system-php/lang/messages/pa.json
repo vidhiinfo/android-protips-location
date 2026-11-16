@@ -921,5 +921,20 @@
 "report.grievances": "ਬੂਥਵਾਰ ਸ਼ਿਕਾਇਤਾਂ",
 "report.grievances.desc": "ਹਰ ਬੂਥ ਦੀਆਂ ਸ਼ਿਕਾਇਤਾਂ: ਖੁੱਲ੍ਹੀਆਂ, ਹੱਲ, ਦਿਨ, ਮੁੱਖ ਸਮੱਸਿਆਵਾਂ",
 "an.note.grievances": "ਸ਼ਿਕਾਇਤ ਰਜਿਸਟਰ ਤੋਂ। ਦਿਨ ਦਰਜ ਹੋਣ ਦੇ ਦਿਨ ਤੋਂ ਗਿਣੇ ਜਾਂਦੇ ਹਨ।",
-"worker.name": "ਨਾਮ"
+"worker.name": "ਨਾਮ",
+"app.install.title": "ਐਪ ਇੰਸਟਾਲ ਕਰੋ",
+"app.install.subtitle": "Android ਅਤੇ iPhone 'ਤੇ ਐਪ ਵਾਂਗ ਵਰਤੋ",
+"app.install.already": "ਇਹ ਐਪ ਇਸ ਡਿਵਾਈਸ 'ਤੇ ਇੰਸਟਾਲ ਹੈ।",
+"app.install.play": "Google Play 'ਤੇ ਲਵੋ",
+"app.install.apk": "Android ਐਪ ਡਾਊਨਲੋਡ (APK)",
+"app.install.now": "ਹੁਣੇ ਇੰਸਟਾਲ ਕਰੋ",
+"app.install.apkStep1": "ਡਾਊਨਲੋਡ ਦਬਾਓ, ਫਿਰ ਡਾਊਨਲੋਡ ਹੋਈ ਫਾਈਲ ਖੋਲ੍ਹੋ।",
+"app.install.apkStep2": "ਪੁੱਛਣ 'ਤੇ ਬ੍ਰਾਊਜ਼ਰ ਲਈ \"ਅਣਜਾਣ ਐਪ ਇੰਸਟਾਲ\" ਇਜਾਜ਼ਤ ਦਿਓ, ਫਿਰ ਇੰਸਟਾਲ ਦਬਾਓ।",
+"app.install.chromeStep": "ਇਹ ਸਾਈਟ Chrome ਵਿੱਚ ਖੋਲ੍ਹੋ, ਮੀਨੂ (⋮) ਦਬਾਓ ਅਤੇ \"ਐਪ ਇੰਸਟਾਲ ਕਰੋ\" ਚੁਣੋ।",
+"app.install.appStore": "App Store ਤੋਂ ਡਾਊਨਲੋਡ ਕਰੋ",
+"app.install.ios1": "ਇਹ ਸਾਈਟ Safari ਵਿੱਚ ਖੋਲ੍ਹੋ।",
+"app.install.ios2": "ਹੇਠਾਂ ਸ਼ੇਅਰ ਬਟਨ {0} ਦਬਾਓ।",
+"app.install.ios3": "\"ਹੋਮ ਸਕ੍ਰੀਨ 'ਤੇ ਜੋੜੋ\" ਚੁਣੋ, ਫਿਰ ਜੋੜੋ ਦਬਾਓ।",
+"app.install.privacy": "ਵੋਟਰ ਡਾਟਾ ਫ਼ੋਨ 'ਤੇ ਨਹੀਂ ਰੱਖਿਆ ਜਾਂਦਾ: ਐਪ ਉਹੀ ਸੁਰੱਖਿਅਤ ਸਾਈਟ ਦਿਖਾਉਂਦੀ ਹੈ।",
+"app.install.link": "ਮੋਬਾਈਲ ਐਪ ਇੰਸਟਾਲ ਕਰੋ"
 }

@@ -927,5 +927,20 @@
 "report.grievances": "Grievances by booth",
 "report.grievances.desc": "Complaints per booth: open, resolved, days to resolve, top problems",
 "an.note.grievances": "From the Grievances register. Days are counted from the day the grievance was logged.",
-"worker.name": "Name"
+"worker.name": "Name",
+"app.install.title": "Install the app",
+"app.install.subtitle": "Use it like an app on Android and iPhone",
+"app.install.already": "The app is installed on this device.",
+"app.install.play": "Get it on Google Play",
+"app.install.apk": "Download Android app (APK)",
+"app.install.now": "Install now",
+"app.install.apkStep1": "Tap Download, then open the downloaded file.",
+"app.install.apkStep2": "If asked, allow \"Install unknown apps\" for your browser, then tap Install.",
+"app.install.chromeStep": "Open this site in Chrome, tap the menu (⋮) and choose \"Install app\" / \"Add to Home screen\".",
+"app.install.appStore": "Download on the App Store",
+"app.install.ios1": "Open this site in Safari.",
+"app.install.ios2": "Tap the Share button {0} at the bottom.",
+"app.install.ios3": "Choose \"Add to Home Screen\", then tap Add. The app icon appears on your home screen.",
+"app.install.privacy": "Voter data is not stored on the phone: the app shows the same secure site, with the same login and permissions.",
+"app.install.link": "Install mobile app"
 }

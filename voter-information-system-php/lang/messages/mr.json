@@ -921,5 +921,20 @@
 "report.grievances": "बूथनिहाय तक्रारी",
 "report.grievances.desc": "प्रत्येक बूथच्या तक्रारी: उघड्या, सुटलेल्या, दिवस, मुख्य समस्या",
 "an.note.grievances": "तक्रार नोंदवहीतून. दिवस नोंदणीच्या दिवसापासून मोजले जातात.",
-"worker.name": "नाव"
+"worker.name": "नाव",
+"app.install.title": "ॲप इन्स्टॉल करा",
+"app.install.subtitle": "Android आणि iPhone वर ॲपसारखे वापरा",
+"app.install.already": "हे ॲप या उपकरणावर इन्स्टॉल आहे.",
+"app.install.play": "Google Play वर मिळवा",
+"app.install.apk": "Android ॲप डाउनलोड (APK)",
+"app.install.now": "आता इन्स्टॉल करा",
+"app.install.apkStep1": "डाउनलोड दाबा, मग डाउनलोड झालेली फाइल उघडा.",
+"app.install.apkStep2": "विचारल्यास ब्राउझरसाठी \"अज्ञात ॲप्स इन्स्टॉल\" परवानगी द्या, मग इन्स्टॉल दाबा.",
+"app.install.chromeStep": "ही साइट Chrome मध्ये उघडा, मेनू (⋮) दाबा आणि \"ॲप इन्स्टॉल करा\" निवडा.",
+"app.install.appStore": "App Store वरून डाउनलोड करा",
+"app.install.ios1": "ही साइट Safari मध्ये उघडा.",
+"app.install.ios2": "खाली शेअर बटण {0} दाबा.",
+"app.install.ios3": "\"होम स्क्रीनवर जोडा\" निवडा, मग जोडा दाबा.",
+"app.install.privacy": "मतदार माहिती फोनवर ठेवली जात नाही: ॲप तीच सुरक्षित साइट दाखवते.",
+"app.install.link": "मोबाइल ॲप इन्स्टॉल करा"
 }

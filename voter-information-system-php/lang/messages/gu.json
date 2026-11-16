@@ -921,5 +921,20 @@
 "report.grievances": "બૂથવાર ફરિયાદો",
 "report.grievances.desc": "દરેક બૂથની ફરિયાદો: ખુલ્લી, ઉકેલાયેલી, દિવસ, મુખ્ય સમસ્યાઓ",
 "an.note.grievances": "ફરિયાદ રજિસ્ટરમાંથી. દિવસ નોંધણીના દિવસથી ગણાય છે.",
-"worker.name": "નામ"
+"worker.name": "નામ",
+"app.install.title": "એપ ઇન્સ્ટોલ કરો",
+"app.install.subtitle": "Android અને iPhone પર એપની જેમ વાપરો",
+"app.install.already": "આ એપ આ ઉપકરણ પર ઇન્સ્ટોલ છે.",
+"app.install.play": "Google Play પર મેળવો",
+"app.install.apk": "Android એપ ડાઉનલોડ (APK)",
+"app.install.now": "હમણાં ઇન્સ્ટોલ કરો",
+"app.install.apkStep1": "ડાઉનલોડ દબાવો, પછી ડાઉનલોડ થયેલી ફાઇલ ખોલો.",
+"app.install.apkStep2": "પૂછાય તો બ્રાઉઝર માટે \"અજાણી એપ ઇન્સ્ટોલ\" મંજૂરી આપો, પછી ઇન્સ્ટોલ દબાવો.",
+"app.install.chromeStep": "આ સાઇટ Chrome માં ખોલો, મેનુ (⋮) દબાવો અને \"એપ ઇન્સ્ટોલ કરો\" પસંદ કરો.",
+"app.install.appStore": "App Store પરથી ડાઉનલોડ કરો",
+"app.install.ios1": "આ સાઇટ Safari માં ખોલો.",
+"app.install.ios2": "નીચે શેર બટન {0} દબાવો.",
+"app.install.ios3": "\"હોમ સ્ક્રીન પર ઉમેરો\" પસંદ કરો, પછી ઉમેરો દબાવો.",
+"app.install.privacy": "મતદાર ડેટા ફોન પર રાખાતો નથી: એપ એ જ સુરક્ષિત સાઇટ બતાવે છે.",
+"app.install.link": "મોબાઇલ એપ ઇન્સ્ટોલ કરો"
 }
