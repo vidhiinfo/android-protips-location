@@ -74,6 +74,71 @@ class ExcelExporter
         return $this->write($r->title, $r->subtitle, $r->headers, $r->rows, $r->totals, mb_substr(preg_replace('/[\\\\\/?*\[\]:]/', ' ', $r->title), 0, 31));
     }
 
+    /**
+     * Door-to-door survey sheet: voters house by house (alternate shading per house), Caste / Sub Caste drop-downs from the
+     * masters, yellow columns to fill in. The column titles are the normal import titles, so Bulk Import reads it back.
+     */
+    public function surveySheet(iterable $voters, string $title): string
+    {
+        $cols = [['col.assemblyNo', 'assembly_no'], ['col.wardNo', 'ward_no'], ['col.boothNo', 'booth_no'], ['col.serialNo', 'serial_no'],
+            ['col.houseNo', 'house_no'], ['col.epicNo', 'epic_no'], ['col.name', 'name'], ['col.relativeName', 'relative_name'],
+            ['col.gender', 'gender'], ['col.age', 'age'], ['col.caste', 'caste'], ['col.subCaste', 'sub_caste'], ['col.mobile', 'mobile'], ['col.remarks', 'remarks']];
+        $fill = ['caste', 'sub_caste', 'mobile', 'remarks'];
+        $book = new Spreadsheet();
+        $sh = $book->getActiveSheet();
+        $sh->setTitle(mb_substr(t('survey.sheet'), 0, 31));
+        $sh->setRightToLeft(Lang::rtl());
+        $last = Coordinate::stringFromColumnIndex(count($cols));
+        $sh->setCellValue('A1', $title);
+        $sh->getStyle('A1')->getFont()->setBold(true)->setSize(13);
+        $sh->setCellValue('A2', t('survey.howto'));
+        $sh->mergeCells("A2:{$last}2");
+        $sh->getStyle('A2')->getAlignment()->setWrapText(true);
+        $sh->getRowDimension(2)->setRowHeight(32);
+        foreach ($cols as $i => [$key]) $sh->setCellValue(Coordinate::stringFromColumnIndex($i + 1) . '3', t($key));
+        $sh->getStyle("A3:{$last}3")->getFont()->setBold(true);
+        $sh->getStyle("A3:{$last}3")->getFill()->setFillType('solid')->getStartColor()->setRGB('D9D9D9');
+        $r = 3; $house = null; $shade = false;
+        foreach ($voters as $v) {
+            $r++;
+            $key = $v->booth_no . '|' . mb_strtolower((string) $v->village_ward) . '|' . \App\Support\Text::houseKey($v->house_no);
+            if ($key !== $house) { $house = $key; $shade = !$shade; }
+            foreach ($cols as $i => [, $f]) {
+                $val = $f === 'gender' ? $v->genderLabel() : $v->$f;
+                if ($val !== null && $val !== '') $sh->setCellValueExplicit(Coordinate::stringFromColumnIndex($i + 1) . $r, (string) $val,
+                    in_array($f, ['assembly_no', 'ward_no', 'booth_no', 'serial_no', 'age'], true) ? DataType::TYPE_NUMERIC : DataType::TYPE_STRING);
+            }
+            if ($shade) $sh->getStyle("A{$r}:{$last}{$r}")->getFill()->setFillType('solid')->getStartColor()->setRGB('EEF3FB');
+        }
+        $end = max(4, $r);
+        // columns to fill in: yellow; Caste / Sub Caste: drop-down lists from the masters (other values still allowed)
+        $tree = \App\Models\Caste::tree();
+        $lists = $book->createSheet(); $lists->setTitle(mb_substr(t('survey.lists'), 0, 31));
+        $lists->setCellValue('A1', t('col.caste')); $lists->setCellValue('B1', t('col.subCaste'));
+        $castes = array_keys($tree); $subs = array_values(array_unique(array_merge([], ...array_values($tree ?: [[]]))));
+        foreach ($castes as $i => $c) $lists->setCellValueExplicit('A' . ($i + 2), $c, DataType::TYPE_STRING);
+        foreach ($subs as $i => $c) $lists->setCellValueExplicit('B' . ($i + 2), $c, DataType::TYPE_STRING);
+        $listRef = "'" . str_replace("'", "''", $lists->getTitle()) . "'";
+        foreach ($cols as $i => [, $f]) {
+            if (!in_array($f, $fill, true)) continue;
+            $col = Coordinate::stringFromColumnIndex($i + 1);
+            $sh->getStyle("{$col}3:{$col}{$end}")->getFill()->setFillType('solid')->getStartColor()->setRGB('FFF2CC');
+            $range = $f === 'caste' && $castes ? '$A$2:$A$' . (count($castes) + 1) : ($f === 'sub_caste' && $subs ? '$B$2:$B$' . (count($subs) + 1) : null);
+            if (!$range) continue;
+            $dv = new \PhpOffice\PhpSpreadsheet\Cell\DataValidation();
+            $dv->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION)
+               ->setAllowBlank(true)->setShowDropDown(true)->setShowErrorMessage(false)->setFormula1($listRef . '!' . $range);
+            $sh->setDataValidation("{$col}4:{$col}{$end}", $dv);
+        }
+        $sh->freezePane('A4');
+        $sh->setAutoFilter("A3:{$last}{$end}");
+        foreach ([8, 7, 7, 7, 12, 14, 26, 26, 9, 6, 18, 18, 14, 24] as $i => $w) $sh->getColumnDimension(Coordinate::stringFromColumnIndex($i + 1))->setWidth($w);
+        $sh->getPageSetup()->setOrientation('landscape')->setFitToWidth(1)->setFitToHeight(0);
+        $sh->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(3, 3);
+        $book->setActiveSheetIndex(0);
+        return $this->save($book);
+    }
+
     /** Workbook with the header row and one sample row, for bulk upload. */
     public function template(): string
     {

@@ -51,13 +51,49 @@ class VoterController extends Controller
     public function show(int $voter, MessagingService $m)
     {
         $v = $this->load($voter);
-        return view('voters.view', ['voter' => $v, 'household' => $this->voters->household($v), 'optedOut' => $m->isOptedOut($v->mobile, 'SMS')]);
+        return view('voters.view', ['voter' => $v, 'household' => $this->voters->household($v), 'optedOut' => $m->isOptedOut($v->mobile, 'SMS'),
+            'casteTree' => \App\Models\Caste::tree()]);
     }
 
     public function household(Request $r, int $voter)
     {
         $v = $this->load($voter);
-        return view($r->query('fragment') ? 'voters.household-content' : 'voters.household', ['voter' => $v, 'household' => $this->voters->household($v)]);
+        return view($r->query('fragment') ? 'voters.household-content' : 'voters.household', ['voter' => $v, 'household' => $this->voters->household($v),
+            'casteTree' => \App\Models\Caste::tree()]);
+    }
+
+    /** One caste / sub caste for every voter of this house (same house no. + address + ward). */
+    public function householdCaste(Request $r, int $voter)
+    {
+        $v = $this->load($voter);
+        $caste = trim((string) $r->input('caste')); $sub = trim((string) $r->input('sub_caste')) ?: null;
+        if ($caste === '' || mb_strlen($caste) > 100 || ($sub !== null && mb_strlen($sub) > 100)) return redirect('/voters/' . $v->id)->with('error', 'validation.required');
+        $tree = \App\Models\Caste::tree();
+        if ($tree && $sub !== null && !in_array($sub, $tree[$caste] ?? [], true) && $sub !== $v->sub_caste) $sub = null;   // sub caste must belong to the caste
+        $category = \App\Models\Caste::where('name', $caste)->value('category');
+        $n = 0;
+        foreach ($this->voters->household($v) as $h) {
+            if (!$this->user()->allows($h->assembly_no)) continue;
+            $h->caste = $caste; $h->sub_caste = $sub;
+            if (!$h->category && $category) $h->category = $category;
+            $h->save(); $n++;
+        }
+        $this->audit()->log('UPDATE', 'VOTER', $v->id, "caste '$caste'" . ($sub ? " / '$sub'" : '') . " for $n voters of house {$v->house_no}");
+        return redirect('/voters/' . $v->id)->with('success', t('household.casteApplied', $n));
+    }
+
+    /** Booth-wise survey sheet: voters house by house with Caste / Sub Caste drop-downs, to fill in the field and upload back. */
+    public function surveySheet(Request $r, ExcelExporter $x)
+    {
+        $f = $this->filter($r);
+        if ($this->voters->count($f) > VoterService::maxPdfRows()) return redirect('/voters?' . $f->queryWithSort())->with('error', 'survey.tooMany');
+        // houses in roll order (by the first serial no. of the house), members of a house together
+        $all = $this->voters->searchAll($f, VoterService::maxPdfRows());
+        $houseOf = fn ($v) => $v->assembly_no . '|' . $v->booth_no . '|' . mb_strtolower((string) $v->village_ward) . '|' . (\App\Support\Text::houseKey($v->house_no) ?: '#' . $v->id);
+        $first = [];
+        foreach ($all as $v) { $k = $houseOf($v); $first[$k] = min($first[$k] ?? PHP_INT_MAX, $v->booth_no * 100000 + (int) $v->serial_no); }
+        $rows = $all->sortBy(fn ($v) => [$first[$houseOf($v)], $houseOf($v), (int) $v->serial_no])->values();
+        return $this->download($x->surveySheet($rows, $this->title($f)), 'survey-' . date('Y-m-d') . '.xlsx', self::XLSX);
     }
 
     private function formData(Voter $v): array

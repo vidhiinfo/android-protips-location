@@ -98,7 +98,8 @@ class ExcelImporter
         $idx = null; $inserted = 0; $updated = 0; $errors = []; $buf = [];
         $fields = array_flip(array_values($keys));   // includes ward_no
         // saves 500 rows per transaction, looking up their EPIC numbers with one query
-        $save = function () use (&$buf, &$inserted, &$updated, &$errors, $onlyAssembly, $fields) {
+        $casteCategory = \App\Models\Caste::whereNotNull('category')->get()->mapWithKeys(fn ($c) => [mb_strtolower($c->name) => $c->category])->all();
+        $save = function () use (&$buf, &$inserted, &$updated, &$errors, $onlyAssembly, $fields, $casteCategory) {
             $epic = fn ($d) => strtoupper((string) Text::asciiDigits($d['epic_no']));
             $existing = Voter::whereIn('epic_no', array_map(fn ($b) => $epic($b[1]), $buf))->get()->keyBy('epic_no')->all();
             foreach ($buf as [$label, $data]) {
@@ -109,6 +110,7 @@ class ExcelImporter
                 }
                 $isNew = !$voter->exists;
                 $voter->fill(array_intersect_key($data, $fields));
+                if ($voter->caste && !$voter->category) $voter->category = $casteCategory[mb_strtolower($voter->caste)] ?? null;   // from the Caste master
                 try { $voter->save(); $isNew ? $inserted++ : $updated++; $existing[$voter->epic_no] = $voter; }
                 catch (\Throwable $e) { $errors[] = t('import.row', $label) . ': ' . $e->getMessage(); }
             }
@@ -136,7 +138,7 @@ class ExcelImporter
             $data = [];
             foreach ($idx as $field => $i) $data[$field] = $get($field);
             $data['gender'] = $genders[self::norm($data['gender'] ?? '')] ?? match (strtoupper(substr($data['gender'] ?? '', 0, 1))) { 'M' => 'MALE', 'F' => 'FEMALE', 'O', 'T' => 'OTHER', default => null };
-            $data['relation_type'] = $relations[self::norm($data['relation_type'] ?? '')] ?? 'FATHER';
+            if (isset($idx['relation_type'])) $data['relation_type'] = $relations[self::norm($data['relation_type'] ?? '')] ?? 'FATHER';   // no column: keep the voter's
             // a "Ward" column holds the ward number (e.g. 102) or a ward / locality name (e.g. "Ward 12", "Vishnu Garden")
             if (array_key_exists('ward', $data)) {
                 $w = trim((string) Text::asciiDigits($data['ward']));

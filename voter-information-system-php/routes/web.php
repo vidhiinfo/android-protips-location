@@ -29,7 +29,9 @@ Route::middleware('login.required')->group(function () {
         Route::get('/voters/import/template', [VoterController::class, 'template']);
         Route::post('/voters/import', [VoterController::class, 'import']);
     });
+    Route::post('/voters/{voter}/household/caste', [VoterController::class, 'householdCaste'])->whereNumber('voter')->middleware('perm:VOTER_EDIT');
     Route::middleware('perm:VOTER_EXPORT')->group(function () {
+        Route::get('/voters/export/survey', [VoterController::class, 'surveySheet']);
         Route::get('/voters/export/excel', [VoterController::class, 'exportExcel']);
         Route::get('/voters/export/pdf', [VoterController::class, 'exportPdf']);
         Route::get('/voters/print', [VoterController::class, 'print']);

@@ -611,5 +611,13 @@
 "master.active": "Active",
 "master.casteHint": "Castes listed here appear in the Caste drop-down of the voter form. The category (if given) fills the voter's category automatically when it is empty. A caste cannot be deleted while voters or sub castes use it; renaming it also renames it on those voters.",
 "col.subCaste": "Sub Caste",
-"field.subCaste": "Sub Caste"
+"field.subCaste": "Sub Caste",
+"household.casteTitle": "Caste for this house",
+"household.applyCaste": "Apply to all {0} members of this house",
+"household.casteApplied": "Caste saved for {0} voters of this house.",
+"survey.sheet": "Survey Sheet",
+"survey.hint": "Excel sheet for the door-to-door survey: voters house by house, with Caste / Sub Caste drop-downs. Fill it in and upload it back with Bulk Import.",
+"survey.tooMany": "The survey sheet is limited to 5,000 voters. Select a booth or ward first.",
+"survey.howto": "Fill in Caste, Sub Caste, Mobile and Remarks (yellow columns) as told by the family. Do not change EPIC No. Then upload the file in Voters > Bulk Import; only the voters in the sheet are updated.",
+"survey.lists": "Lists"
 }

@@ -59,7 +59,8 @@
             <li class="list-group-item d-flex justify-content-between"><span><a href="{{ url('/voters/'.$h->id) }}">{{ $h->name }}</a>
                 @if($h->name_local)<span class="text-muted" dir="auto"> / {{ $h->name_local }}</span>@endif</span>
                 <span class="text-muted small">{{ $h->genderLabel() }}, {{ $h->age }}</span></li>
-        @endif @endforeach</ul></div>
+        @endif @endforeach</ul>
+        <div class="card-body pt-0">@include('voters.household-caste-form')</div></div>
     @endif
 </div>
 @endsection

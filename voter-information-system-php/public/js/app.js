@@ -59,17 +59,18 @@ document.querySelectorAll('select[data-ward-select]').forEach(function (ward) {
 })
 ;
 
-// Caste -> Sub Caste: the Sub Caste drop-down shows only the sub castes of the chosen caste (Caste master)
-document.querySelectorAll('select[data-caste-select]').forEach(function (caste) {
+// Caste -> Sub Caste: the Sub Caste drop-down shows only the sub castes of the chosen caste (Caste master).
+// Listens on the document, so it also works inside the House No popup that is loaded later.
+document.addEventListener('change', function (e) {
+    var caste = e.target;
+    if (!caste.matches || !caste.matches('select[data-caste-select]')) return;
     var sub = document.getElementById(caste.dataset.subSelect);
     if (!sub) return;
     var map = {};
-    try { map = JSON.parse(caste.dataset.map || '{}'); } catch (e) { return; }
+    try { map = JSON.parse(caste.dataset.map || '{}'); } catch (err) { return; }
     var empty = sub.options.length ? sub.options[0].text : '--';
-    caste.addEventListener('change', function () {
-        var current = sub.value;
-        sub.innerHTML = '';
-        sub.add(new Option(empty, ''));
-        (map[caste.value] || []).forEach(function (s) { sub.add(new Option(s, s, false, s === current)); });
-    });
+    var current = sub.value;
+    sub.innerHTML = '';
+    sub.add(new Option(empty, ''));
+    (map[caste.value] || []).forEach(function (s) { sub.add(new Option(s, s, false, s === current)); });
 });

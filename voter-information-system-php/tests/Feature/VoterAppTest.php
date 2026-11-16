@@ -261,6 +261,47 @@ class VoterAppTest extends TestCase
         $this->assertSame('Golla Saini', Voter::where('epic_no', 'SUB0000001')->value('sub_caste'));
     }
 
+    public function test_household_caste_and_survey_sheet(): void
+    {
+        $this->login();
+        $c = \App\Models\Caste::create(['name' => 'Saini', 'category' => 'OBC', 'active' => true]);
+        \App\Models\SubCaste::create(['caste_id' => $c->id, 'name' => 'Mali', 'active' => true]);
+        // apply to the whole house
+        $wife = Voter::where('assembly_no', 45)->where('relation_type', 'HUSBAND')->first();
+        $house = app(\App\Services\Voters\VoterService::class)->household($wife);
+        $this->assertGreaterThan(1, count($house));
+        $this->get("/voters/{$wife->id}/household?fragment=1")->assertOk()->assertSee(t('household.applyCaste', count($house)));
+        $this->post("/voters/{$wife->id}/household/caste", ['caste' => 'Saini', 'sub_caste' => 'Mali'])->assertRedirect("/voters/{$wife->id}")
+            ->assertSessionHas('success', t('household.casteApplied', count($house)));
+        foreach ($house as $h) $this->assertSame(['Saini', 'Mali'], [$h->fresh()->caste, $h->fresh()->sub_caste]);
+        $this->assertSame('HUSBAND', $wife->fresh()->relation_type);
+        // survey sheet: house by house, drop-downs, read back by Bulk Import without touching other fields
+        $res = $this->get('/voters/export/survey?assemblyNo=45&boothNo=' . $wife->booth_no)->assertOk();
+        $path = tempnam(sys_get_temp_dir(), 'sv') . '.xlsx';
+        file_put_contents($path, $res->getContent());
+        $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+        $sh = $book->getSheet(0);
+        $head = $sh->rangeToArray('A3:N3')[0];
+        $this->assertSame(t('col.caste'), $head[10]);
+        $this->assertNotEmpty($sh->getDataValidationCollection());
+        $rows = $sh->rangeToArray('A4:N' . $sh->getHighestRow());
+        $this->assertSame(Voter::where('assembly_no', 45)->where('booth_no', $wife->booth_no)->count(), count($rows));
+        // pick a voter without caste, fill it in the sheet, upload
+        $target = null;
+        foreach ($rows as $i => $row) if (!$row[10]) { $target = [$i + 4, $row[5]]; break; }
+        $this->assertNotNull($target);
+        $sh->setCellValue('K' . $target[0], 'Saini');
+        $sh->setCellValue('M' . $target[0], '9876501234');
+        \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, 'Xlsx')->save($path);
+        $before = Voter::where('epic_no', $target[1])->first();
+        $this->post('/voters/import', ['file' => new UploadedFile($path, 'survey.xlsx', null, null, true)])->assertOk();
+        $after = Voter::where('epic_no', $target[1])->first();
+        $this->assertSame(['Saini', '9876501234', 'OBC'], [$after->caste, $after->mobile, $after->category ?: 'OBC']);
+        $this->assertSame([$before->relation_type, $before->name, $before->age, $before->house_no], [$after->relation_type, $after->name, $after->age, $after->house_no]);
+        $this->assertSame($wife->fresh()->relation_type, 'HUSBAND');   // wives keep "Husband" after the upload
+        $this->get('/voters?assemblyNo=45')->assertSee(t('survey.sheet'));
+    }
+
     public function test_results_entry_and_view(): void
     {
         $this->login();

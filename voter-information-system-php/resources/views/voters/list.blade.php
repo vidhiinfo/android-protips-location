@@ -73,6 +73,7 @@
             <a class="btn btn-sm btn-outline-success" href="{{ url('/messages/compose') }}?{{ $f->queryWithSort() }}&channel=WHATSAPP"><i class="bi bi-whatsapp"></i> WhatsApp</a></div>@endif
         @if(can('VOTER_EXPORT'))
         <a class="btn btn-sm btn-success" href="{{ url('/voters/export/excel') }}?{{ $f->queryWithSort() }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        <a class="btn btn-sm btn-outline-success" href="{{ url('/voters/export/survey') }}?{{ $f->queryWithSort() }}" title="{{ t('survey.hint') }}"><i class="bi bi-clipboard-check"></i> {{ t('survey.sheet') }}</a>
         <a class="btn btn-sm btn-danger" href="{{ url('/voters/export/pdf') }}?{{ $f->queryWithSort() }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <a class="btn btn-sm btn-secondary" target="_blank" href="{{ url('/voters/print') }}?{{ $f->queryWithSort() }}&autoprint=1"><i class="bi bi-printer"></i> {{ t('common.print') }}</a>
         @endif
