@@ -5,3 +5,4 @@
 <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
 <link rel="stylesheet" href="{{ versioned_asset('css/fonts.css') }}">
 <link rel="stylesheet" href="{{ versioned_asset('css/app.css') }}">
+@stack('head')

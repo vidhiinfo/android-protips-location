@@ -15,7 +15,7 @@ class VoterFilter
         'gender' => 'gender', 'age' => 'age', 'assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'serialNo' => 'serial_no',
         'villageWard' => 'village_ward', 'wardNo' => 'ward_no', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
     public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'wardNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
-        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment'];
+        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment', 'workerId', 'voted'];
 
     public array $v = [];
     public string $sort = 'assemblyNo';
@@ -30,11 +30,12 @@ class VoterFilter
             $val = $r->query($k, $r->input($k));
             if ($val !== null && $val !== '') $f->v[$k] = is_string($val) ? trim($val) : $val;
         }
-        foreach (['assemblyNo', 'wardNo', 'boothNo', 'ageMin', 'ageMax'] as $k) {
+        foreach (['assemblyNo', 'wardNo', 'boothNo', 'ageMin', 'ageMax', 'workerId'] as $k) {
             if (isset($f->v[$k])) { if (is_numeric($f->v[$k])) $f->v[$k] = (int) $f->v[$k]; else unset($f->v[$k]); }
         }
         if (isset($f->v['gender']) && !in_array($f->v['gender'], ['MALE', 'FEMALE', 'OTHER'], true)) unset($f->v['gender']);
         if (isset($f->v['deleted']) && !in_array($f->v['deleted'], ['exclude', 'only'], true)) unset($f->v['deleted']);
+        if (isset($f->v['voted']) && !in_array($f->v['voted'], ['yes', 'no'], true)) unset($f->v['voted']);
         if (isset($f->v['sentiment']) && !in_array($f->v['sentiment'], ['S', 'N', 'O', 'X', 'U'], true)) unset($f->v['sentiment']);
         if (isset($f->v['hasMobile'])) $f->v['hasMobile'] = filter_var($f->v['hasMobile'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
         $sort = (string) $r->input('sort', 'assemblyNo');
@@ -107,6 +108,12 @@ class VoterFilter
         }
         if (($a = $this->get('ageMin')) !== null) $q->where('age', '>=', $a);
         if (($a = $this->get('ageMax')) !== null) $q->where('age', '<=', $a);
+        if (($w = $this->get('workerId')) !== null) $w === 0 ? $q->whereNull('worker_id') : $q->where('worker_id', $w);   // 0 = not assigned
+        if ($vt = $this->get('voted')) {   // poll day: voted / not yet voted in the current election
+            $eid = (int) \App\Models\Election::where('current', true)->value('id');
+            $sub = fn ($x) => $x->selectRaw('1')->from('poll_marks')->whereColumn('poll_marks.voter_id', 'voters.id')->where('poll_marks.election_id', $eid);
+            $vt === 'yes' ? $q->whereExists($sub) : $q->whereNotExists($sub);
+        }
         if ($s = $this->get('sentiment')) $q->whereRaw(\App\Services\Reports\AnalyticsService::SENTIMENT_SQL . ' = ?', [$s]);   // support / neutral / opposition (Analytics)
         if ($this->get('hasMobile') === 'true') $q->whereNotNull('mobile')->where('mobile', '<>', '');
         if ($this->get('deleted') === 'exclude') $q->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted'));

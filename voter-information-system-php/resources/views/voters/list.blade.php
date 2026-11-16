@@ -24,7 +24,7 @@
                 <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> {{ t('common.search') }}</button>
                 <a href="{{ url('/voters') }}" class="btn btn-outline-secondary" title="{{ t('common.reset') }}"><i class="bi bi-x-lg"></i></a></div>
         </div>
-        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','subCaste','politicalStatus','beneficiary','membershipNo','deleted'])->contains(fn($k) => $f->get($k) !== null))
+        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','subCaste','politicalStatus','beneficiary','membershipNo','deleted','workerId','voted'])->contains(fn($k) => $f->get($k) !== null))
         <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#adv">{{ t('list.advanced') }} <i class="bi bi-chevron-down"></i></a>
         <div id="adv" class="collapse {{ $adv ? 'show' : '' }}"><div class="row g-2 mt-1">
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.name') }}</label><input name="name" value="{{ $f->get('name') }}" class="form-control" dir="auto"></div>
@@ -58,6 +58,14 @@
                     @foreach($politicalStatuses as $c)<option value="{{ $c }}" @selected($c === $f->get('politicalStatus'))>{{ $c }}</option>@endforeach</select></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.beneficiary') }}</label><input name="beneficiary" value="{{ $f->get('beneficiary') }}" class="form-control" dir="auto"></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.membershipNo') }}</label><input name="membershipNo" value="{{ $f->get('membershipNo') }}" class="form-control"></div>
+            @if($workers->count() && !$me->workerId())
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('worker.worker') }}</label>
+                <select name="workerId" class="form-select"><option value="">{{ t('common.all') }}</option><option value="0" @selected($f->get('workerId') === 0)>{{ t('worker.notAssigned') }}</option>
+                    @foreach($workers as $wk)<option value="{{ $wk->id }}" @selected($wk->id === $f->get('workerId'))>{{ $wk->label() }}</option>@endforeach</select></div>
+            @endif
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('poll.votedFilter') }}</label>
+                <select name="voted" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach(['yes', 'no'] as $vt)<option value="{{ $vt }}" @selected($vt === $f->get('voted'))>{{ t('poll.voted.'.$vt) }}</option>@endforeach</select></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.deleted') }}</label>
                 <select name="deleted" class="form-select"><option value="">{{ t('common.all') }}</option>
                     @foreach(['exclude', 'only'] as $d)<option value="{{ $d }}" @selected($d === $f->get('deleted'))>{{ t('filter.deleted.'.$d) }}</option>@endforeach</select></div>
@@ -75,6 +83,7 @@
         <a class="btn btn-sm btn-success" href="{{ url('/voters/export/excel') }}?{{ $f->queryWithSort() }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
         <a class="btn btn-sm btn-outline-success" href="{{ url('/voters/export/survey') }}?{{ $f->queryWithSort() }}" title="{{ t('survey.hint') }}"><i class="bi bi-clipboard-check"></i> {{ t('survey.sheet') }}</a>
         <a class="btn btn-sm btn-danger" href="{{ url('/voters/export/pdf') }}?{{ $f->queryWithSort() }}"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        <a class="btn btn-sm btn-outline-danger" href="{{ url('/voters/export/slips') }}?{{ $f->queryWithSort() }}" title="{{ t('slip.hint') }}"><i class="bi bi-ticket-perforated"></i> {{ t('slip.title') }}</a>
         <a class="btn btn-sm btn-secondary" target="_blank" href="{{ url('/voters/print') }}?{{ $f->queryWithSort() }}&autoprint=1"><i class="bi bi-printer"></i> {{ t('common.print') }}</a>
         @endif
         <form method="get" action="{{ url('/voters') }}" class="d-flex align-items-center gap-1">
@@ -131,6 +140,11 @@
             <div><label class="form-label small mb-0">{{ t('col.socialStatus') }}</label><input name="social_status" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
             <div><label class="form-label small mb-0">{{ t('col.organisationalStatus') }}</label><input name="organisational_status" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
             <div><label class="form-label small mb-0">{{ t('col.placeOfOrigin') }}</label><input name="place_of_origin" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
+            @if(can('WORKER_MANAGE') && $workers->count())
+            <div><label class="form-label small mb-0">{{ t('worker.worker') }}</label>
+                <select name="worker_id" class="form-select form-select-sm"><option value="">{{ t('bulk.keep') }}</option>
+                    @foreach($workers as $wk)<option value="{{ $wk->id }}">{{ $wk->label() }}</option>@endforeach<option value="-">{{ t('bulk.clear') }}</option></select></div>
+            @endif
             <button class="btn btn-sm btn-primary" data-confirm-bulk="{{ t('bulk.confirm') }}"><i class="bi bi-check2-all"></i> {{ t('bulk.apply') }}</button>
         </div>
         <div class="small text-muted mt-1">{{ t('bulk.hint') }}</div>

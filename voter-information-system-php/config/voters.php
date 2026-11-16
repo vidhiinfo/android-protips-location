@@ -25,6 +25,9 @@ return [
     ],
 
     // users: "app" = tables app_users / roles / role_permissions / user_roles; "external" = your existing tables
+    // printed at the bottom of every voter slip (Voters > Slips)
+    'slip_note' => env('SLIP_NOTE', 'Poll: 7:00 AM to 6:00 PM. Carry your EPIC card or another approved photo ID.'),
+
     'security' => [
         'user_source' => env('USER_SOURCE', 'app'),
         'external' => [

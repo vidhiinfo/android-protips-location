@@ -116,3 +116,23 @@ document.addEventListener('click', function (e) {
     });
     refresh();
 })();
+
+// Poll day serial grid: tap a serial no. to mark / unmark "voted" (saved at once).
+(function () {
+    var grid = document.querySelector('.poll-grid');
+    if (!grid) return;
+    grid.addEventListener('click', function (e) {
+        var b = e.target.closest('.poll-cell');
+        if (!b || b.disabled) return;
+        b.disabled = true;
+        var body = new URLSearchParams({ voter_id: b.dataset.id, _token: grid.dataset.token });
+        fetch(grid.dataset.toggleUrl, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+            .then(function (r) { if (!r.ok) throw r; return r.json(); })
+            .then(function (d) {
+                b.classList.toggle('voted', d.voted);
+                var c = document.querySelector('[data-poll-voted]'); if (c && d.stats) c.textContent = d.stats.voted;
+            })
+            .catch(function () { b.classList.add('err'); })
+            .finally(function () { b.disabled = false; });
+    });
+})();

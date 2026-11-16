@@ -25,7 +25,7 @@ class FieldSurveyController extends Controller
     public function houses(int $a, int $b): array
     {
         $out = [];
-        foreach (Voter::where('assembly_no', $a)->where('booth_no', $b)->orderByRaw('serial_no is null')->orderBy('serial_no')->orderBy('id')
+        foreach (Voter::where('assembly_no', $a)->where('booth_no', $b)->when($this->user()->workerId(), fn ($q, $w) => $q->where('worker_id', $w))->orderByRaw('serial_no is null')->orderBy('serial_no')->orderBy('id')
                      ->get(['id', 'house_no', 'address', 'village_ward', 'political_status', 'caste', 'deleted']) as $v) {
             $k = Text::houseKey($v->house_no) === '' ? '#' . $v->id
                 : Text::houseKey($v->house_no) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
@@ -62,14 +62,14 @@ class FieldSurveyController extends Controller
     private function load(int $id): Voter
     {
         $v = Voter::find($id);
-        abort_if(!$v || !$this->user()->allows($v->assembly_no), 404, t('error.notFound'));
+        abort_if(!$v || !$this->user()->allowsVoter($v), 404, t('error.notFound'));
         return $v;
     }
 
     public function house(int $voter)
     {
         $v = $this->load($voter);
-        $members = $this->voters->household($v)->filter(fn ($m) => $this->user()->allows($m->assembly_no))->values();
+        $members = $this->voters->household($v)->filter(fn ($m) => $this->user()->allowsVoter($m))->values();
         $keys = array_keys($this->houses($v->assembly_no, $v->booth_no));
         $anchors = array_column($this->houses($v->assembly_no, $v->booth_no), 'anchor');
         $i = array_search($members->first()->id ?? $v->id, $anchors);
@@ -91,7 +91,7 @@ class FieldSurveyController extends Controller
         $n = 0;
         foreach ((array) $r->input('m', []) as $id => $data) {
             $m = $members[(int) $id] ?? null;
-            if (!$m || !$this->user()->allows($m->assembly_no) || !is_array($data)) continue;
+            if (!$m || !$this->user()->allowsVoter($m) || !is_array($data)) continue;
             $row = [];
             foreach (self::FIELDS as $f) $row[$f] = isset($data[$f]) && trim((string) $data[$f]) !== '' ? trim((string) $data[$f]) : null;
             if ($row['mobile']) $row['mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['mobile']));

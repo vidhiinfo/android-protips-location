@@ -29,6 +29,14 @@ class CurrentUser
         return $requested === null || $requested === '' ? null : (int) $requested;
     }
 
+    /** Worker record linked to this login: such a user sees and edits only the voters assigned to them (admins are never limited). */
+    public function worker(): ?\App\Models\Worker
+    {
+        return $this->check() && !$this->can('USER_ADMIN') ? \App\Models\Worker::forUsername($this->username()) : null;
+    }
+    public function workerId(): ?int { return $this->worker()?->id; }
+    public function allowsVoter($v): bool { return $this->allows($v->assembly_no) && (($w = $this->workerId()) === null || (int) $v->worker_id === $w); }
+
     public function allows($assembly): bool { return !$this->scoped() || (int) $assembly === $this->workAssembly(); }
 
     public function login(array $data): void

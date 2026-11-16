@@ -98,4 +98,49 @@ class PdfExporter
             $m->WriteHTML($this->table($headers, $chunk, $i === count($chunks) - 1 ? $totals : null, $widths, $i > 0));
         }
     }
+
+    /**
+     * Voter slips: 8 per A4 page (2 x 4), cut along the dashed lines. Plain slips with no party name or symbol,
+     * as the Election Commission allows for unofficial identity slips. Labels in the current language, with Hindi alongside.
+     */
+    public function slips(iterable $voters, ?\App\Models\Election $e): string
+    {
+        $m = $this->mpdf(false);
+        $m->SetMargins(6, 6, 6); $m->setFooter('');
+        $m->WriteHTML('.slip { border: 1px dashed #777; padding: 2.2mm 3mm; height: 62mm; vertical-align: top; width: 50%; font-size: 8.6pt; }
+            .slip h3 { font-size: 10pt; margin: 0 0 1mm 0; border-bottom: 1px solid #999; padding-bottom: .8mm; }
+            .slip .big { font-size: 11pt; font-weight: bold; } .slip .lbl { color: #555; } .slip .sn { font-size: 15pt; font-weight: bold; }
+            .slip .ps { font-size: 8pt; } .slip .note { font-size: 7.4pt; color: #444; margin-top: 1mm; }
+            table.slips { border-collapse: separate; border-spacing: 2mm; width: 100%; }', \Mpdf\HTMLParserMode::HEADER_CSS);
+        $hi = \App\Support\Lang::current() !== 'hi';
+        $L = fn ($k) => self::e(t($k)) . ($hi && ($h = \App\Support\Lang::get($k, [], 'hi')) !== t($k) ? ' / ' . self::e($h) : '');
+        $booths = [];
+        foreach (\App\Models\Booth::all() as $b) $booths[$b->assembly_no . '/' . $b->booth_no] = $b;
+        $date = $e?->poll_date ? \Illuminate\Support\Carbon::parse($e->poll_date)->format('d-m-Y') : '';
+        $note = (string) config('voters.slip_note');
+        $cells = [];
+        foreach ($voters as $v) {
+            $b = $booths[$v->assembly_no . '/' . $v->booth_no] ?? null;
+            $ps = trim(($b?->name ?: $v->booth_name) . ($b?->location ? ', ' . $b->location : ''));
+            $cells[] = '<td class="slip"><h3>' . $L('slip.heading') . '</h3>' . ($e ? '<div class="lbl ps">' . self::e($e->name) . ($date ? ' · ' . $date : '') . '</div>' : '')
+                . '<table width="100%"><tr><td style="vertical-align:top">'
+                . '<div class="big">' . self::e($v->name) . ($v->name_local ? ' <span style="font-weight:normal">(' . self::e($v->name_local) . ')</span>' : '') . '</div>'
+                . '<div>' . self::e($v->relationDisplay()) . '</div>'
+                . '<div><span class="lbl">' . $L('col.epicNo') . ':</span> <b>' . self::e($v->epic_no) . '</b> &nbsp; ' . self::e($v->genderLabel()) . ($v->age ? ', ' . (int) $v->age : '') . '</div>'
+                . '<div><span class="lbl">' . $L('col.houseNo') . ':</span> ' . self::e($v->house_no) . '</div>'
+                . '</td><td style="vertical-align:top;text-align:center;width:24mm;border-left:1px solid #ccc">'
+                . '<div class="lbl">' . $L('slip.part') . '</div><div class="sn">' . (int) $v->booth_no . '</div>'
+                . '<div class="lbl">' . $L('slip.serial') . '</div><div class="sn">' . (int) $v->serial_no . '</div></td></tr></table>'
+                . '<div class="ps"><span class="lbl">' . $L('slip.station') . ':</span> <b>' . self::e($ps) . '</b></div>'
+                . '<div class="ps"><span class="lbl">' . $L('col.assemblyNo') . ':</span> ' . (int) $v->assembly_no . ' ' . self::e($v->assembly_name) . '</div>'
+                . ($note !== '' ? '<div class="note">' . self::e($note) . '</div>' : '') . '</td>';
+        }
+        if (!$cells) $cells[] = '<td class="slip">' . self::e(t('list.empty')) . '</td>';
+        foreach (array_chunk($cells, 8) as $i => $page) {
+            if ($i > 0) $m->AddPage();
+            $rows = array_map(fn ($pair) => '<tr>' . implode('', $pair) . (count($pair) < 2 ? '<td></td>' : '') . '</tr>', array_chunk($page, 2));
+            $m->WriteHTML('<table class="slips">' . implode('', $rows) . '</table>');
+        }
+        return $m->Output('', 'S');
+    }
 }

@@ -19,14 +19,14 @@ class Defaults
     public function __construct(private AuditService $audit) {}
 
     /** Bump when a release adds database changes, so existing installations re-check once. */
-    private const VERSION = 'vis.defaults.2026-11-audit-ip';
+    private const VERSION = 'vis.defaults.2026-11-workers';
 
     public function ensure(bool $force = false): void
     {
         if (!$force && Cache::get(self::VERSION)) return;
         if (!Schema::hasTable('roles')) return;
         // database created from an older db/schema.sql: add the new columns (no SSH / phpMyAdmin step needed)
-        if (Schema::hasTable('voters') && (!Schema::hasColumn('voters', 'caste') || !Schema::hasColumn('voters', 'ward_no') || !Schema::hasColumn('voters', 'sub_caste') || !Schema::hasTable('castes') || !Schema::hasColumn('audit_log', 'ip_address'))) {
+        if (Schema::hasTable('voters') && (!Schema::hasColumn('voters', 'caste') || !Schema::hasColumn('voters', 'ward_no') || !Schema::hasColumn('voters', 'sub_caste') || !Schema::hasTable('castes') || !Schema::hasColumn('audit_log', 'ip_address') || !Schema::hasTable('grievances') || !Schema::hasColumn('voters', 'worker_id'))) {
             Artisan::call('migrate', ['--force' => true]);
         }
         DB::transaction(function () {
@@ -34,6 +34,7 @@ class Defaults
             $this->role('OPERATOR', 'Operator', 'Voter data entry and import, results entry, messaging', Permission::OPERATOR);
             $this->role('VIEWER', 'Viewer', 'Search, view, reports, export and print', Permission::VIEWER);
             if (config('voters.security.user_source') !== 'external') $this->firstAdmin();
+            $this->grantAdded();
         });
         Cache::forever(self::VERSION, true);
     }
@@ -43,6 +44,19 @@ class Defaults
         if (Role::where('code', $code)->exists()) return;
         $r = Role::create(['code' => $code, 'name' => $name, 'description' => $desc, 'system_role' => true]);
         $r->setPermissions($perms);
+    }
+
+    /** Permissions added by a newer version go to the built-in roles once (later edits by the admin are kept). */
+    private function grantAdded(): void
+    {
+        $flag = 'vis.perm.added.2026-11-workers';
+        if (Cache::get($flag)) return;
+        foreach (Permission::ADDED as $code => $perms) {
+            $r = Role::where('code', $code)->first();
+            if (!$r) continue;
+            foreach (array_diff($perms, $r->permissions()) as $p) DB::table('role_permissions')->insert(['role_id' => $r->id, 'permission' => $p]);
+        }
+        Cache::forever($flag, true);
     }
 
     private function firstAdmin(): void

@@ -3,7 +3,7 @@
 @section('content')
 @php($icons = ['booth-scorecard' => 'trophy', 'voter-sentiment' => 'emoji-smile', 'survey-coverage' => 'clipboard-check', 'caste-booth' => 'grid-3x3',
     'beneficiaries' => 'gift', 'worker-coverage' => 'people', 'household-insights' => 'house', 'origin' => 'geo-alt', 'turnout-profile' => 'graph-up',
-    'campaign-reach' => 'megaphone', 'team-activity' => 'person-check'])
+    'campaign-reach' => 'megaphone', 'grievances' => 'chat-left-dots', 'team-activity' => 'person-check'])
 <div class="container-fluid px-3" style="max-width:1400px">
     @include('partials.flash')
     <div class="d-flex flex-wrap gap-2 align-items-end mb-3">

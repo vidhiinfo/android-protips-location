@@ -23,6 +23,7 @@ class VoterController extends Controller
     {
         $f = VoterFilter::fromRequest($r);
         $f->set('assemblyNo', $this->user()->restrict($f->get('assemblyNo')));
+        if (($w = $this->user()->workerId()) !== null) $f->set('workerId', $w);   // a worker's login: only their own voters
         if ($f->get('wardNo') && $f->get('boothNo') && !in_array($f->get('boothNo'), $this->voters->boothsByWard($f->get('assemblyNo'))[$f->get('wardNo')] ?? [])) {
             $f->set('boothNo', null);   // booth chosen earlier is not in the newly chosen ward
         }
@@ -32,7 +33,7 @@ class VoterController extends Controller
     private function load(int $id): Voter
     {
         $v = Voter::find($id);
-        abort_if(!$v || !$this->user()->allows($v->assembly_no), 404, t('error.notFound'));
+        abort_if(!$v || !$this->user()->allowsVoter($v), 404, t('error.notFound'));
         return $v;
     }
 
@@ -45,6 +46,7 @@ class VoterController extends Controller
             'wards' => $this->voters->wards($a), 'wardMap' => $this->voters->boothsByWard($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
             'castes' => $this->voters->distinctValues('caste', $a), 'subCastes' => $this->voters->distinctValues('sub_caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
+            'workers' => \App\Models\Worker::where('active', true)->when($a, fn ($q) => $q->where('assembly_no', $a))->orderBy('booth_no')->orderBy('name')->get(),
             'total' => $this->voters->total($this->user()->workAssembly()), 'genderCounts' => $this->voters->genderCounts($this->user()->workAssembly())]);
     }
 
@@ -73,7 +75,7 @@ class VoterController extends Controller
         $category = \App\Models\Caste::where('name', $caste)->value('category');
         $n = 0;
         foreach ($this->voters->household($v) as $h) {
-            if (!$this->user()->allows($h->assembly_no)) continue;
+            if (!$this->user()->allowsVoter($h)) continue;
             $h->caste = $caste; $h->sub_caste = $sub;
             if (!$h->category && $category) $h->category = $category;
             $h->save(); $n++;
@@ -98,13 +100,18 @@ class VoterController extends Controller
             if (mb_strlen($val) > 100) return redirect($back)->with('error', 'validation.required');
             $set[$f] = $val === '-' ? null : $val;   // "-" clears the field
         }
+        $wid = trim((string) $r->input('worker_id'));
+        if ($wid !== '' && $this->user()->can('WORKER_MANAGE')) {
+            $worker = $wid === '-' ? null : \App\Models\Worker::find((int) $wid);
+            if ($wid === '-' || ($worker && $this->user()->allows($worker->assembly_no))) $set['worker_id'] = $worker?->id;
+        }
         if (!$ids || !$set) return redirect($back)->with('error', 'bulk.nothing');
         $tree = \App\Models\Caste::tree();
         if (isset($set['sub_caste']) && $set['sub_caste'] !== null && $tree && isset($set['caste']) && !in_array($set['sub_caste'], $tree[$set['caste']] ?? [], true)) unset($set['sub_caste']);
         $category = isset($set['caste']) ? \App\Models\Caste::where('name', $set['caste'])->value('category') : null;
         $n = 0;
         foreach (Voter::whereIn('id', $ids)->get() as $v) {
-            if (!$this->user()->allows($v->assembly_no)) continue;
+            if (!$this->user()->allowsVoter($v)) continue;
             foreach ($set as $f => $val) $v->$f = $val;
             if (array_key_exists('caste', $set) && $set['caste'] === null) $v->sub_caste = null;
             if ($category && !$v->category) $v->category = $category;
@@ -219,6 +226,18 @@ class VoterController extends Controller
             return redirect('/voters?' . $f->queryWithSort())->with('error', 'export.pdf.tooMany');
         }
         return $this->download($p->voters($this->voters->searchAll($f, VoterService::maxPdfRows()), $this->title($f), self::summary($f)), 'voters-' . date('Y-m-d') . '.pdf', 'application/pdf');
+    }
+
+    /** Voter slips for door-to-door distribution, in booth / serial order. */
+    public function slips(Request $r, PdfExporter $p)
+    {
+        $f = $this->filter($r);
+        if ($this->voters->count($f) > VoterService::maxPdfRows()) return redirect('/voters?' . $f->queryWithSort())->with('error', 'export.pdf.tooMany');
+        $f->sort = 'boothNo';
+        $rows = $f->apply(Voter::query())->where(fn ($q) => $q->where('deleted', false)->orWhereNull('deleted'))
+            ->orderBy('assembly_no')->orderBy('booth_no')->orderByRaw('serial_no is null')->orderBy('serial_no')->limit(VoterService::maxPdfRows())->get();
+        $this->audit()->log('EXPORT', 'VOTER', null, 'voter slips: ' . count($rows) . ' voters');
+        return $this->download($p->slips($rows, \App\Models\Election::where('current', true)->first()), 'voter-slips-' . date('Y-m-d') . '.pdf', 'application/pdf');
     }
 
     public function print(Request $r)

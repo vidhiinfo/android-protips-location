@@ -29,6 +29,39 @@ Route::middleware('login.required')->group(function () {
         Route::get('/voters/import/template', [VoterController::class, 'template']);
         Route::post('/voters/import', [VoterController::class, 'import']);
     });
+    Route::get('/voters/export/slips', [VoterController::class, 'slips'])->middleware('perm:VOTER_EXPORT');
+    Route::middleware('perm:WORKER_MANAGE')->group(function () {
+        $w = \App\Http\Controllers\WorkerController::class;
+        Route::get('/workers', [$w, 'index']);
+        Route::get('/workers/new', [$w, 'form']);
+        Route::post('/workers', [$w, 'save']);
+        Route::post('/workers/panna', [$w, 'panna']);
+        Route::get('/workers/{id}', [$w, 'show'])->whereNumber('id');
+        Route::get('/workers/{id}/edit', [$w, 'form'])->whereNumber('id');
+        Route::post('/workers/{id}', [$w, 'save'])->whereNumber('id');
+        Route::post('/workers/{id}/assign', [$w, 'assign'])->whereNumber('id');
+        Route::post('/workers/{id}/unassign', [$w, 'unassign'])->whereNumber('id');
+        Route::post('/workers/{id}/delete', [$w, 'destroy'])->whereNumber('id');
+    });
+    Route::middleware('perm:POLL_DAY')->group(function () {
+        $p = \App\Http\Controllers\PollDayController::class;
+        Route::get('/pollday', [$p, 'index']);
+        Route::post('/pollday/mark', [$p, 'mark']);
+        Route::post('/pollday/unmark', [$p, 'unmark']);
+        Route::get('/pollday/grid', [$p, 'grid']);
+        Route::post('/pollday/toggle', [$p, 'toggle']);
+        Route::get('/pollday/live', [$p, 'live']);
+    });
+    Route::middleware('perm:GRIEVANCE')->group(function () {
+        $g = \App\Http\Controllers\GrievanceController::class;
+        Route::get('/grievances', [$g, 'index']);
+        Route::get('/grievances/new', [$g, 'form']);
+        Route::post('/grievances', [$g, 'save']);
+        Route::get('/grievances/{id}', [$g, 'show'])->whereNumber('id');
+        Route::get('/grievances/{id}/edit', [$g, 'form'])->whereNumber('id');
+        Route::post('/grievances/{id}', [$g, 'save'])->whereNumber('id');
+        Route::post('/grievances/{id}/status', [$g, 'status'])->whereNumber('id');
+    });
     Route::post('/voters/bulk', [VoterController::class, 'bulkUpdate'])->middleware('perm:VOTER_EDIT');
     Route::middleware('perm:VOTER_EDIT')->group(function () {
         Route::get('/survey', [\App\Http\Controllers\FieldSurveyController::class, 'index']);

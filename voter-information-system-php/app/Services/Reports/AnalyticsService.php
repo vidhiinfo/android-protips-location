@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class AnalyticsService
 {
     public const IDS = ['booth-scorecard', 'voter-sentiment', 'survey-coverage', 'caste-booth', 'beneficiaries', 'worker-coverage',
-        'household-insights', 'origin', 'turnout-profile', 'campaign-reach', 'team-activity'];
+        'household-insights', 'origin', 'turnout-profile', 'campaign-reach', 'grievances', 'team-activity'];
     public const SENSITIVE = ['caste-booth', 'team-activity'];
     /** Booth grade thresholds (support index = support % - opposition % of surveyed voters). */
     public const STRONG = 20, WEAK = -20, MIN_SURVEYED_PCT = 10, VOTERS_PER_WORKER = 100;
@@ -40,6 +40,7 @@ class AnalyticsService
             'origin' => $this->origin($a, $b),
             'turnout-profile' => $this->turnout($a, $e, $party),
             'campaign-reach' => $this->campaigns($a),
+            'grievances' => $this->grievances($a),
             'team-activity' => $this->team(),
         };
         if ($r->note === '' && t('an.note.' . $id) !== 'an.note.' . $id) $r->note = t('an.note.' . $id);
@@ -412,6 +413,42 @@ class AnalyticsService
             $ch['l'][] = mb_substr($x->name, 0, 24); $ch['s'][] = (int) $x->sent; $ch['f'][] = (int) $x->failed;
         }
         $r->chart = ['type' => 'bar', 'stacked' => true, 'labels' => array_reverse($ch['l']), 'series' => [[t('an.sent'), array_reverse($ch['s']), 'support'], [t('an.failed'), array_reverse($ch['f']), 'opposition']]];
+        return $r;
+    }
+
+    // ------------------------------------------------------------------ grievances
+    public function grievances(?int $a): Report
+    {
+        $cats = \App\Models\Grievance::CATEGORIES;
+        $r = (new Report(t('report.grievances'), $this->h('col.boothNo', 'gr.total', 'gr.status.OPEN', 'gr.status.IN_PROGRESS', 'gr.status.RESOLVED', 'gr.status.CLOSED',
+            'gr.resolvedPct', 'gr.avgDays', 'gr.oldestOpen', 'gr.topCategory')))->subtitle($this->scope($a));
+        $rows = DB::table('grievances')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))
+            ->get(['booth_no', 'status', 'category', 'created_at', 'resolved_at']);
+        $by = []; $catStatus = [];
+        foreach ($rows as $g) {
+            $k = $g->booth_no ?? 0;
+            $by[$k] ??= ['n' => 0, 'OPEN' => 0, 'IN_PROGRESS' => 0, 'RESOLVED' => 0, 'CLOSED' => 0, 'days' => [], 'oldest' => 0, 'cat' => []];
+            $x = &$by[$k]; $x['n']++; $x[$g->status] = ($x[$g->status] ?? 0) + 1; $x['cat'][$g->category] = ($x['cat'][$g->category] ?? 0) + 1;
+            $days = (int) floor(((($g->resolved_at ? strtotime($g->resolved_at) : time())) - strtotime((string) $g->created_at)) / 86400);
+            if ($g->resolved_at) $x['days'][] = $days; elseif (in_array($g->status, ['OPEN', 'IN_PROGRESS'], true)) $x['oldest'] = max($x['oldest'], $days);
+            unset($x);
+            $open = in_array($g->status, ['OPEN', 'IN_PROGRESS'], true) ? 'open' : 'done';
+            $catStatus[$g->category][$open] = ($catStatus[$g->category][$open] ?? 0) + 1;
+        }
+        ksort($by);
+        $t = ['n' => 0, 'OPEN' => 0, 'IN_PROGRESS' => 0, 'RESOLVED' => 0, 'CLOSED' => 0, 'days' => [], 'oldest' => 0];
+        foreach ($by as $b => $x) {
+            arsort($x['cat']); $done = $x['RESOLVED'] + $x['CLOSED'];
+            $r->add([$b ?: '-', $x['n'], $x['OPEN'], $x['IN_PROGRESS'], $x['RESOLVED'], $x['CLOSED'], self::pct($done, $x['n']),
+                $x['days'] ? round(array_sum($x['days']) / count($x['days']), 1) : null, $x['oldest'] ?: null, t('gr.cat.' . array_key_first($x['cat']))]);
+            foreach (['n', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'] as $k) $t[$k] += $x[$k];
+            $t['days'] = array_merge($t['days'], $x['days']); $t['oldest'] = max($t['oldest'], $x['oldest']);
+        }
+        $r->totals = [t('report.total'), $t['n'], $t['OPEN'], $t['IN_PROGRESS'], $t['RESOLVED'], $t['CLOSED'], self::pct($t['RESOLVED'] + $t['CLOSED'], $t['n']),
+            $t['days'] ? round(array_sum($t['days']) / count($t['days']), 1) : null, $t['oldest'] ?: null, ''];
+        uksort($catStatus, fn ($x, $y) => array_sum($catStatus[$y]) <=> array_sum($catStatus[$x]));
+        $r->chart = ['type' => 'bar', 'horizontal' => true, 'stacked' => true, 'labels' => array_map(fn ($c) => t('gr.cat.' . $c), array_keys($catStatus)), 'series' => [
+            [t('gr.pending'), array_map(fn ($c) => $c['open'] ?? 0, array_values($catStatus)), 'opposition'], [t('gr.done'), array_map(fn ($c) => $c['done'] ?? 0, array_values($catStatus)), 'support']]];
         return $r;
     }
 

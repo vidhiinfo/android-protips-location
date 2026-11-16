@@ -17,6 +17,7 @@
             @endunless
         @endif
         <button class="btn btn-sm btn-secondary" data-print><i class="bi bi-printer"></i> {{ t('view.printSlip') }}</button>
+        @if(can('GRIEVANCE'))<a href="{{ url('/grievances/new') }}?voterId={{ $v->id }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-megaphone"></i> {{ t('gr.logForVoter') }}</a>@endif
         @if(can('VOTER_EDIT'))<a href="{{ url('/voters/'.$v->id.'/edit') }}" class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i> {{ t('common.edit') }}</a>@endif
         @if(can('VOTER_DELETE'))<form action="{{ url('/voters/'.$v->id.'/delete') }}" method="post" data-confirm="{{ t('common.confirmDelete') }}">@csrf
             <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> {{ t('common.delete') }}</button></form>@endif
@@ -32,6 +33,10 @@
             @if($v->ward_no)<dt class="col-sm-3">{{ t('col.wardNo') }}</dt><dd class="col-sm-9">{{ $v->ward_no }}</dd>@endif
             <dt class="col-sm-3">{{ t('col.boothNo') }}</dt><dd class="col-sm-9">{{ $v->booth_no }}{{ $v->booth_name ? ' - '.$v->booth_name : '' }}</dd>
             <dt class="col-sm-3">{{ t('col.serialNo') }}</dt><dd class="col-sm-9">{{ $v->serial_no ?? '-' }}</dd>
+            @if($v->worker_id && ($wk = \App\Models\Worker::find($v->worker_id)))<dt class="col-sm-3">{{ t('worker.worker') }}</dt><dd class="col-sm-9">@if(can('WORKER_MANAGE'))<a href="{{ url('/workers/'.$wk->id) }}">{{ $wk->name }}</a>@else{{ $wk->name }}@endif @if($wk->mobile)· <a href="tel:{{ $wk->mobile }}">{{ $wk->mobile }}</a>@endif</dd>@endif
+            @php($eid = \App\Models\Election::where('current', true)->value('id'))
+            @if($eid && ($pm = \App\Models\PollMark::where('election_id', $eid)->where('voter_id', $v->id)->first()))<dt class="col-sm-3">{{ t('poll.votedCol') }}</dt><dd class="col-sm-9"><span class="badge text-bg-success"><i class="bi bi-check2"></i> {{ $pm->marked_at->format('d-m-Y H:i') }}</span></dd>@endif
+            @if(can('GRIEVANCE') && ($gc = \App\Models\Grievance::where('voter_id', $v->id)->count()))<dt class="col-sm-3">{{ t('gr.title') }}</dt><dd class="col-sm-9"><a href="{{ url('/grievances') }}?status=ALL&voterId={{ $v->id }}">{{ $gc }}</a></dd>@endif
             <dt class="col-sm-3">{{ t('col.houseNo') }}</dt><dd class="col-sm-9">@if($v->house_no)<a class="house-link" data-household href="{{ url('/voters/'.$v->id.'/household') }}">{{ $v->house_no }}</a>@else - @endif</dd>
             <dt class="col-sm-3">{{ t('col.address') }}</dt><dd class="col-sm-9">{{ $v->fullAddress() ?: '-' }}@if($v->address_local)<span class="local-text" dir="auto">{{ $v->address_local }}</span>@endif</dd>
             <dt class="col-sm-3">{{ t('col.mobile') }}</dt><dd class="col-sm-9">{{ $v->mobile ?: '-' }} @if($optedOut)<span class="badge text-bg-secondary ms-1"><i class="bi bi-bell-slash"></i> {{ t('msg.optedOut') }}</span>@endif</dd>

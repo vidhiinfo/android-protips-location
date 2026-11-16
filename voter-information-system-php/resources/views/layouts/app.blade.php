@@ -3,9 +3,9 @@
 <head>@include('layouts.head', ['title' => trim($__env->yieldContent('title'))])</head>
 <body class="@yield('bodyClass')" @yield('bodyAttrs')>
 @unless(trim($__env->yieldContent('bare')))
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-3 no-print">
+<nav class="navbar navbar-expand-xl navbar-dark bg-primary mb-3 no-print">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url($me->landingPage()) }}"><i class="bi bi-person-vcard"></i> {{ t('app.name') }}</a>
+        <a class="navbar-brand" href="{{ url($me->landingPage()) }}"><i class="bi bi-person-vcard"></i> <span class="brand-text">{{ t('app.name') }}</span></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav me-auto">
@@ -16,6 +16,7 @@
                         <li><a class="dropdown-item" href="{{ url('/voters') }}">{{ t('nav.voterList') }}</a></li>
                         @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/new') }}">{{ t('nav.addVoter') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/survey') }}"><i class="bi bi-clipboard2-check"></i> {{ t('fs.title') }}</a></li>@endif
+                        @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>@endif
                         @if(can('VOTER_IMPORT'))<li><a class="dropdown-item" href="{{ url('/voters/import') }}">{{ t('nav.import') }}</a></li>@endif
                     </ul></li>
                 @endif
@@ -54,6 +55,15 @@
                         @foreach($analyticsIds as $r)<li><a class="dropdown-item" href="{{ url('/reports/'.$r) }}">{{ t('report.'.$r) }}</a></li>@endforeach
                     </ul></li>
                 @endif
+                @if(can('POLL_DAY'))
+                <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-check2-square"></i> {{ t('poll.menu') }}</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url('/pollday') }}">{{ t('poll.title') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/pollday/grid') }}">{{ t('poll.grid') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/pollday/live') }}"><i class="bi bi-broadcast text-danger"></i> {{ t('poll.live') }}</a></li>
+                    </ul></li>
+                @endif
+                @if(can('GRIEVANCE'))<li class="nav-item"><a class="nav-link" href="{{ url('/grievances') }}"><i class="bi bi-megaphone"></i> {{ t('gr.title') }}</a></li>@endif
                 @if(can('MESSAGE_SEND'))
                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-chat-dots"></i> {{ t('nav.messages') }}</a>
                     <ul class="dropdown-menu">
@@ -77,9 +87,9 @@
                     </ul></li>
                 @endif
             </ul>
-            <span class="badge text-bg-light me-2 mb-2 mb-lg-0" title="{{ t('login.assembly') }}"><i class="bi bi-geo-alt"></i>
+            <span class="badge text-bg-light me-2 mb-2 mb-xl-0" title="{{ t('login.assembly') }}"><i class="bi bi-geo-alt"></i>
                 {{ $me->scoped() ? $me->workAssembly() . ' - ' . $me->workAssemblyName() : t('login.allAssemblies') }}</span>
-            @include('partials.lang', ['cls' => 'w-auto me-2 mb-2 mb-lg-0'])
+            @include('partials.lang', ['cls' => 'w-auto me-2 mb-2 mb-xl-0'])
             <div class="dropdown">
                 <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ $me->username() }}</a>
                 <ul class="dropdown-menu dropdown-menu-end">
