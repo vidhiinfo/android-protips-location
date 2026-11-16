@@ -17,9 +17,11 @@ The PHP version of the Voter Information System. It has the same screens, the sa
 * **Campaign dashboard**: 8 charts (age/gender, booth sizes, lead/trail by booth, vote share, turnout, mobile reach, young voters, households).
 * **15 reports**: assembly / booth / village summaries, age-gender, social category, caste-wise summary, birthdays and anniversaries in the next 30 days, first-time voters, voters 85+, large households, phone-bank list, results summary, party performance, swing booths, possible duplicate voters (same assembly or same village/ward).
 * **Analytics** (menu *Analytics*): one home page with key figures and charts, plus 11 analyses, each with a chart, Excel / PDF / Print and Ward / Booth filters. Click a number to open those voters. The analyses: booth scorecard (A/B/C with a suggested action), voter sentiment, survey coverage, caste x booth (sensitive), scheme beneficiaries, worker coverage, household insights, place of origin, turnout vs voter profile, campaign reach, and team activity (sensitive).
+* **Field survey on a phone** (Voters > Field survey): pick a booth, go house by house in roll order, record each member's mobile, caste / sub caste, political status, schemes, origin and membership no. "Same for the whole house" copies an answer to everyone; progress per booth is shown.
+* **Bulk update**: tick voters in the list and set caste, sub caste, political status, social / organisational status or place of origin for all of them at once.
 * **Results**: booth-wise result entry, seat results with winner, margin and turnout.
 * **SMS and WhatsApp**: templates, campaigns from any voter filter, opt-out list, sending window, rate limit and election silence period. Providers: Twilio, Meta WhatsApp Cloud API, or any HTTP SMS gateway. Dry-run mode until a provider is set.
-* **Audit log** of logins and every change.
+* **Audit log** of logins and every change, with the user's IP address and browser / device; filter by IP.
 * **Masters**: assemblies, booths, parties, elections, candidates.
 
 ## Requirements
@@ -61,7 +63,7 @@ The demo data is fictional: three assemblies with Hindi, Urdu and Bengali names,
 ## Tests
 
 ```bash
-php artisan test        # 43 tests on in-memory SQLite
+php artisan test        # 47 tests on in-memory SQLite
 # the same suite on MySQL:
 DB_CONNECTION=mysql DB_DATABASE=voter_test DB_USERNAME=... DB_PASSWORD=... php artisan test
 ```

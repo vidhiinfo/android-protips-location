@@ -85,6 +85,7 @@
     </div>
     <div class="table-responsive bg-white border rounded"><table class="table table-hover table-striped mb-0">
         <thead class="table-light"><tr>
+            @if(can('VOTER_EDIT'))<th class="no-print"><input type="checkbox" class="form-check-input" data-check-all title="{{ t('bulk.selectPage') }}"></th>@endif
             @foreach(['assemblyNo' => 'list.col.ac', 'wardNo' => 'col.wardNo', 'boothNo' => 'list.col.booth', 'serialNo' => 'list.col.sr', 'epicNo' => 'col.epicNo', 'name' => 'col.name',
                       'relativeName' => 'list.col.relative', 'gender' => 'col.gender', 'age' => 'col.age', 'villageWard' => 'col.villageWard', 'mobile' => 'col.mobile'] as $col => $label)
                 <th><a href="{{ $f->sortLink($col) }}">{{ t($label) }} @if($f->sort === $col)<i class="bi {{ $f->dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down' }}"></i>@endif</a></th>
@@ -94,6 +95,7 @@
         <tbody>
         @forelse($page as $v)
             <tr>
+                @if(can('VOTER_EDIT'))<td class="no-print"><input type="checkbox" class="form-check-input" name="ids[]" value="{{ $v->id }}" form="bulkForm" data-check></td>@endif
                 <td>{{ $v->assembly_no }}</td><td>{{ $v->ward_no }}</td><td>{{ $v->booth_no }}</td><td>{{ $v->serial_no }}</td><td><code>{{ $v->epic_no }}</code></td>
                 <td><a href="{{ url('/voters/'.$v->id) }}">{{ $v->name }}</a>@if($v->name_local)<span class="local-text" dir="auto">{{ $v->name_local }}</span>@endif</td>
                 <td>{{ $v->relationDisplay() }}@if($v->relative_name_local)<span class="local-text" dir="auto">{{ $v->relative_name_local }}</span>@endif</td>
@@ -109,9 +111,31 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="13" class="text-center text-muted py-4">{{ t('list.empty') }}</td></tr>
+            <tr><td colspan="14" class="text-center text-muted py-4">{{ t('list.empty') }}</td></tr>
         @endforelse
         </tbody></table></div>
+    @if(can('VOTER_EDIT'))
+    <form method="post" action="{{ url('/voters/bulk') }}" id="bulkForm" class="bulk-bar card card-body py-2 mt-2 shadow-sm d-none no-print" data-bulk-bar>@csrf
+        <input type="hidden" name="back" value="?{{ $f->queryWithSort() }}&page={{ $page->currentPage() - 1 }}">
+        <div class="d-flex flex-wrap gap-2 align-items-end">
+            <div class="fw-semibold me-2"><i class="bi bi-check2-square"></i> <span data-bulk-count>0</span> {{ t('bulk.selected') }}</div>
+            @php($tree = \App\Models\Caste::tree())
+            <div><label class="form-label small mb-0">{{ t('col.caste') }}</label>
+                <select name="caste" class="form-select form-select-sm" data-caste-select data-sub-select="bulk-sub" data-map='@json((object) $tree)'>
+                    <option value="">{{ t('bulk.keep') }}</option>@foreach(array_keys($tree) as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach<option value="-">{{ t('bulk.clear') }}</option></select></div>
+            <div><label class="form-label small mb-0">{{ t('col.subCaste') }}</label>
+                <select name="sub_caste" id="bulk-sub" class="form-select form-select-sm"><option value="">{{ t('bulk.keep') }}</option></select></div>
+            <div><label class="form-label small mb-0">{{ t('col.politicalStatus') }}</label>
+                <input name="political_status" class="form-control form-control-sm" list="bulk-status" placeholder="{{ t('bulk.keep') }}" maxlength="100">
+                <datalist id="bulk-status">@foreach(array_unique(array_merge(\App\Http\Controllers\FieldSurveyController::STATUSES, $politicalStatuses)) as $ps)<option value="{{ $ps }}">@endforeach</datalist></div>
+            <div><label class="form-label small mb-0">{{ t('col.socialStatus') }}</label><input name="social_status" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
+            <div><label class="form-label small mb-0">{{ t('col.organisationalStatus') }}</label><input name="organisational_status" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
+            <div><label class="form-label small mb-0">{{ t('col.placeOfOrigin') }}</label><input name="place_of_origin" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
+            <button class="btn btn-sm btn-primary" data-confirm-bulk="{{ t('bulk.confirm') }}"><i class="bi bi-check2-all"></i> {{ t('bulk.apply') }}</button>
+        </div>
+        <div class="small text-muted mt-1">{{ t('bulk.hint') }}</div>
+    </form>
+    @endif
     @if($page->lastPage() > 1)
     @php($cur = $page->currentPage() - 1)
     <nav class="mt-3"><ul class="pagination pagination-sm justify-content-center flex-wrap">

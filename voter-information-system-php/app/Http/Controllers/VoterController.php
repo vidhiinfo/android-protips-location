@@ -82,6 +82,38 @@ class VoterController extends Controller
         return redirect('/voters/' . $v->id)->with('success', t('household.casteApplied', $n));
     }
 
+    /** Fields that can be set for many selected voters at once (after the field team has confirmed the answers). */
+    public const BULK_FIELDS = ['caste', 'sub_caste', 'political_status', 'social_status', 'organisational_status', 'place_of_origin'];
+    public const BULK_MAX = 1000;
+
+    /** Sets the filled-in fields for the ticked voters; empty fields are left as they are, "clear" empties them. */
+    public function bulkUpdate(Request $r)
+    {
+        $ids = array_slice(array_values(array_unique(array_map('intval', (array) $r->input('ids', [])))), 0, self::BULK_MAX);
+        $back = '/voters' . ($r->input('back') && str_starts_with((string) $r->input('back'), '?') ? $r->input('back') : '');
+        $set = [];
+        foreach (self::BULK_FIELDS as $f) {
+            $val = trim((string) $r->input($f));
+            if ($val === '') continue;
+            if (mb_strlen($val) > 100) return redirect($back)->with('error', 'validation.required');
+            $set[$f] = $val === '-' ? null : $val;   // "-" clears the field
+        }
+        if (!$ids || !$set) return redirect($back)->with('error', 'bulk.nothing');
+        $tree = \App\Models\Caste::tree();
+        if (isset($set['sub_caste']) && $set['sub_caste'] !== null && $tree && isset($set['caste']) && !in_array($set['sub_caste'], $tree[$set['caste']] ?? [], true)) unset($set['sub_caste']);
+        $category = isset($set['caste']) ? \App\Models\Caste::where('name', $set['caste'])->value('category') : null;
+        $n = 0;
+        foreach (Voter::whereIn('id', $ids)->get() as $v) {
+            if (!$this->user()->allows($v->assembly_no)) continue;
+            foreach ($set as $f => $val) $v->$f = $val;
+            if (array_key_exists('caste', $set) && $set['caste'] === null) $v->sub_caste = null;
+            if ($category && !$v->category) $v->category = $category;
+            $v->save(); $n++;
+        }
+        $this->audit()->log('UPDATE', 'VOTER', null, "bulk update of $n voters: " . implode(', ', array_map(fn ($f, $val) => "$f=" . ($val ?? '(cleared)'), array_keys($set), $set)));
+        return redirect($back)->with('success', t('bulk.done', $n));
+    }
+
     /** Booth-wise survey sheet: voters house by house with Caste / Sub Caste drop-downs, to fill in the field and upload back. */
     public function surveySheet(Request $r, ExcelExporter $x)
     {

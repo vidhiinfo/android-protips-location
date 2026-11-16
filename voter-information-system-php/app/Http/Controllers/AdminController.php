@@ -121,7 +121,8 @@ class AdminController extends Controller
         if ($u = $r->query('user')) $q->whereRaw('lower(username) like ?', ['%' . mb_strtolower($u) . '%']);
         if ($a = $r->query('action')) $q->where('action', $a);
         if ($e = $r->query('entity')) $q->where('entity', $e);
-        return view('admin.audit', ['page' => $q->paginate(50)->withQueryString(), 'user' => $r->query('user'), 'action' => $r->query('action'), 'entity' => $r->query('entity'),
+        if (($ip = trim((string) $r->query('ip'))) !== '') $q->where('ip_address', 'like', $ip . '%');
+        return view('admin.audit', ['page' => $q->paginate(50)->withQueryString(), 'user' => $r->query('user'), 'ip' => $r->query('ip'), 'action' => $r->query('action'), 'entity' => $r->query('entity'),
             'actions' => ['CREATE', 'UPDATE', 'DELETE', 'IMPORT', 'RESULT_SAVE', 'LOGIN', 'LOGIN_FAILED', 'PASSWORD_CHANGE', 'MSG_CAMPAIGN', 'MSG_CANCEL', 'MSG_TEST', 'OPT_OUT'],
             'entities' => ['VOTER', 'USER', 'ROLE', 'ASSEMBLY', 'BOOTH', 'PARTY', 'ELECTION', 'CANDIDATE', 'RESULT', 'CAMPAIGN', 'TEMPLATE', 'OPTOUT']]);
     }

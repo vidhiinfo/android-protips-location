@@ -14,7 +14,8 @@
                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-people"></i> {{ t('nav.voters') }}</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url('/voters') }}">{{ t('nav.voterList') }}</a></li>
-                        @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/new') }}">{{ t('nav.addVoter') }}</a></li>@endif
+                        @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/new') }}">{{ t('nav.addVoter') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/survey') }}"><i class="bi bi-clipboard2-check"></i> {{ t('fs.title') }}</a></li>@endif
                         @if(can('VOTER_IMPORT'))<li><a class="dropdown-item" href="{{ url('/voters/import') }}">{{ t('nav.import') }}</a></li>@endif
                     </ul></li>
                 @endif

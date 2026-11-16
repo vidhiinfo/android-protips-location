@@ -189,7 +189,10 @@ CREATE TABLE IF NOT EXISTS audit_log (
     entity     VARCHAR(30),
     entity_id  VARCHAR(50),
     details    VARCHAR(500),
+    ip_address VARCHAR(45)           COMMENT 'IP address of the user',
+    user_agent VARCHAR(255)          COMMENT 'Browser / device',
     INDEX idx_audit_time (at),
+    INDEX idx_audit_ip (ip_address),
     INDEX idx_audit_user (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

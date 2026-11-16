@@ -52,4 +52,20 @@ class Text
     {
         return mb_strtolower((string) self::nfc($s));
     }
+
+    /** Short "Browser on OS" label from a user-agent string, for the audit log. */
+    public static function device(?string $ua): string
+    {
+        if (!$ua) return '';
+        $b = match (true) {
+            str_contains($ua, 'Edg/') => 'Edge', str_contains($ua, 'OPR/') || str_contains($ua, 'Opera') => 'Opera',
+            str_contains($ua, 'SamsungBrowser') => 'Samsung Internet', str_contains($ua, 'Firefox/') => 'Firefox',
+            str_contains($ua, 'Chrome/') || str_contains($ua, 'CriOS') => 'Chrome', str_contains($ua, 'Safari/') => 'Safari', default => '',
+        };
+        $o = match (true) {
+            str_contains($ua, 'Android') => 'Android', str_contains($ua, 'iPhone') || str_contains($ua, 'iPad') => 'iOS',
+            str_contains($ua, 'Windows') => 'Windows', str_contains($ua, 'Mac OS') => 'Mac', str_contains($ua, 'Linux') => 'Linux', default => '',
+        };
+        return trim($b . ($b && $o ? ' / ' : '') . $o) ?: mb_substr($ua, 0, 30);
+    }
 }

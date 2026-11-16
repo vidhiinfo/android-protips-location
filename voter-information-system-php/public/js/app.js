@@ -74,3 +74,45 @@ document.addEventListener('change', function (e) {
     sub.add(new Option(empty, ''));
     (map[caste.value] || []).forEach(function (s) { sub.add(new Option(s, s, false, s === current)); });
 });
+
+// Field survey: copy the first member's answer (caste + sub caste, political status ...) to everyone in the house.
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest && e.target.closest('[data-copy]');
+    if (!btn) return;
+    var cards = document.querySelectorAll('[data-member]');
+    if (cards.length < 2) return;
+    btn.dataset.copy.split(',').forEach(function (f) {
+        var src = cards[0].querySelector('[data-f="' + f + '"]');
+        if (!src) return;
+        for (var i = 1; i < cards.length; i++) {
+            var dst = cards[i].querySelector('[data-f="' + f + '"]');
+            if (!dst) continue;
+            if (dst.tagName === 'SELECT' && src.tagName === 'SELECT') dst.innerHTML = src.innerHTML;   // sub caste options follow the caste
+            dst.value = src.value;
+        }
+    });
+    btn.classList.replace('btn-outline-primary', 'btn-success');
+});
+
+// Voter list: tick voters, then set caste / political status ... for all of them (bulk bar appears at the bottom).
+(function () {
+    var bar = document.querySelector('[data-bulk-bar]');
+    if (!bar) return;
+    var boxes = function () { return document.querySelectorAll('input[data-check]'); };
+    var all = document.querySelector('[data-check-all]');
+    function refresh() {
+        var n = Array.prototype.filter.call(boxes(), function (b) { return b.checked; }).length;
+        bar.classList.toggle('d-none', n === 0);
+        bar.querySelector('[data-bulk-count]').textContent = n;
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target === all) boxes().forEach(function (b) { b.checked = all.checked; });
+        if (e.target === all || (e.target.matches && e.target.matches('input[data-check]'))) refresh();
+    });
+    bar.addEventListener('submit', function (e) {
+        var btn = bar.querySelector('[data-confirm-bulk]');
+        var msg = btn.dataset.confirmBulk.replace('{0}', bar.querySelector('[data-bulk-count]').textContent);
+        if (!window.confirm(msg)) e.preventDefault();
+    });
+    refresh();
+})();

@@ -29,6 +29,12 @@ Route::middleware('login.required')->group(function () {
         Route::get('/voters/import/template', [VoterController::class, 'template']);
         Route::post('/voters/import', [VoterController::class, 'import']);
     });
+    Route::post('/voters/bulk', [VoterController::class, 'bulkUpdate'])->middleware('perm:VOTER_EDIT');
+    Route::middleware('perm:VOTER_EDIT')->group(function () {
+        Route::get('/survey', [\App\Http\Controllers\FieldSurveyController::class, 'index']);
+        Route::get('/survey/house/{voter}', [\App\Http\Controllers\FieldSurveyController::class, 'house'])->whereNumber('voter');
+        Route::post('/survey/house/{voter}', [\App\Http\Controllers\FieldSurveyController::class, 'save'])->whereNumber('voter');
+    });
     Route::post('/voters/{voter}/household/caste', [VoterController::class, 'householdCaste'])->whereNumber('voter')->middleware('perm:VOTER_EDIT');
     Route::middleware('perm:VOTER_EXPORT')->group(function () {
         Route::get('/voters/export/survey', [VoterController::class, 'surveySheet']);
