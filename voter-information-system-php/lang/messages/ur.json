@@ -936,5 +936,8 @@
 "app.install.ios2": "نیچے شیئر بٹن {0} دبائیں۔",
 "app.install.ios3": "\"ہوم اسکرین میں شامل کریں\" منتخب کریں، پھر شامل کریں دبائیں۔",
 "app.install.privacy": "ووٹر ڈیٹا فون پر محفوظ نہیں ہوتا: ایپ وہی محفوظ سائٹ دکھاتی ہے۔",
-"app.install.link": "موبائل ایپ انسٹال کریں"
+"app.install.link": "موبائل ایپ انسٹال کریں",
+"login.error.expired": "آپ کا سیشن ختم ہو گیا تھا، اس لیے کچھ محفوظ نہیں ہوا۔ براہ کرم دوبارہ لاگ ان کریں۔",
+"session.expired": "صفحے کی مدت ختم ہو گئی تھی۔ براہ کرم فارم دیکھ کر دوبارہ محفوظ کریں۔",
+"login.cookies": "اس براؤزر میں کوکیز بند ہیں، اس لیے لاگ ان نہیں ہو سکتا۔ iPhone: Settings > Apps > Safari > \"Block All Cookies\" بند کریں۔ Android Chrome: Settings > Site settings > Cookies > Allow۔"
 }

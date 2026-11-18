@@ -936,5 +936,8 @@
 "app.install.ios2": "নিচে শেয়ার বোতাম {0} চাপুন।",
 "app.install.ios3": "\"হোম স্ক্রিনে যোগ করুন\" বেছে যোগ করুন চাপুন।",
 "app.install.privacy": "ভোটার তথ্য ফোনে রাখা হয় না: অ্যাপ একই সুরক্ষিত সাইট দেখায়।",
-"app.install.link": "মোবাইল অ্যাপ ইনস্টল করুন"
+"app.install.link": "মোবাইল অ্যাপ ইনস্টল করুন",
+"login.error.expired": "আপনার সেশন শেষ হয়ে গিয়েছিল, তাই কিছু সংরক্ষিত হয়নি। আবার লগইন করুন।",
+"session.expired": "পৃষ্ঠার মেয়াদ শেষ হয়েছিল। ফর্ম দেখে আবার সংরক্ষণ করুন।",
+"login.cookies": "এই ব্রাউজারে কুকি বন্ধ, তাই লগইন করা যাবে না। iPhone: Settings > Apps > Safari > \"Block All Cookies\" বন্ধ করুন। Android Chrome: Settings > Site settings > Cookies > Allow।"
 }

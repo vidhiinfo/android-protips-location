@@ -936,5 +936,8 @@
 "app.install.ios2": "નીચે શેર બટન {0} દબાવો.",
 "app.install.ios3": "\"હોમ સ્ક્રીન પર ઉમેરો\" પસંદ કરો, પછી ઉમેરો દબાવો.",
 "app.install.privacy": "મતદાર ડેટા ફોન પર રાખાતો નથી: એપ એ જ સુરક્ષિત સાઇટ બતાવે છે.",
-"app.install.link": "મોબાઇલ એપ ઇન્સ્ટોલ કરો"
+"app.install.link": "મોબાઇલ એપ ઇન્સ્ટોલ કરો",
+"login.error.expired": "તમારું સત્ર પૂરું થયું હતું, તેથી કંઈ સાચવ્યું નથી. કૃપા કરી ફરી લૉગિન કરો.",
+"session.expired": "પેજની સમય મર્યાદા પૂરી થઈ હતી. કૃપા કરી ફોર્મ તપાસી ફરી સાચવો.",
+"login.cookies": "આ બ્રાઉઝરમાં કુકીઝ બંધ છે, તેથી લૉગિન થઈ શકતું નથી. iPhone: Settings > Apps > Safari > \"Block All Cookies\" બંધ કરો. Android Chrome: Settings > Site settings > Cookies > Allow."
 }

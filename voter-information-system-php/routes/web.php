@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'show'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/logout', [AuthController::class, 'logout']);
+// fresh security token for a page that was left open (phones): see public/js/app.js
+Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()])->header('Cache-Control', 'no-store'));
 // Mobile app: how to install on Android / iPhone (no login needed, so it can be shared as a link or QR code)
 Route::get('/mobile-app', fn () => view('app-install', [
     'apk' => is_file(public_path('downloads/voter-system.apk')) ? 'downloads/voter-system.apk' : null,

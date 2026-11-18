@@ -127,7 +127,7 @@ document.addEventListener('click', function (e) {
         b.disabled = true;
         var body = new URLSearchParams({ voter_id: b.dataset.id, _token: grid.dataset.token });
         fetch(grid.dataset.toggleUrl, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
-            .then(function (r) { if (!r.ok) throw r; return r.json(); })
+            .then(function (r) { if (r.status === 419) { location.reload(); throw r; } if (!r.ok) throw r; return r.json(); })
             .then(function (d) {
                 b.classList.toggle('voted', d.voted);
                 var c = document.querySelector('[data-poll-voted]'); if (c && d.stats) c.textContent = d.stats.voted;
@@ -208,4 +208,37 @@ document.addEventListener('click', function (e) {
             if (!/cancel/i.test(String(err && err.message))) alert(String(err && err.message || err));
         }).finally(function () { busy(false); });
     });
+})();
+
+// ---------------------------------------------------------------- expired page protection (phones, especially iPhone Safari)
+// A form keeps the security token of the moment the page was opened. When the phone sleeps, the tab is left open
+// or Safari shows a saved copy, that token may belong to a finished session ("419 Page Expired").
+(function () {
+    var loaded = Date.now();
+    // Safari "back" / app switch restored a saved copy of the page: load it fresh
+    window.addEventListener('pageshow', function (e) { if (e.persisted) location.reload(); });
+    var script = document.querySelector('script[src*="js/app.js"]');
+    if (!script || !document.querySelector('input[name="_token"]')) return;
+    var url = script.src.replace(/js\/app\.js.*$/, '') + 'csrf-token';
+    function refresh() {
+        return fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+            if (!d || !d.token) return;
+            document.querySelectorAll('input[name="_token"]').forEach(function (i) { i.value = d.token; });
+            var g = document.querySelector('.poll-grid'); if (g) g.dataset.token = d.token;
+            loaded = Date.now();
+        }).catch(function () {});
+    }
+    // back on the page after a while (phone unlocked, tab switched): get a fresh token
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - loaded > 5 * 60000) refresh(); });
+    // and every 10 minutes while the page stays open
+    setInterval(function () { if (!document.hidden) refresh(); }, 10 * 60000);
+})();
+
+// Login needs one cookie (the session). If the browser blocks cookies (iPhone: Settings > Safari > Block All Cookies), say so.
+(function () {
+    var w = document.querySelector('[data-cookie-warning]');
+    if (!w) return;
+    var ok = navigator.cookieEnabled;
+    try { document.cookie = 'vis_ck=1; path=/; SameSite=Lax'; ok = ok && document.cookie.indexOf('vis_ck=1') >= 0; document.cookie = 'vis_ck=; Max-Age=0; path=/'; } catch (e) { ok = false; }
+    if (!ok) w.classList.remove('d-none');
 })();

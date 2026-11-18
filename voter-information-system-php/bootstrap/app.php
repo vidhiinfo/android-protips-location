@@ -30,5 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // "419 Page Expired": the form's security token is from an old session (page left open, phone asleep,
+        // Safari showing a saved copy). Never show the bare error page: go back to the form, or to the login page.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $r) {
+            if ($e->getStatusCode() !== 419) return null;
+            if ($r->expectsJson()) return response()->json(['message' => t('session.expired'), 'reload' => true], 419);
+            $loggedIn = app(\App\Services\Auth\CurrentUser::class)->check();
+            if ($r->is('login') || !$loggedIn) return redirect('/login?error=expired');
+            return redirect()->back()->withInput($r->except(['password', '_token']))->with('error', 'session.expired');
+        });
     })->create();

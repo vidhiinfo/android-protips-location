@@ -936,5 +936,8 @@
 "app.install.ios2": "కింద షేర్ బటన్ {0} నొక్కండి.",
 "app.install.ios3": "\"హోమ్ స్క్రీన్‌కు జోడించు\" ఎంచుకుని జోడించు నొక్కండి.",
 "app.install.privacy": "ఓటర్ డేటా ఫోన్‌లో నిల్వ చేయబడదు: యాప్ అదే సురక్షిత సైట్‌ను చూపుతుంది.",
-"app.install.link": "మొబైల్ యాప్ ఇన్‌స్టాల్ చేయండి"
+"app.install.link": "మొబైల్ యాప్ ఇన్‌స్టాల్ చేయండి",
+"login.error.expired": "మీ సెషన్ ముగిసింది, కాబట్టి ఏమీ సేవ్ కాలేదు. దయచేసి మళ్లీ లాగిన్ అవ్వండి.",
+"session.expired": "పేజీ గడువు ముగిసింది. ఫారం చూసి మళ్లీ సేవ్ చేయండి.",
+"login.cookies": "ఈ బ్రౌజర్‌లో కుకీలు నిరోధించబడ్డాయి, కాబట్టి లాగిన్ కాలేరు. iPhone: Settings > Apps > Safari > \"Block All Cookies\" ఆపండి. Android Chrome: Settings > Site settings > Cookies > Allow."
 }

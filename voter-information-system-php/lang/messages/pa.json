@@ -936,5 +936,8 @@
 "app.install.ios2": "ਹੇਠਾਂ ਸ਼ੇਅਰ ਬਟਨ {0} ਦਬਾਓ।",
 "app.install.ios3": "\"ਹੋਮ ਸਕ੍ਰੀਨ 'ਤੇ ਜੋੜੋ\" ਚੁਣੋ, ਫਿਰ ਜੋੜੋ ਦਬਾਓ।",
 "app.install.privacy": "ਵੋਟਰ ਡਾਟਾ ਫ਼ੋਨ 'ਤੇ ਨਹੀਂ ਰੱਖਿਆ ਜਾਂਦਾ: ਐਪ ਉਹੀ ਸੁਰੱਖਿਅਤ ਸਾਈਟ ਦਿਖਾਉਂਦੀ ਹੈ।",
-"app.install.link": "ਮੋਬਾਈਲ ਐਪ ਇੰਸਟਾਲ ਕਰੋ"
+"app.install.link": "ਮੋਬਾਈਲ ਐਪ ਇੰਸਟਾਲ ਕਰੋ",
+"login.error.expired": "ਤੁਹਾਡਾ ਸੈਸ਼ਨ ਖਤਮ ਹੋ ਗਿਆ ਸੀ, ਇਸ ਲਈ ਕੁਝ ਸੇਵ ਨਹੀਂ ਹੋਇਆ। ਕਿਰਪਾ ਕਰਕੇ ਮੁੜ ਲੌਗਇਨ ਕਰੋ।",
+"session.expired": "ਪੰਨੇ ਦਾ ਸਮਾਂ ਖਤਮ ਹੋ ਗਿਆ ਸੀ। ਕਿਰਪਾ ਕਰਕੇ ਫਾਰਮ ਵੇਖ ਕੇ ਮੁੜ ਸੇਵ ਕਰੋ।",
+"login.cookies": "ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਕੂਕੀਜ਼ ਬੰਦ ਹਨ, ਇਸ ਲਈ ਲੌਗਇਨ ਨਹੀਂ ਹੋ ਸਕਦਾ। iPhone: Settings > Apps > Safari > \"Block All Cookies\" ਬੰਦ ਕਰੋ। Android Chrome: Settings > Site settings > Cookies > Allow।"
 }

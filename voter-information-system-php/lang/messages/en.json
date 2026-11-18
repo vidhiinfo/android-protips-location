@@ -942,5 +942,8 @@
 "app.install.ios2": "Tap the Share button {0} at the bottom.",
 "app.install.ios3": "Choose \"Add to Home Screen\", then tap Add. The app icon appears on your home screen.",
 "app.install.privacy": "Voter data is not stored on the phone: the app shows the same secure site, with the same login and permissions.",
-"app.install.link": "Install mobile app"
+"app.install.link": "Install mobile app",
+"login.error.expired": "Your session had expired, so nothing was saved. Please log in again.",
+"session.expired": "The page had expired. Please check the form and save again.",
+"login.cookies": "Cookies are blocked in this browser, so you cannot log in. iPhone: Settings > Apps > Safari > turn off \"Block All Cookies\". Android Chrome: Settings > Site settings > Cookies > Allow."
 }

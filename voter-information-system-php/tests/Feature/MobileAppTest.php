@@ -23,4 +23,15 @@ class MobileAppTest extends TestCase
         $this->assertFileExists(public_path('offline.html'));
         $this->assertFileExists(public_path('images/app/apple-touch-icon.png'));
     }
+
+    public function test_expired_security_token_goes_to_login_instead_of_419_page(): void
+    {
+        $this->withMiddleware();
+        app('router')->aliasMiddleware('t419', fn ($r, $n) => throw new \Illuminate\Session\TokenMismatchException());
+        \Illuminate\Support\Facades\Route::middleware('web')->post('/_test419', fn () => 'ok')->middleware('t419');
+        $this->post('/_test419')->assertRedirect('/login?error=expired');
+        $this->postJson('/_test419')->assertStatus(419)->assertJson(['reload' => true]);
+        $this->get('/login?error=expired')->assertOk()->assertSee(t('login.error.expired'))->assertHeader('Cache-Control');
+        $this->getJson('/csrf-token')->assertOk()->assertJsonStructure(['token']);
+    }
 }
