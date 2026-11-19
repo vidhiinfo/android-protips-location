@@ -19,9 +19,9 @@ class BrandNameTest extends TestCase
         config(['voters.branding.app_name' => 'Booth Management Solution (Uttar Pradesh)', 'voters.branding.app_name_local' => 'बूथ प्रबंधन समाधान (उत्तर प्रदेश)',
             'voters.branding.short_name' => 'Booth UP', 'voters.branding.owner' => 'Vidhi Info Solutions']);
         $this->get('/login')->assertOk()->assertSee('Booth Management Solution (Uttar Pradesh)')->assertDontSee('Voter Information System')
-            ->assertSee('app.webmanifest', false)->assertSee(t('brand.by', 'Vidhi Info Solutions'))->assertSee('© ' . date('Y') . ' Vidhi Info Solutions');
+            ->assertSee('site.webmanifest', false)->assertSee(t('brand.by', 'Vidhi Info Solutions'))->assertSee('© ' . date('Y') . ' Vidhi Info Solutions');
         $this->get('/login?lang=hi')->assertOk()->assertSee('बूथ प्रबंधन समाधान (उत्तर प्रदेश)');
-        $m = $this->get('/app.webmanifest')->assertOk()->assertHeader('content-type', 'application/manifest+json')->json();
+        $m = $this->get('/site.webmanifest')->assertOk()->assertHeader('content-type', 'application/manifest+json')->json();
         $this->assertSame(['Booth Management Solution (Uttar Pradesh)', 'Booth UP'], [$m['name'], $m['short_name']]);
         $this->assertStringEndsWith('/dashboard?source=app', $m['start_url']);
         $this->assertStringEndsWith('/images/app/icon-192.png', $m['icons'][0]['src']);

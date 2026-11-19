@@ -10,14 +10,15 @@ Route::post('/logout', [AuthController::class, 'logout']);
 // fresh security token for a page that was left open (phones): see public/js/app.js
 Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()])->header('Cache-Control', 'no-store'));
 // installable-app manifest with the product name from .env (BRAND_APP_NAME), for a renamed installation
-Route::get('/app.webmanifest', function () {
+Route::get('/site.webmanifest', function () {
     $m = json_decode((string) file_get_contents(public_path('manifest.webmanifest')), true);
     $name = (string) config('voters.branding.app_name');
     if ($name !== '') {
         $m['name'] = $name;
         $m['short_name'] = (string) (config('voters.branding.short_name') ?: mb_substr($name, 0, 12));
     }
-    foreach (['start_url' => './dashboard?source=app', 'scope' => './'] as $k => $v) $m[$k] = url(ltrim($v, '.'));
+    $m['start_url'] = url('dashboard?source=app');
+    $m['scope'] = rtrim(url('/'), '/') . '/';
     foreach ($m['icons'] ?? [] as $i => $icon) $m['icons'][$i]['src'] = asset($icon['src']);
     foreach ($m['shortcuts'] ?? [] as $i => $sc) { $m['shortcuts'][$i]['url'] = url(ltrim($sc['url'], '.')); foreach ($sc['icons'] ?? [] as $j => $ic) $m['shortcuts'][$i]['icons'][$j]['src'] = asset($ic['src']); }
     return response()->json($m, 200, ['Content-Type' => 'application/manifest+json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
