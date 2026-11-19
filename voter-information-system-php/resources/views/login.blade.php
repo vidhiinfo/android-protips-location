@@ -8,6 +8,7 @@
             <div class="d-flex align-items-center gap-2 mb-4 login-brand">
                 <span class="login-brand-mark"><i class="bi bi-person-vcard"></i></span>
                 <span><span class="d-block fw-semibold">{{ t('app.name') }}</span>
+                    @if(config('voters.branding.owner'))<span class="d-block small opacity-75">{{ t('brand.by', config('voters.branding.owner')) }}</span>@endif
                     @if($branding['organisation'])<span class="d-block small opacity-75">{{ $branding['organisation'] }}</span>@endif</span>
             </div>
             <h1 class="login-title">{{ t('login.banner.title') }}</h1>
@@ -51,6 +52,7 @@
                 </form>
                 <p class="small text-muted mt-4 mb-0 d-flex gap-2"><i class="bi bi-shield-lock"></i> <span>{{ t('login.secure') }}</span></p>
                 <a class="small d-inline-flex gap-1 mt-2 native-hide" href="{{ url('/mobile-app') }}"><i class="bi bi-phone"></i> {{ t('app.install.link') }}</a>
+                @if(config('voters.branding.owner'))<p class="small text-muted mt-3 mb-0">{{ t('brand.copyright', date('Y'), config('voters.branding.owner')) }}</p>@endif
             </div>
         </div>
     </div>

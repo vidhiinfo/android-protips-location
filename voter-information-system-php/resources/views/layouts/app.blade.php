@@ -109,6 +109,9 @@
 </nav>
 @endunless
 @yield('content')
+@if(config('voters.branding.owner'))
+<footer class="text-center small text-muted py-3 no-print">{{ t('app.name') }} · {{ t('brand.copyright', date('Y'), config('voters.branding.owner')) }}</footer>
+@endif
 @stack('modals')
 <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ versioned_asset('js/app.js') }}"></script>

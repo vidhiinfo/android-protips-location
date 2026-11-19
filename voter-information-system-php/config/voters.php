@@ -60,6 +60,7 @@ return [
         'app_name' => env('BRAND_APP_NAME', ''),
         'app_name_local' => env('BRAND_APP_NAME_LOCAL', ''),   // shown when the screen language is not English
         'short_name' => env('BRAND_SHORT_NAME', ''),           // under the phone app icon (about 12 letters)
+        'owner' => env('BRAND_OWNER', ''),                     // company that owns the solution: "A solution by ..." and the copyright line
     ],
 
     'messaging' => [

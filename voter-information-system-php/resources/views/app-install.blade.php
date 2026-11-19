@@ -35,6 +35,7 @@
 
     <p class="small text-muted"><i class="bi bi-shield-lock"></i> {{ t('app.install.privacy') }}</p>
     <a class="btn btn-outline-primary" href="{{ url('/login') }}"><i class="bi bi-box-arrow-in-right"></i> {{ t('login.button') }}</a>
+    @if(config('voters.branding.owner'))<p class="small text-muted text-center mt-3 mb-0">{{ t('brand.copyright', date('Y'), config('voters.branding.owner')) }}</p>@endif
 </div>
 <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ versioned_asset('js/app.js') }}"></script>
