@@ -84,7 +84,10 @@ class VoterFilter
         $like = fn ($s) => '%' . addcslashes(Text::lower(Text::asciiDigits($s)), '%_\\') . '%';
         // MySQL compares these utf8mb4_unicode_ci columns without case already: lower() on every row only slows a big assembly down
         $col = \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'mysql' ? fn ($c) => $c : fn ($c) => "lower($c)";
-        if ($s = $this->get('q')) {
+        $epic = '/^([A-Z]{3}\d{7}|[A-Z]{2}\/\d{2}\/\d{3}\/\d{6,7})$/';   // a complete EPIC No. (ABC1234567, UP/20/103/0168433)
+        if (($s = $this->get('q')) && preg_match($epic, $e = strtoupper(trim((string) Text::asciiDigits($s))))) {
+            $q->where('epic_no', $e);   // straight to the EPIC index instead of reading every voter
+        } elseif ($s) {
             foreach (preg_split('/\s+/u', (string) Text::nfc($s)) as $term) {
                 $l = $like($term);
                 $q->where(function ($w) use ($l, $col) {

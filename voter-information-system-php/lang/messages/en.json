@@ -1107,5 +1107,6 @@
 "backup.visitOff": "The backup after a page visit is switched off (BACKUP_ON_VISIT=false): set up the cron job.",
 "backup.offsite": "Download a backup at least once a week and keep it off the server (a pen drive or Google Drive), in case the hosting fails.",
 "backup.restore": "To restore: phpMyAdmin > an empty database > Import > the .sql.gz file > Go.",
-"backup.private": "Backups contain voters' personal data: keep downloaded files private."
+"backup.private": "Backups contain voters' personal data: keep downloaded files private.",
+"list.searchSlow": "The search took too long and was stopped. Choose a booth, or type more of the name (or the EPIC / mobile no.)."
 }

@@ -3,11 +3,12 @@
 @section('content')
 <div class="container-fluid px-3">
     @include('partials.flash')
+    @if(!empty($searchSlow))<div class="alert alert-warning py-2"><i class="bi bi-hourglass-split"></i> {{ t('list.searchSlow') }}</div>@endif
     <div class="row g-2 mb-3">
         <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('list.totalVoters') }}</div><div class="num">{{ $total }}</div></div></div>
         <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('gender.MALE') }}</div><div class="num">{{ $genderCounts['MALE'] }}</div></div></div>
         <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('gender.FEMALE') }}</div><div class="num">{{ $genderCounts['FEMALE'] }}</div></div></div>
-        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('list.matching') }}</div><div class="num text-primary">{{ $page->total() }}</div></div></div>
+        <div class="col-6 col-md-3"><div class="stat"><div class="text-muted small">{{ t('list.matching') }}</div><div class="num text-primary">{{ $page->total() }}{{ !empty($page->capped) ? '+' : '' }}</div></div></div>
     </div>
     <form method="get" action="{{ url('/voters') }}" class="card filter-card mb-3"><div class="card-body pb-2">
         <div class="row g-2 align-items-end">
@@ -82,7 +83,7 @@
     </div></form>
 
     <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
-        <div class="me-auto text-muted small">{{ t('list.showing', $page->total() ? ($page->currentPage() - 1) * $page->perPage() + 1 : 0, ($page->currentPage() - 1) * $page->perPage() + $page->count(), $page->total()) }}
+        <div class="me-auto text-muted small">{{ t('list.showing', $page->total() ? ($page->currentPage() - 1) * $page->perPage() + 1 : 0, ($page->currentPage() - 1) * $page->perPage() + $page->count(), $page->total() . (!empty($page->capped) ? '+' : '')) }}
             @if($f->active())<span class="badge text-bg-warning ms-1">{{ t('list.filtered') }}</span>@endif</div>
         @if(can('MESSAGE_SEND'))<div class="btn-group">
             <a class="btn btn-sm btn-outline-primary" href="{{ url('/messages/compose') }}?{{ $f->queryWithSort() }}&channel=SMS"><i class="bi bi-chat-text"></i> SMS</a>

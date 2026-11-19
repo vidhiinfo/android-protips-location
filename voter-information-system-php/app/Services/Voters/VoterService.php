@@ -17,9 +17,44 @@ class VoterService
 
     public function __construct(private AuditService $audit) {}
 
+    /** A text search counts at most this many matches ("1,000+"): counting every match reads the whole assembly. */
+    public const SEARCH_COUNT_CAP = 1000;
+
     public function search(VoterFilter $f)
     {
-        return $f->applySort($f->apply(Voter::query()))->paginate($f->size, ['*'], 'page', $f->page + 1);
+        if (!$f->get('q')) return $f->applySort($f->apply(Voter::query()))->paginate($f->size, ['*'], 'page', $f->page + 1);
+        return self::timeLimited(function () use ($f) {
+            $base = $f->apply(Voter::query());
+            $total = DB::query()->fromSub((clone $base)->select('voters.id')->limit(self::SEARCH_COUNT_CAP + 1)->toBase(), 'm')->count();
+            $items = $f->applySort(clone $base)->forPage($f->page + 1, $f->size)->get();
+            $p = new \Illuminate\Pagination\LengthAwarePaginator($items, min($total, self::SEARCH_COUNT_CAP), $f->size, $f->page + 1,
+                ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'pageName' => 'page']);
+            $p->capped = $total > self::SEARCH_COUNT_CAP;
+            return $p;
+        });
+    }
+
+    /**
+     * Runs a heavy search with a time limit (SEARCH_SECONDS, default 8) so that a few broad searches cannot hold every
+     * server process on shared hosting. Throws SearchTooSlow when the database stops the query.
+     */
+    public static function timeLimited(\Closure $fn)
+    {
+        $secs = (int) config('voters.search_seconds', 8);
+        $db = DB::connection();
+        if ($secs <= 0 || $db->getDriverName() !== 'mysql') return $fn();
+        $maria = stripos((string) $db->getPdo()->getAttribute(\PDO::ATTR_SERVER_VERSION), 'mariadb') !== false;
+        $set = fn ($on) => $maria ? $db->statement('SET SESSION max_statement_time = ' . ($on ? $secs : 0))
+                                   : $db->statement('SET SESSION max_execution_time = ' . ($on ? $secs * 1000 : 0));
+        try { $set(true); } catch (\Throwable $e) { return $fn(); }   // not allowed on this server: run without a limit
+        try {
+            return $fn();
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (in_array((int) ($e->errorInfo[1] ?? 0), [1969, 3024, 1317], true)) throw new SearchTooSlow();
+            throw $e;
+        } finally {
+            try { $set(false); } catch (\Throwable $e) {}
+        }
     }
 
     public function searchAll(VoterFilter $f, int $max = self::MAX_EXPORT_ROWS)

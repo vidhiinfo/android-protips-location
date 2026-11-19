@@ -40,9 +40,13 @@ class VoterController extends Controller
     public function index(Request $r)
     {
         $f = $this->filter($r);
-        $page = $this->voters->search($f);
+        try { $page = $this->voters->search($f); $slow = false; }
+        catch (\App\Services\Voters\SearchTooSlow $e) {   // too broad for the time limit: empty result with advice
+            $page = new \Illuminate\Pagination\LengthAwarePaginator(collect(), 0, $f->size, 1, ['path' => $r->url()]);
+            $slow = true;
+        }
         $a = $f->get('assemblyNo');
-        return view('voters.list', ['f' => $f, 'page' => $page, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($a),
+        return view('voters.list', ['f' => $f, 'page' => $page, 'searchSlow' => $slow, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($a),
             'wards' => $this->voters->wards($a), 'wardMap' => $this->voters->boothsByWard($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
             // Caste / Sub Caste filter: the masters, plus values on voters that are not in a master
