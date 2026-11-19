@@ -47,9 +47,20 @@ class Lang
         return self::$cache[$code];
     }
 
+    /** Product name set in .env (BRAND_APP_NAME / BRAND_APP_NAME_LOCAL), e.g. for a separate state installation. */
+    public static function brandName(string $code): ?string
+    {
+        if (!function_exists('config') || !app()->bound('config')) return null;
+        $local = (string) config('voters.branding.app_name_local');
+        $name = (string) config('voters.branding.app_name');
+        if ($code !== 'en' && $local !== '') return $local;
+        return $name !== '' ? $name : null;
+    }
+
     public static function get(string $key, array $args = [], ?string $code = null): string
     {
         $code ??= self::current();
+        if ($key === 'app.name' && ($own = self::brandName($code)) !== null) return $own;
         $text = self::messages($code)[$key] ?? self::messages('en')[$key] ?? $key;
         foreach (array_values($args) as $i => $v) {
             $text = str_replace('{' . $i . '}', (string) $v, $text);

@@ -56,6 +56,10 @@ return [
         'banner_image' => env('BRAND_BANNER', '/images/login-banner.svg'),
         'organisation' => env('BRAND_ORGANISATION', ''),
         'logo' => env('BRAND_LOGO', ''),
+        // product name on the login page, menu bar, page titles and the installed phone app (empty = "Voter Information System")
+        'app_name' => env('BRAND_APP_NAME', ''),
+        'app_name_local' => env('BRAND_APP_NAME_LOCAL', ''),   // shown when the screen language is not English
+        'short_name' => env('BRAND_SHORT_NAME', ''),           // under the phone app icon (about 12 letters)
     ],
 
     'messaging' => [

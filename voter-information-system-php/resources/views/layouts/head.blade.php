@@ -1,7 +1,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d6efd">
-<link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+<link rel="manifest" href="{{ config('voters.branding.app_name') ? url('app.webmanifest') : asset('manifest.webmanifest') }}">
 <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/app/icon-192.png') }}">
 <link rel="apple-touch-icon" href="{{ asset('images/app/apple-touch-icon.png') }}">
 <meta name="apple-mobile-web-app-capable" content="yes">
