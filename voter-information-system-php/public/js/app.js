@@ -244,3 +244,62 @@ document.addEventListener('click', function (e) {
     try { document.cookie = 'vis_ck=1; path=/; SameSite=Lax'; ok = ok && document.cookie.indexOf('vis_ck=1') >= 0; document.cookie = 'vis_ck=; Max-Age=0; path=/'; } catch (e) { ok = false; }
     if (!ok) w.classList.remove('d-none');
 })();
+
+// Admin > Users > Access area: Ward / Booth drop-downs (tick one or more) from the chosen assembly; the booth list
+// follows the chosen wards; "Roll page" fills the serial range (30 voters per page) of a single booth.
+(function () {
+    var root = document.querySelector('[data-area-picker]');
+    if (!root) return;
+    var map = {}; try { map = JSON.parse(root.dataset.map || '{}'); } catch (e) {}
+    var asm = document.querySelector('[data-area-assembly]');
+    var val = function (f) { return root.querySelector('[data-area-value="' + f + '"]'); };
+    var ints = function (s) { return (s || '').split(/[\s,;]+/).filter(function (x) { return /^\d+$/.test(x); }).map(Number); };
+    var from = root.querySelector('[name=scope_serial_from]'), to = root.querySelector('[name=scope_serial_to]'), page = root.querySelector('[data-area-page]');
+    function data() { return map[asm && asm.value] || { wards: [], booths: {} }; }
+    function render(f, items) {
+        var dd = root.querySelector('[data-area-dd="' + f + '"]'), menu = dd.querySelector('.dropdown-menu'), btn = dd.querySelector('button');
+        var chosen = ints(val(f).value).filter(function (x) { return items.indexOf(x) >= 0; });
+        val(f).value = chosen.join(', ');
+        menu.innerHTML = '';
+        if (!items.length) menu.innerHTML = '<div class="small text-muted px-2">' + root.dataset.none + '</div>';
+        items.forEach(function (n) {
+            var id = f + '-' + n, lab = document.createElement('label');
+            lab.className = 'dropdown-item d-flex gap-2 align-items-center py-1'; lab.htmlFor = id;
+            lab.innerHTML = '<input type="checkbox" class="form-check-input m-0" id="' + id + '" value="' + n + '"' + (chosen.indexOf(n) >= 0 ? ' checked' : '') + '> ' + n;
+            menu.appendChild(lab);
+        });
+        btn.textContent = chosen.length ? (chosen.length <= 4 ? chosen.join(', ') : root.dataset.selectedN.replace('{0}', chosen.length)) : root.dataset.all;
+    }
+    function booths() {
+        var d = data(), wards = ints(val('scope_wards').value);
+        return Object.keys(d.booths || {}).map(Number).filter(function (b) { return !wards.length || wards.indexOf(d.booths[b].ward) >= 0; }).sort(function (a, b) { return a - b; });
+    }
+    function pages() {
+        var b = ints(val('scope_booths').value), d = data(), cur = page.value;
+        page.innerHTML = '<option value="">' + page.options[0].text + '</option>';
+        page.disabled = b.length !== 1;
+        if (b.length !== 1) return;
+        var max = (d.booths[b[0]] || {}).max || 0;
+        for (var p = 1; p * 30 - 29 <= max; p++) {
+            var lo = p * 30 - 29, hi = Math.min(p * 30, max);
+            var o = new Option(root.dataset.page.replace('{0}', p) + ' (' + lo + '-' + hi + ')', lo + '-' + hi);
+            if (String(from.value) === String(lo) && String(to.value) === String(hi)) o.selected = true;
+            page.add(o);
+        }
+        if (cur && !page.value) page.value = '';
+    }
+    function refresh() { render('scope_wards', data().wards || []); render('scope_booths', booths()); pages(); }
+    root.addEventListener('change', function (e) {
+        var cb = e.target.closest('.dropdown-menu input[type=checkbox]');
+        if (cb) {
+            var f = cb.closest('[data-area-dd]').dataset.areaDd;
+            val(f).value = Array.prototype.map.call(cb.closest('.dropdown-menu').querySelectorAll('input:checked'), function (i) { return i.value; }).join(', ');
+            refresh();
+        }
+        if (e.target === page) {
+            if (page.value) { var r = page.value.split('-'); from.value = r[0]; to.value = r[1]; } else { from.value = ''; to.value = ''; }
+        }
+    });
+    if (asm) asm.addEventListener('change', refresh);
+    refresh();
+})();

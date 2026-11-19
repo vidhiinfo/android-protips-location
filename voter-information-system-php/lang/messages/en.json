@@ -985,5 +985,12 @@
 "area.outside": "This is outside your access area (ward / booth / serial no.).",
 "area.needsAssembly": "Choose the assembly first: an access area is part of one assembly.",
 "area.oneBooth": "A serial range needs exactly one booth.",
-"area.fromTo": "\"Serial from\" must not be more than \"Serial to\"."
+"area.fromTo": "\"Serial from\" must not be more than \"Serial to\".",
+"area.serialRange": "Serial range (optional)",
+"area.wholeBooth": "Whole booth",
+"area.page": "Page {0}",
+"area.pageHelp": "Pick a roll page (30 voters) or type the serial numbers. Needs exactly one booth.",
+"area.selectedN": "{0} selected",
+"area.noData": "No data for this assembly yet",
+"area.notInAssembly": "This ward / booth is not in the selected assembly."
 }

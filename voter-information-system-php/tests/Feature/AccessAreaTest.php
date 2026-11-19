@@ -91,6 +91,9 @@ class AccessAreaTest extends TestCase
             'scope_booths' => '3,4', 'scope_serial_from' => 1, 'scope_serial_to' => 30])->assertSessionHasNoErrors()->assertOk()->assertSee(t('area.oneBooth'));
         $this->post('/admin/users', ['id' => $u->id, 'full_name' => 'X', 'assembly_no' => 45, 'enabled' => 1, 'roleIds' => [$role],
             'scope_booths' => '3', 'scope_serial_from' => 31, 'scope_serial_to' => 60])->assertRedirect();
+        $this->post('/admin/users', ['id' => $u->id, 'full_name' => 'X', 'assembly_no' => 45, 'enabled' => 1, 'roleIds' => [$role],
+            'scope_booths' => '999'])->assertOk()->assertSee(t('area.notInAssembly'));                       // not a booth of assembly 45
+        $this->get('/admin/users/' . $u->id . '/edit')->assertOk()->assertSee('data-area-picker', false)->assertSee('data-area-dd="scope_booths"', false);
         $u->refresh();
         $this->assertSame(['3', 31, 60], [$u->scope_booths, (int) $u->scope_serial_from, (int) $u->scope_serial_to]);
         $this->get('/admin/users')->assertSee(t('col.boothNo') . ' 3 · ' . t('area.serials', 31, 60), false);

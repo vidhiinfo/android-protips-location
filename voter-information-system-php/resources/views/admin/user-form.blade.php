@@ -15,25 +15,32 @@
                     <span><b>{{ $r->name }}</b> <code class="small">{{ $r->code }}</code><span class="d-block small text-muted">{{ $r->description }}</span></span></label></div>@endforeach
             </div><div class="form-text">{{ t('admin.rolesHelp') }}</div></div>
             <div class="col-md-6"><label class="form-label">{{ t('admin.assignedAssembly') }}</label>
-                <select name="assembly_no" class="form-select"><option value="">{{ t('login.allAssemblies') }}</option>
+                <select name="assembly_no" class="form-select" data-area-assembly><option value="">{{ t('login.allAssemblies') }}</option>
                     @foreach($assemblyList as $a)<option value="{{ $a->assembly_no }}" @selected($a->assembly_no == $item->assembly_no)>{{ $a->assembly_no }} - {{ $a->name }}</option>@endforeach</select>
                 <div class="form-text">{{ t('admin.assignedAssemblyHelp') }}</div></div>
             <div class="col-12"><div class="border rounded p-3 bg-light">
                 <div class="fw-semibold mb-1"><i class="bi bi-bounding-box"></i> {{ t('area.title') }}</div>
                 <div class="small text-muted mb-2">{{ t('area.help') }}</div>
-                <div class="row g-2">
+                <div class="row g-2" data-area-picker data-map='@json((object) $areaMap)' data-all="{{ t('common.all') }}" data-none="{{ t('area.noData') }}"
+                     data-selected-n="{{ t('area.selectedN') }}" data-page="{{ t('area.page') }}">
                     @php($ae = fn ($f) => isset($errors) ? $errors->first($f) : null)
-                    <div class="col-md-3"><label class="form-label small mb-0" for="scope_wards">{{ t('area.wards') }}</label>
-                        <input id="scope_wards" name="scope_wards" value="{{ old('scope_wards', $item->scope_wards) }}" class="form-control {{ $ae('scope_wards') ? 'is-invalid' : '' }}" placeholder="101, 102" inputmode="numeric">
-                        @if($ae('scope_wards'))<div class="invalid-feedback">{{ $ae('scope_wards') }}</div>@endif</div>
-                    <div class="col-md-5"><label class="form-label small mb-0" for="scope_booths">{{ t('area.booths') }}</label>
-                        <input id="scope_booths" name="scope_booths" value="{{ old('scope_booths', $item->scope_booths) }}" class="form-control {{ $ae('scope_booths') ? 'is-invalid' : '' }}" placeholder="3, 4, 5" inputmode="numeric">
-                        @if($ae('scope_booths'))<div class="invalid-feedback">{{ $ae('scope_booths') }}</div>@endif</div>
-                    <div class="col-6 col-md-2"><label class="form-label small mb-0" for="scope_serial_from">{{ t('area.serialFrom') }}</label>
-                        <input id="scope_serial_from" name="scope_serial_from" type="number" min="1" value="{{ old('scope_serial_from', $item->scope_serial_from) }}" class="form-control {{ $ae('scope_serial_from') ? 'is-invalid' : '' }}">
-                        @if($ae('scope_serial_from'))<div class="invalid-feedback">{{ $ae('scope_serial_from') }}</div>@endif</div>
-                    <div class="col-6 col-md-2"><label class="form-label small mb-0" for="scope_serial_to">{{ t('area.serialTo') }}</label>
-                        <input id="scope_serial_to" name="scope_serial_to" type="number" min="1" value="{{ old('scope_serial_to', $item->scope_serial_to) }}" class="form-control {{ $ae('scope_serial_to') ? 'is-invalid' : '' }}"></div>
+                    @foreach(['scope_wards' => 'area.wards', 'scope_booths' => 'area.booths'] as $fld => $lbl)
+                    <div class="col-md-{{ $fld === 'scope_wards' ? 4 : 8 }}"><label class="form-label small mb-0">{{ t($lbl) }}</label>
+                        <input type="hidden" name="{{ $fld }}" value="{{ old($fld, $item->$fld) }}" data-area-value="{{ $fld }}">
+                        <div class="dropdown" data-area-dd="{{ $fld }}">
+                            <button type="button" class="form-select text-start {{ $ae($fld) ? 'is-invalid' : '' }}" data-bs-toggle="dropdown" data-bs-auto-close="outside">{{ t('common.all') }}</button>
+                            <div class="dropdown-menu p-2 w-100" style="max-height:280px;overflow:auto"></div>
+                        </div>
+                        @if($ae($fld))<div class="invalid-feedback d-block">{{ $ae($fld) }}</div>@endif</div>
+                    @endforeach
+                    <div class="col-md-8"><label class="form-label small mb-0">{{ t('area.serialRange') }}</label>
+                        <div class="input-group">
+                            <select class="form-select" data-area-page style="max-width:13rem" title="{{ t('area.pageHelp') }}"><option value="">{{ t('area.wholeBooth') }}</option></select>
+                            <input name="scope_serial_from" type="number" min="1" value="{{ old('scope_serial_from', $item->scope_serial_from) }}" class="form-control {{ $ae('scope_serial_from') ? 'is-invalid' : '' }}" placeholder="{{ t('area.serialFrom') }}" aria-label="{{ t('area.serialFrom') }}">
+                            <input name="scope_serial_to" type="number" min="1" value="{{ old('scope_serial_to', $item->scope_serial_to) }}" class="form-control" placeholder="{{ t('area.serialTo') }}" aria-label="{{ t('area.serialTo') }}">
+                        </div>
+                        @if($ae('scope_serial_from'))<div class="invalid-feedback d-block">{{ $ae('scope_serial_from') }}</div>@endif
+                        <div class="form-text">{{ t('area.pageHelp') }}</div></div>
                 </div>
                 <div class="small text-muted mt-2">{{ t('area.examples') }}</div>
             </div></div>

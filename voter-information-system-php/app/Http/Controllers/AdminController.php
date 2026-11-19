@@ -23,7 +23,29 @@ class AdminController extends Controller
         if ($this->external()) return redirect('/admin/users');
         $item = $id ? AppUser::with('roles')->findOrFail($id) : new AppUser(['enabled' => true]);
         return view('admin.user-form', ['item' => $item, 'roleIds' => $item->exists ? $item->roles->pluck('id')->all() : [],
-            'roleList' => Role::orderByDesc('system_role')->orderBy('name')->get(), 'assemblyList' => Assembly::orderBy('assembly_no')->get()]);
+            'roleList' => Role::orderByDesc('system_role')->orderBy('name')->get(), 'assemblyList' => Assembly::orderBy('assembly_no')->get(), 'areaMap' => self::areaMap()]);
+    }
+
+    /**
+     * Wards and booths of every assembly for the Access area drop-downs:
+     * [assembly => ['wards' => [101, ...], 'booths' => [booth => ['ward' => 101, 'max' => last serial no.]]]]
+     */
+    public static function areaMap(): array
+    {
+        $m = [];
+        foreach (\App\Models\Voter::withoutGlobalScope('area')->selectRaw('assembly_no, ward_no, booth_no, max(serial_no) as ms')
+                     ->groupBy('assembly_no', 'ward_no', 'booth_no')->orderBy('assembly_no')->orderBy('booth_no')->get() as $r) {
+            $a = (int) $r->assembly_no; $b = (int) $r->booth_no;
+            $m[$a]['booths'][$b] = ['ward' => $r->ward_no !== null ? (int) $r->ward_no : ($m[$a]['booths'][$b]['ward'] ?? null), 'max' => max((int) $r->ms, $m[$a]['booths'][$b]['max'] ?? 0)];
+            if ($r->ward_no !== null) $m[$a]['wards'][(int) $r->ward_no] = true;
+        }
+        foreach (\App\Models\Booth::orderBy('booth_no')->get(['assembly_no', 'booth_no']) as $b) $m[$b->assembly_no]['booths'][$b->booth_no] ??= ['ward' => null, 'max' => 0];
+        foreach ($m as $a => $x) {
+            $m[$a]['wards'] = array_map('intval', array_keys($x['wards'] ?? []));
+            sort($m[$a]['wards']);
+            ksort($m[$a]['booths']);
+        }
+        return $m;
     }
 
     public function saveUser(Request $r)
@@ -48,6 +70,11 @@ class AdminController extends Controller
             // access area: needs an assembly; a serial range needs exactly one booth and from <= to
             $hasArea = ($data['scope_wards'] ?? null) || ($data['scope_booths'] ?? null) || ($data['scope_serial_from'] ?? null) || ($data['scope_serial_to'] ?? null);
             if ($hasArea && empty($data['assembly_no'])) $val->errors()->add('scope_wards', t('area.needsAssembly'));
+            if ($hasArea && !empty($data['assembly_no'])) {
+                $known = self::areaMap()[(int) $data['assembly_no']] ?? ['wards' => [], 'booths' => []];
+                if (array_diff(\App\Support\Area::ints($data['scope_wards'] ?? ''), $known['wards'])) $val->errors()->add('scope_wards', t('area.notInAssembly'));
+                if (array_diff(\App\Support\Area::ints($data['scope_booths'] ?? ''), array_keys($known['booths']))) $val->errors()->add('scope_booths', t('area.notInAssembly'));
+            }
             $serial = ($data['scope_serial_from'] ?? null) || ($data['scope_serial_to'] ?? null);
             if ($serial && count(\App\Support\Area::ints($data['scope_booths'] ?? '')) !== 1) $val->errors()->add('scope_booths', t('area.oneBooth'));
             if (($data['scope_serial_from'] ?? null) && ($data['scope_serial_to'] ?? null) && (int) $data['scope_serial_from'] > (int) $data['scope_serial_to']) $val->errors()->add('scope_serial_from', t('area.fromTo'));
@@ -56,7 +83,7 @@ class AdminController extends Controller
         if ($v->fails()) {
             $item->fill(array_diff_key($data, ['username' => $isNew ? null : 1]));
             return response()->view('admin.user-form', ['item' => $item, 'roleIds' => $roleIds, 'errors' => $v->errors(),
-                'roleList' => Role::orderByDesc('system_role')->orderBy('name')->get(), 'assemblyList' => Assembly::orderBy('assembly_no')->get()]);
+                'roleList' => Role::orderByDesc('system_role')->orderBy('name')->get(), 'assemblyList' => Assembly::orderBy('assembly_no')->get(), 'areaMap' => self::areaMap()]);
         }
         if ($isNew) { $item->username = $data['username']; $item->created_at = now(); }
         $item->full_name = $data['full_name'];
