@@ -48,11 +48,12 @@
                     <option value="true" @selected($f->get('hasMobile') === 'true')>{{ t('filter.withMobile') }}</option>
                     <option value="false" @selected($f->get('hasMobile') === 'false')>{{ t('filter.withoutMobile') }}</option></select></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.caste') }}</label>
-                <select name="caste" class="form-select"><option value="">{{ t('common.all') }}</option>
-                    @foreach($castes as $c)<option value="{{ $c }}" @selected($c === $f->get('caste'))>{{ $c }}</option>@endforeach</select></div>
+                <select name="caste" class="form-select" data-caste-select data-sub-select="f-subCaste" data-map='@json((object) $casteTreeAll)' data-all='@json($subCastes)' data-labels='@json((object) \App\Models\Caste::labels())'>
+                    <option value="">{{ t('common.all') }}</option>
+                    @foreach($castes as $c)<option value="{{ $c }}" @selected($c === $f->get('caste'))>{{ \App\Models\Caste::labels()[$c] ?? $c }}</option>@endforeach</select></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.subCaste') }}</label>
-                <select name="subCaste" class="form-select"><option value="">{{ t('common.all') }}</option>
-                    @foreach($subCastes as $c)<option value="{{ $c }}" @selected($c === $f->get('subCaste'))>{{ $c }}</option>@endforeach</select></div>
+                <select name="subCaste" id="f-subCaste" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach($f->get('caste') ? ($casteTreeAll[$f->get('caste')] ?? []) : $subCastes as $c)<option value="{{ $c }}" @selected($c === $f->get('subCaste'))>{{ \App\Models\Caste::labels()[$c] ?? $c }}</option>@endforeach</select></div>
             @foreach(['politicalStatus' => 'col.politicalStatus', 'socialStatus' => 'col.socialStatus', 'orgStatus' => 'col.organisationalStatus'] as $sk => $sl)
             <div class="col-6 col-md-2"><label class="form-label">{{ t($sl) }}</label>
                 <select name="{{ $sk }}" class="form-select"><option value="">{{ t('common.all') }}</option>
@@ -135,8 +136,8 @@
             <div class="fw-semibold me-2"><i class="bi bi-check2-square"></i> <span data-bulk-count>0</span> {{ t('bulk.selected') }}</div>
             @php($tree = \App\Models\Caste::tree())
             <div><label class="form-label small mb-0">{{ t('col.caste') }}</label>
-                <select name="caste" class="form-select form-select-sm" data-caste-select data-sub-select="bulk-sub" data-map='@json((object) $tree)'>
-                    <option value="">{{ t('bulk.keep') }}</option>@foreach(array_keys($tree) as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach<option value="-">{{ t('bulk.clear') }}</option></select></div>
+                <select name="caste" class="form-select form-select-sm" data-caste-select data-sub-select="bulk-sub" data-map='@json((object) $tree)' data-labels='@json((object) \App\Models\Caste::labels())'>
+                    <option value="">{{ t('bulk.keep') }}</option>@foreach(array_keys($tree) as $c)<option value="{{ $c }}">{{ \App\Models\Caste::labels()[$c] ?? $c }}</option>@endforeach<option value="-">{{ t('bulk.clear') }}</option></select></div>
             <div><label class="form-label small mb-0">{{ t('col.subCaste') }}</label>
                 <select name="sub_caste" id="bulk-sub" class="form-select form-select-sm"><option value="">{{ t('bulk.keep') }}</option></select></div>
             @foreach(['political_status' => 'col.politicalStatus', 'social_status' => 'col.socialStatus', 'organisational_status' => 'col.organisationalStatus'] as $sf => $sl)

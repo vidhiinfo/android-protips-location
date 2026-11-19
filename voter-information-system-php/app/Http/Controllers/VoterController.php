@@ -45,7 +45,10 @@ class VoterController extends Controller
         return view('voters.list', ['f' => $f, 'page' => $page, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($a),
             'wards' => $this->voters->wards($a), 'wardMap' => $this->voters->boothsByWard($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
-            'castes' => $this->voters->distinctValues('caste', $a), 'subCastes' => $this->voters->distinctValues('sub_caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
+            // Caste / Sub Caste filter: the masters, plus values on voters that are not in a master
+            'castes' => $castes = array_values(array_unique(array_merge(array_keys($tree = \App\Models\Caste::tree()), $this->voters->distinctValues('caste', $a)))),
+            'subCastes' => array_values(array_unique(array_merge(...array_values($tree ?: [[]]), ...[$this->voters->distinctValues('sub_caste', $a)]))),
+            'casteTreeAll' => $tree, 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
             'statusFilter' => ['politicalStatus' => \App\Support\StatusMasters::options('political_status', $this->voters->distinctValues('political_status', $a)),
                 'socialStatus' => \App\Support\StatusMasters::options('social_status', $this->voters->distinctValues('social_status', $a)),
                 'orgStatus' => \App\Support\StatusMasters::options('organisational_status', $this->voters->distinctValues('organisational_status', $a))],

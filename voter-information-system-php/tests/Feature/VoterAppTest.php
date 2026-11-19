@@ -221,6 +221,7 @@ class VoterAppTest extends TestCase
     public function test_caste_and_sub_caste_masters(): void
     {
         $this->login();
+        \App\Models\SubCaste::query()->delete(); \App\Models\Caste::query()->delete();   // start from empty masters (the Delhi list is filled in automatically)
         $this->get('/masters/castes')->assertOk()->assertSee(t('master.castes'));
         $this->post('/masters/castes', ['name' => 'Saini', 'category' => 'OBC', 'active' => 1])->assertRedirect('/masters/castes');
         $this->post('/masters/castes', ['name' => 'Arora', 'category' => 'GEN', 'active' => 1])->assertRedirect();
@@ -264,6 +265,7 @@ class VoterAppTest extends TestCase
     public function test_household_caste_and_survey_sheet(): void
     {
         $this->login();
+        \App\Models\SubCaste::query()->delete(); \App\Models\Caste::query()->delete();   // start from empty masters (the Delhi list is filled in automatically)
         $c = \App\Models\Caste::create(['name' => 'Saini', 'category' => 'OBC', 'active' => true]);
         \App\Models\SubCaste::create(['caste_id' => $c->id, 'name' => 'Mali', 'active' => true]);
         // apply to the whole house
@@ -478,5 +480,18 @@ class VoterAppTest extends TestCase
         $this->post('/logout');
         $this->login();
         $this->get('/admin/audit')->assertOk()->assertSee('LOGIN');
+    }
+
+    public function test_caste_masters_are_filled_and_drive_the_voter_filter(): void
+    {
+        $this->login();
+        $this->assertSame(84, \App\Models\Caste::count());
+        $this->assertSame(191, \App\Models\SubCaste::count());
+        $html = $this->get('/voters?assemblyNo=45')->assertOk()->getContent();
+        $this->assertStringContainsString('Brahmin (ब्राह्मण)', html_entity_decode($html));                     // caste filter lists the master
+        $this->assertStringContainsString('data-sub-select="f-subCaste"', $html);
+        $this->get('/voters?assemblyNo=45&caste=Chamar')->assertOk()->assertSee('Jatav (जाटव)')->assertDontSee('Gaur (गौड़)');   // sub castes of the chosen caste
+        $v = Voter::where('assembly_no', 45)->first();
+        $this->get('/voters/' . $v->id . '/edit')->assertOk()->assertSee('Brahmin (ब्राह्मण)');
     }
 }

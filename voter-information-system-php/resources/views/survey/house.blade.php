@@ -50,15 +50,15 @@
                 @if($val('caste') && !in_array($val('caste'), $castes))@php($castes[] = $val('caste'))@endif
                 <div class="col-6"><label class="form-label small mb-0">{{ t('col.caste') }}</label>
                     @if($casteTree)
-                    <select name="m[{{ $m->id }}][caste]" class="form-select" data-f="caste" data-caste-select data-sub-select="sub-{{ $m->id }}" data-map='@json((object) $casteTree)'>
-                        <option value="">--</option>@foreach($castes as $c)<option value="{{ $c }}" @selected($c === $val('caste'))>{{ $c }}</option>@endforeach</select>
+                    <select name="m[{{ $m->id }}][caste]" class="form-select" data-f="caste" data-caste-select data-sub-select="sub-{{ $m->id }}" data-map='@json((object) $casteTree)' data-labels='@json((object) \App\Models\Caste::labels())'>
+                        <option value="">--</option>@foreach($castes as $c)<option value="{{ $c }}" @selected($c === $val('caste'))>{{ \App\Models\Caste::labels()[$c] ?? $c }}</option>@endforeach</select>
                     @else<input name="m[{{ $m->id }}][caste]" value="{{ $val('caste') }}" class="form-control" data-f="caste">@endif</div>
                 <div class="col-6"><label class="form-label small mb-0">{{ t('col.subCaste') }}</label>
                     @if($casteTree)
                     @php($subs = $casteTree[$val('caste')] ?? [])
                     @if($val('sub_caste') && !in_array($val('sub_caste'), $subs))@php($subs[] = $val('sub_caste'))@endif
                     <select name="m[{{ $m->id }}][sub_caste]" id="sub-{{ $m->id }}" class="form-select" data-f="sub_caste">
-                        <option value="">--</option>@foreach($subs as $s)<option value="{{ $s }}" @selected($s === $val('sub_caste'))>{{ $s }}</option>@endforeach</select>
+                        <option value="">--</option>@foreach($subs as $s)<option value="{{ $s }}" @selected($s === $val('sub_caste'))>{{ \App\Models\Caste::labels()[$s] ?? $s }}</option>@endforeach</select>
                     @else<input name="m[{{ $m->id }}][sub_caste]" value="{{ $val('sub_caste') }}" class="form-control" data-f="sub_caste">@endif</div>
             </div>
             <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#more-{{ $m->id }}">{{ t('fs.more') }} <i class="bi bi-chevron-down"></i></a>

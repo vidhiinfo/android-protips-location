@@ -34,4 +34,14 @@ class MobileAppTest extends TestCase
         $this->get('/login?error=expired')->assertOk()->assertSee(t('login.error.expired'))->assertHeader('Cache-Control');
         $this->getJson('/csrf-token')->assertOk()->assertJsonStructure(['token']);
     }
+
+    public function test_javascript_files_have_no_syntax_errors(): void
+    {
+        exec('node --version 2>/dev/null', $o, $rc);
+        if ($rc !== 0) $this->markTestSkipped('node is not installed');
+        foreach (glob(public_path('js/*.js')) as $f) {
+            exec('node --check ' . escapeshellarg($f) . ' 2>&1', $out, $code);
+            $this->assertSame(0, $code, basename($f) . ': ' . implode("\n", $out));
+        }
+    }
 }

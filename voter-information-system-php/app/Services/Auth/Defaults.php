@@ -19,7 +19,7 @@ class Defaults
     public function __construct(private AuditService $audit) {}
 
     /** Bump when a release adds database changes, so existing installations re-check once. */
-    private const VERSION = 'vis.defaults.2026-11-status-masters';
+    private const VERSION = 'vis.defaults.2026-11-caste-seed';
 
     public function ensure(bool $force = false): void
     {
@@ -35,6 +35,7 @@ class Defaults
             $this->role('VIEWER', 'Viewer', 'Search, view, reports, export and print', Permission::VIEWER);
             if (config('voters.security.user_source') !== 'external') $this->firstAdmin();
             $this->grantAdded();
+            if (Schema::hasTable('castes')) \App\Models\Caste::seedDefaults();   // empty caste masters: Delhi list
         });
         Cache::forever(self::VERSION, true);
     }

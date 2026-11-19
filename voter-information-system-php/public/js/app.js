@@ -66,13 +66,15 @@ document.addEventListener('change', function (e) {
     if (!caste.matches || !caste.matches('select[data-caste-select]')) return;
     var sub = document.getElementById(caste.dataset.subSelect);
     if (!sub) return;
-    var map = {};
-    try { map = JSON.parse(caste.dataset.map || '{}'); } catch (err) { return; }
+    var map = {}, labels = {};
+    try { map = JSON.parse(caste.dataset.map || '{}'); labels = JSON.parse(caste.dataset.labels || '{}'); } catch (err) { return; }
     var empty = sub.options.length ? sub.options[0].text : '--';
     var current = sub.value;
+    var list = map[caste.value] || [];
+    if (!caste.value && caste.dataset.all) { try { list = JSON.parse(caste.dataset.all); } catch (err) {} }   // filter: no caste = every sub caste
     sub.innerHTML = '';
     sub.add(new Option(empty, ''));
-    (map[caste.value] || []).forEach(function (s) { sub.add(new Option(s, s, false, s === current)); });
+    list.forEach(function (s) { sub.add(new Option(labels[s] || s, s, false, s === current)); });
 });
 
 // Field survey: copy the first member's answer (caste + sub caste, political status ...) to everyone in the house.

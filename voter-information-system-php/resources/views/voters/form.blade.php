@@ -61,9 +61,9 @@
                 @if($v->caste && !in_array($v->caste, $castes))@php($castes[] = $v->caste)@endif
                 <div class="col-md-3"><label class="form-label" for="caste">{{ t('col.caste') }}</label>
                     <select name="caste" id="caste" class="form-select {{ isset($errors) && $errors->first('caste') ? 'is-invalid' : '' }}" data-caste-select data-sub-select="sub_caste"
-                            data-map='@json((object) $casteTree)'>
+                            data-map='@json((object) $casteTree)' data-labels='@json((object) \App\Models\Caste::labels())'>
                         <option value="">--</option>
-                        @foreach($castes as $c)<option value="{{ $c }}" @selected($c === $v->caste)>{{ $c }}</option>@endforeach
+                        @foreach($castes as $c)<option value="{{ $c }}" @selected($c === $v->caste)>{{ \App\Models\Caste::labels()[$c] ?? $c }}</option>@endforeach
                     </select></div>
                 @elseif($field === 'sub_caste' && $casteTree)
                 @php($subs = $casteTree[$v->caste] ?? [])
@@ -71,7 +71,7 @@
                 <div class="col-md-3"><label class="form-label" for="sub_caste">{{ t('col.subCaste') }}</label>
                     <select name="sub_caste" id="sub_caste" class="form-select">
                         <option value="">--</option>
-                        @foreach($subs as $sc)<option value="{{ $sc }}" @selected($sc === $v->sub_caste)>{{ $sc }}</option>@endforeach
+                        @foreach($subs as $sc)<option value="{{ $sc }}" @selected($sc === $v->sub_caste)>{{ \App\Models\Caste::labels()[$sc] ?? $sc }}</option>@endforeach
                     </select></div>
                 @elseif(isset(\App\Support\StatusMasters::TABLES[$field]) && \App\Support\StatusMasters::rows($field))
                 {{-- Social / Political / Organisational Status from their masters (Masters menu) --}}
