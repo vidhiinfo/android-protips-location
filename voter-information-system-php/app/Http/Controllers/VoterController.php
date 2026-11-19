@@ -46,6 +46,9 @@ class VoterController extends Controller
             'wards' => $this->voters->wards($a), 'wardMap' => $this->voters->boothsByWard($a),
             'districts' => $this->voters->districts($a), 'villages' => $this->voters->villages($a),
             'castes' => $this->voters->distinctValues('caste', $a), 'subCastes' => $this->voters->distinctValues('sub_caste', $a), 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
+            'statusFilter' => ['politicalStatus' => \App\Support\StatusMasters::options('political_status', $this->voters->distinctValues('political_status', $a)),
+                'socialStatus' => \App\Support\StatusMasters::options('social_status', $this->voters->distinctValues('social_status', $a)),
+                'orgStatus' => \App\Support\StatusMasters::options('organisational_status', $this->voters->distinctValues('organisational_status', $a))],
             'workers' => \App\Models\Worker::where('active', true)->when($a, fn ($q) => $q->where('assembly_no', $a))->orderBy('booth_no')->orderBy('name')->get(),
             'total' => $this->voters->total($this->user()->workAssembly()), 'genderCounts' => $this->voters->genderCounts($this->user()->workAssembly())]);
     }
@@ -98,7 +101,7 @@ class VoterController extends Controller
             $val = trim((string) $r->input($f));
             if ($val === '') continue;
             if (mb_strlen($val) > 100) return redirect($back)->with('error', 'validation.required');
-            $set[$f] = $val === '-' ? null : $val;   // "-" clears the field
+            $set[$f] = $val === '-' ? null : (isset(\App\Support\StatusMasters::TABLES[$f]) ? \App\Support\StatusMasters::normalize($f, $val) : $val);   // "-" clears the field
         }
         $wid = trim((string) $r->input('worker_id'));
         if ($wid !== '' && $this->user()->can('WORKER_MANAGE')) {
@@ -201,7 +204,8 @@ class VoterController extends Controller
         if ($w = $f->get('wardNo')) $s[] = t('col.wardNo') . ': ' . $w;
         foreach (['q' => 'filter.search', 'name' => 'col.name', 'relativeName' => 'col.relativeName', 'epicNo' => 'col.epicNo', 'mobile' => 'col.mobile',
                      'houseNo' => 'col.houseNo', 'district' => 'col.district', 'villageWard' => 'col.villageWard', 'caste' => 'col.caste', 'subCaste' => 'col.subCaste',
-                     'politicalStatus' => 'col.politicalStatus', 'beneficiary' => 'filter.beneficiary', 'membershipNo' => 'col.membershipNo'] as $k => $label) {
+                     'politicalStatus' => 'col.politicalStatus', 'socialStatus' => 'col.socialStatus', 'orgStatus' => 'col.organisationalStatus',
+                     'sentiment' => 'filter.leaning', 'beneficiary' => 'filter.beneficiary', 'membershipNo' => 'col.membershipNo'] as $k => $label) {
             if ($v = $f->get($k)) $s[] = t($label) . ': ' . $v;
         }
         if ($g = $f->get('gender')) $s[] = t('col.gender') . ': ' . t('gender.' . $g);

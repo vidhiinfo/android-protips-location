@@ -73,6 +73,14 @@
                         <option value="">--</option>
                         @foreach($subs as $sc)<option value="{{ $sc }}" @selected($sc === $v->sub_caste)>{{ $sc }}</option>@endforeach
                     </select></div>
+                @elseif(isset(\App\Support\StatusMasters::TABLES[$field]) && \App\Support\StatusMasters::rows($field))
+                {{-- Social / Political / Organisational Status from their masters (Masters menu) --}}
+                @php($cur = old($field, $v->$field))
+                <div class="col-md-3"><label class="form-label" for="{{ $field }}">{{ t('col.'.$key) }}</label>
+                    <select name="{{ $field }}" id="{{ $field }}" class="form-select {{ isset($errors) && $errors->first($field) ? 'is-invalid' : '' }}">
+                        <option value="">--</option>
+                        @foreach(\App\Support\StatusMasters::options($field, [$cur]) as $val => $label)<option value="{{ $val }}" @selected((string) $val === (string) $cur)>{{ $label }}</option>@endforeach
+                    </select></div>
                 @else
                 @include('partials.input', ['name' => $field, 'label' => 'col.'.$key, 'cls' => 'col-md-3', 'value' => $v->$field, 'local' => true])
                 @endif

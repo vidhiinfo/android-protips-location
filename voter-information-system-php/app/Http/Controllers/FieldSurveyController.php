@@ -75,6 +75,7 @@ class FieldSurveyController extends Controller
         $i = array_search($members->first()->id ?? $v->id, $anchors);
         if ($i === false) foreach ($members as $m) if (($i = array_search($m->id, $anchors)) !== false) break;
         return view('survey.house', ['v' => $v, 'members' => $members, 'casteTree' => Caste::tree(),
+            'statusOpts' => ['political_status' => \App\Support\StatusMasters::options('political_status'), 'social_status' => \App\Support\StatusMasters::options('social_status')],
             'statuses' => array_values(array_unique(array_merge(self::STATUSES, $this->voters->distinctValues('political_status', $v->assembly_no)))),
             'schemes' => array_values(array_unique(array_merge($this->voters->distinctValues('beneficiary1', $v->assembly_no), $this->voters->distinctValues('beneficiary2', $v->assembly_no)))),
             'prev' => $i !== false && $i > 0 ? $anchors[$i - 1] : null, 'next' => $i !== false && $i < count($anchors) - 1 ? $anchors[$i + 1] : null,
@@ -94,6 +95,7 @@ class FieldSurveyController extends Controller
             if (!$m || !$this->user()->allowsVoter($m) || !is_array($data)) continue;
             $row = [];
             foreach (self::FIELDS as $f) $row[$f] = isset($data[$f]) && trim((string) $data[$f]) !== '' ? trim((string) $data[$f]) : null;
+            foreach (['political_status', 'social_status'] as $sf) $row[$sf] = \App\Support\StatusMasters::normalize($sf, $row[$sf]);
             if ($row['mobile']) $row['mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['mobile']));
             if ($err = $fv->firstError($row)) {
                 return redirect('/survey/house/' . $v->id)->withInput()->with('error', $m->name . ': ' . t('col.' . lcfirst(str_replace('_', '', ucwords($err[0], '_')))) . ' - ' . $err[1]);

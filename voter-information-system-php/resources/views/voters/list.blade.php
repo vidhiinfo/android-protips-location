@@ -24,7 +24,7 @@
                 <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> {{ t('common.search') }}</button>
                 <a href="{{ url('/voters') }}" class="btn btn-outline-secondary" title="{{ t('common.reset') }}"><i class="bi bi-x-lg"></i></a></div>
         </div>
-        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','subCaste','politicalStatus','beneficiary','membershipNo','deleted','workerId','voted'])->contains(fn($k) => $f->get($k) !== null))
+        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','subCaste','politicalStatus','socialStatus','orgStatus','sentiment','beneficiary','membershipNo','deleted','workerId','voted'])->contains(fn($k) => $f->get($k) !== null))
         <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#adv">{{ t('list.advanced') }} <i class="bi bi-chevron-down"></i></a>
         <div id="adv" class="collapse {{ $adv ? 'show' : '' }}"><div class="row g-2 mt-1">
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.name') }}</label><input name="name" value="{{ $f->get('name') }}" class="form-control" dir="auto"></div>
@@ -53,9 +53,14 @@
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.subCaste') }}</label>
                 <select name="subCaste" class="form-select"><option value="">{{ t('common.all') }}</option>
                     @foreach($subCastes as $c)<option value="{{ $c }}" @selected($c === $f->get('subCaste'))>{{ $c }}</option>@endforeach</select></div>
-            <div class="col-6 col-md-2"><label class="form-label">{{ t('col.politicalStatus') }}</label>
-                <select name="politicalStatus" class="form-select"><option value="">{{ t('common.all') }}</option>
-                    @foreach($politicalStatuses as $c)<option value="{{ $c }}" @selected($c === $f->get('politicalStatus'))>{{ $c }}</option>@endforeach</select></div>
+            @foreach(['politicalStatus' => 'col.politicalStatus', 'socialStatus' => 'col.socialStatus', 'orgStatus' => 'col.organisationalStatus'] as $sk => $sl)
+            <div class="col-6 col-md-2"><label class="form-label">{{ t($sl) }}</label>
+                <select name="{{ $sk }}" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach($statusFilter[$sk] as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $f->get($sk))>{{ $lbl }}</option>@endforeach</select></div>
+            @endforeach
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.leaning') }}</label>
+                <select name="sentiment" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach(['S' => 'an.support', 'N' => 'an.neutral', 'O' => 'an.opposition', 'X' => 'an.other', 'U' => 'an.unknown'] as $o => $lbl)<option value="{{ $o }}" @selected($o === $f->get('sentiment'))>{{ t($lbl) }}</option>@endforeach</select></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.beneficiary') }}</label><input name="beneficiary" value="{{ $f->get('beneficiary') }}" class="form-control" dir="auto"></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.membershipNo') }}</label><input name="membershipNo" value="{{ $f->get('membershipNo') }}" class="form-control"></div>
             @if($workers->count() && !$me->workerId())
@@ -134,11 +139,13 @@
                     <option value="">{{ t('bulk.keep') }}</option>@foreach(array_keys($tree) as $c)<option value="{{ $c }}">{{ $c }}</option>@endforeach<option value="-">{{ t('bulk.clear') }}</option></select></div>
             <div><label class="form-label small mb-0">{{ t('col.subCaste') }}</label>
                 <select name="sub_caste" id="bulk-sub" class="form-select form-select-sm"><option value="">{{ t('bulk.keep') }}</option></select></div>
-            <div><label class="form-label small mb-0">{{ t('col.politicalStatus') }}</label>
-                <input name="political_status" class="form-control form-control-sm" list="bulk-status" placeholder="{{ t('bulk.keep') }}" maxlength="100">
-                <datalist id="bulk-status">@foreach(array_unique(array_merge(\App\Http\Controllers\FieldSurveyController::STATUSES, $politicalStatuses)) as $ps)<option value="{{ $ps }}">@endforeach</datalist></div>
-            <div><label class="form-label small mb-0">{{ t('col.socialStatus') }}</label><input name="social_status" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
-            <div><label class="form-label small mb-0">{{ t('col.organisationalStatus') }}</label><input name="organisational_status" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
+            @foreach(['political_status' => 'col.politicalStatus', 'social_status' => 'col.socialStatus', 'organisational_status' => 'col.organisationalStatus'] as $sf => $sl)
+            <div><label class="form-label small mb-0">{{ t($sl) }}</label>
+                @if(\App\Support\StatusMasters::rows($sf))
+                <select name="{{ $sf }}" class="form-select form-select-sm"><option value="">{{ t('bulk.keep') }}</option>
+                    @foreach(\App\Support\StatusMasters::options($sf) as $o => $lbl)<option value="{{ $o }}">{{ $lbl }}</option>@endforeach<option value="-">{{ t('bulk.clear') }}</option></select>
+                @else<input name="{{ $sf }}" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100">@endif</div>
+            @endforeach
             <div><label class="form-label small mb-0">{{ t('col.placeOfOrigin') }}</label><input name="place_of_origin" class="form-control form-control-sm" placeholder="{{ t('bulk.keep') }}" maxlength="100"></div>
             @if(can('WORKER_MANAGE') && $workers->count())
             <div><label class="form-label small mb-0">{{ t('worker.worker') }}</label>

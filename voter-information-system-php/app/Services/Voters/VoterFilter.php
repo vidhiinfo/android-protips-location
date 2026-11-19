@@ -15,7 +15,7 @@ class VoterFilter
         'gender' => 'gender', 'age' => 'age', 'assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'serialNo' => 'serial_no',
         'villageWard' => 'village_ward', 'wardNo' => 'ward_no', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
     public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'wardNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
-        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment', 'workerId', 'voted'];
+        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'socialStatus', 'orgStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment', 'workerId', 'voted'];
 
     public array $v = [];
     public string $sort = 'assemblyNo';
@@ -103,7 +103,8 @@ class VoterFilter
         }
         if ($s = $this->get('houseNo')) $q->whereRaw(Text::HOUSE_KEY_SQL . ' = ?', [Text::houseKey($s)]);   // RZ-154 = R Z-154
         foreach (['assemblyNo' => 'assembly_no', 'wardNo' => 'ward_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward',
-                     'caste' => 'caste', 'subCaste' => 'sub_caste', 'politicalStatus' => 'political_status'] as $k => $c) {
+                     'caste' => 'caste', 'subCaste' => 'sub_caste', 'politicalStatus' => 'political_status', 'socialStatus' => 'social_status',
+                     'orgStatus' => 'organisational_status'] as $k => $c) {
             if (($val = $this->get($k)) !== null) $q->where($c, $val);
         }
         if (($a = $this->get('ageMin')) !== null) $q->where('age', '>=', $a);

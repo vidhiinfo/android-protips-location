@@ -42,7 +42,10 @@
                 <div class="col-12 col-sm-6"><label class="form-label small mb-0">{{ t('col.mobile') }}</label>
                     <input name="m[{{ $m->id }}][mobile]" value="{{ $val('mobile') }}" class="form-control" inputmode="tel" maxlength="14" autocomplete="off"></div>
                 <div class="col-12 col-sm-6"><label class="form-label small mb-0">{{ t('col.politicalStatus') }}</label>
-                    <input name="m[{{ $m->id }}][political_status]" value="{{ $val('political_status') }}" class="form-control" list="dl-status" data-f="political_status" maxlength="100"></div>
+                    @if($statusOpts['political_status'])
+                    <select name="m[{{ $m->id }}][political_status]" class="form-select" data-f="political_status"><option value="">--</option>
+                        @foreach($statusOpts['political_status'] + ($val('political_status') && !isset($statusOpts['political_status'][$val('political_status')]) ? [$val('political_status') => $val('political_status')] : []) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val('political_status'))>{{ $lbl }}</option>@endforeach</select>
+                    @else<input name="m[{{ $m->id }}][political_status]" value="{{ $val('political_status') }}" class="form-control" list="dl-status" data-f="political_status" maxlength="100">@endif</div>
                 @php($castes = array_keys($casteTree))
                 @if($val('caste') && !in_array($val('caste'), $castes))@php($castes[] = $val('caste'))@endif
                 <div class="col-6"><label class="form-label small mb-0">{{ t('col.caste') }}</label>
@@ -65,7 +68,10 @@
                     <input name="m[{{ $m->id }}][{{ $bf }}]" value="{{ $val($bf) }}" class="form-control" list="dl-scheme" maxlength="150"></div>
                 @endforeach
                 <div class="col-12 col-sm-4"><label class="form-label small mb-0">{{ t('col.socialStatus') }}</label>
-                    <input name="m[{{ $m->id }}][social_status]" value="{{ $val('social_status') }}" class="form-control" maxlength="100"></div>
+                    @if($statusOpts['social_status'])
+                    <select name="m[{{ $m->id }}][social_status]" class="form-select"><option value="">--</option>
+                        @foreach($statusOpts['social_status'] + ($val('social_status') && !isset($statusOpts['social_status'][$val('social_status')]) ? [$val('social_status') => $val('social_status')] : []) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val('social_status'))>{{ $lbl }}</option>@endforeach</select>
+                    @else<input name="m[{{ $m->id }}][social_status]" value="{{ $val('social_status') }}" class="form-control" maxlength="100">@endif</div>
                 <div class="col-6 col-sm-4"><label class="form-label small mb-0">{{ t('col.placeOfOrigin') }}</label>
                     <input name="m[{{ $m->id }}][place_of_origin]" value="{{ $val('place_of_origin') }}" class="form-control" data-f="place_of_origin" maxlength="100"></div>
                 <div class="col-6 col-sm-4"><label class="form-label small mb-0">{{ t('col.membershipNo') }}</label>

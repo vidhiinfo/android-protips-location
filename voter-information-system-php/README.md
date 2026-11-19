@@ -27,7 +27,7 @@ The PHP version of the Voter Information System. It has the same screens, the sa
 * **Results**: booth-wise result entry, seat results with winner, margin and turnout.
 * **SMS and WhatsApp**: templates, campaigns from any voter filter, opt-out list, sending window, rate limit and election silence period. Providers: Twilio, Meta WhatsApp Cloud API, or any HTTP SMS gateway. Dry-run mode until a provider is set.
 * **Audit log** of logins and every change, with the user's IP address and browser / device; filter by IP.
-* **Masters**: assemblies, booths, parties, elections, candidates.
+* **Masters**: assemblies, booths, parties, elections, candidates, castes / sub castes, and Social / Political / Organisational Status lists (drop-downs everywhere; Political Status leaning drives the analytics).
 
 ## Requirements
 
@@ -68,7 +68,7 @@ The demo data is fictional: three assemblies with Hindi, Urdu and Bengali names,
 ## Tests
 
 ```bash
-php artisan test        # 56 tests on in-memory SQLite
+php artisan test        # 61 tests on in-memory SQLite
 # the same suite on MySQL:
 DB_CONNECTION=mysql DB_DATABASE=voter_test DB_USERNAME=... DB_PASSWORD=... php artisan test
 ```

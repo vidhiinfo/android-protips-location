@@ -82,8 +82,9 @@ class ExcelExporter
     {
         $cols = [['col.assemblyNo', 'assembly_no'], ['col.wardNo', 'ward_no'], ['col.boothNo', 'booth_no'], ['col.serialNo', 'serial_no'],
             ['col.houseNo', 'house_no'], ['col.epicNo', 'epic_no'], ['col.name', 'name'], ['col.relativeName', 'relative_name'],
-            ['col.gender', 'gender'], ['col.age', 'age'], ['col.caste', 'caste'], ['col.subCaste', 'sub_caste'], ['col.mobile', 'mobile'], ['col.remarks', 'remarks']];
-        $fill = ['caste', 'sub_caste', 'mobile', 'remarks'];
+            ['col.gender', 'gender'], ['col.age', 'age'], ['col.caste', 'caste'], ['col.subCaste', 'sub_caste'], ['col.politicalStatus', 'political_status'],
+            ['col.socialStatus', 'social_status'], ['col.mobile', 'mobile'], ['col.remarks', 'remarks']];
+        $fill = ['caste', 'sub_caste', 'political_status', 'social_status', 'mobile', 'remarks'];
         $book = new Spreadsheet();
         $sh = $book->getActiveSheet();
         $sh->setTitle(mb_substr(t('survey.sheet'), 0, 31));
@@ -118,12 +119,19 @@ class ExcelExporter
         $castes = array_keys($tree); $subs = array_values(array_unique(array_merge([], ...array_values($tree ?: [[]]))));
         foreach ($castes as $i => $c) $lists->setCellValueExplicit('A' . ($i + 2), $c, DataType::TYPE_STRING);
         foreach ($subs as $i => $c) $lists->setCellValueExplicit('B' . ($i + 2), $c, DataType::TYPE_STRING);
+        // Political / Social Status: names from their masters (columns C and D of the lists sheet)
+        $statusLists = ['political_status' => ['C', array_keys(\App\Support\StatusMasters::options('political_status'))], 'social_status' => ['D', array_keys(\App\Support\StatusMasters::options('social_status'))]];
+        foreach ($statusLists as $sf => [$lc, $vals]) {
+            $lists->setCellValue($lc . '1', t($sf === 'political_status' ? 'col.politicalStatus' : 'col.socialStatus'));
+            foreach ($vals as $i => $c) $lists->setCellValueExplicit($lc . ($i + 2), $c, DataType::TYPE_STRING);
+        }
         $listRef = "'" . str_replace("'", "''", $lists->getTitle()) . "'";
         foreach ($cols as $i => [, $f]) {
             if (!in_array($f, $fill, true)) continue;
             $col = Coordinate::stringFromColumnIndex($i + 1);
             $sh->getStyle("{$col}3:{$col}{$end}")->getFill()->setFillType('solid')->getStartColor()->setRGB('FFF2CC');
             $range = $f === 'caste' && $castes ? '$A$2:$A$' . (count($castes) + 1) : ($f === 'sub_caste' && $subs ? '$B$2:$B$' . (count($subs) + 1) : null);
+            if (isset($statusLists[$f]) && $statusLists[$f][1]) $range = '$' . $statusLists[$f][0] . '$2:$' . $statusLists[$f][0] . '$' . (count($statusLists[$f][1]) + 1);
             if (!$range) continue;
             $dv = new \PhpOffice\PhpSpreadsheet\Cell\DataValidation();
             $dv->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION)
@@ -132,7 +140,7 @@ class ExcelExporter
         }
         $sh->freezePane('A4');
         $sh->setAutoFilter("A3:{$last}{$end}");
-        foreach ([8, 7, 7, 7, 12, 14, 26, 26, 9, 6, 18, 18, 14, 24] as $i => $w) $sh->getColumnDimension(Coordinate::stringFromColumnIndex($i + 1))->setWidth($w);
+        foreach ([8, 7, 7, 7, 12, 14, 26, 26, 9, 6, 18, 18, 22, 20, 14, 24] as $i => $w) $sh->getColumnDimension(Coordinate::stringFromColumnIndex($i + 1))->setWidth($w);
         $sh->getPageSetup()->setOrientation('landscape')->setFitToWidth(1)->setFitToHeight(0);
         $sh->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(3, 3);
         $book->setActiveSheetIndex(0);

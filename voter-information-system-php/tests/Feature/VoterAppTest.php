@@ -281,17 +281,18 @@ class VoterAppTest extends TestCase
         file_put_contents($path, $res->getContent());
         $book = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
         $sh = $book->getSheet(0);
-        $head = $sh->rangeToArray('A3:N3')[0];
+        $head = $sh->rangeToArray('A3:P3')[0];
+        $this->assertSame([t('col.politicalStatus'), t('col.socialStatus'), t('col.mobile')], [$head[12], $head[13], $head[14]]);
         $this->assertSame(t('col.caste'), $head[10]);
         $this->assertNotEmpty($sh->getDataValidationCollection());
-        $rows = $sh->rangeToArray('A4:N' . $sh->getHighestRow());
+        $rows = $sh->rangeToArray('A4:P' . $sh->getHighestRow());
         $this->assertSame(Voter::where('assembly_no', 45)->where('booth_no', $wife->booth_no)->count(), count($rows));
         // pick a voter without caste, fill it in the sheet, upload
         $target = null;
         foreach ($rows as $i => $row) if (!$row[10]) { $target = [$i + 4, $row[5]]; break; }
         $this->assertNotNull($target);
         $sh->setCellValue('K' . $target[0], 'Saini');
-        $sh->setCellValue('M' . $target[0], '9876501234');
+        $sh->setCellValue('O' . $target[0], '9876501234');
         \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($book, 'Xlsx')->save($path);
         $before = Voter::where('epic_no', $target[1])->first();
         $this->post('/voters/import', ['file' => new UploadedFile($path, 'survey.xlsx', null, null, true)])->assertOk();

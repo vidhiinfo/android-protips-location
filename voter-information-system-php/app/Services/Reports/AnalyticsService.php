@@ -56,9 +56,14 @@ class AnalyticsService
             ->when(!$withDeleted, fn ($q) => $q->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted')));
     }
 
-    /** Political status grouped into S(upport) / N(eutral) / O(pposition) / X (other answer) / U (not surveyed). */
+    /** Political status grouped into S(upport) / N(eutral) / O(pposition) / X (other answer) / U (not surveyed):
+     *  the leaning set in the Political Status master first, then keywords for values typed before the master existed. */
     public const SENTIMENT_SQL = "case
         when political_status is null or trim(political_status) = '' then 'U'
+        when exists (select 1 from political_statuses ps where ps.name = political_status and ps.leaning = 'S') then 'S'
+        when exists (select 1 from political_statuses ps where ps.name = political_status and ps.leaning = 'N') then 'N'
+        when exists (select 1 from political_statuses ps where ps.name = political_status and ps.leaning = 'O') then 'O'
+        when exists (select 1 from political_statuses ps where ps.name = political_status and ps.leaning = 'U') then 'U'
         when lower(political_status) like '%oppos%' or lower(political_status) like '%against%' or lower(political_status) like '%anti%' then 'O'
         when lower(political_status) like '%neutral%' or lower(political_status) like '%undecided%' or lower(political_status) like '%swing%' then 'N'
         when lower(political_status) like '%support%' or lower(political_status) like '%karyakarta%' or lower(political_status) like '%worker%'
@@ -70,6 +75,8 @@ class AnalyticsService
     {
         $s = mb_strtolower(trim((string) $status));
         if ($s === '') return 'U';
+        $lean = \App\Support\StatusMasters::leanings();   // the Political Status master decides first (cached per request)
+        if (isset($lean[$s]) && in_array($lean[$s], ['S', 'N', 'O', 'U'], true)) return $lean[$s];
         foreach (['O' => ['oppos', 'against', 'anti'], 'N' => ['neutral', 'undecided', 'swing'],
                      'S' => ['support', 'karyakarta', 'worker', 'member', 'favour', 'favor', 'loyal']] as $k => $words) {
             foreach ($words as $w) if (str_contains($s, $w)) return $k;

@@ -32,6 +32,10 @@
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url('/masters/castes') }}">{{ t('master.castes') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/masters/subcastes') }}">{{ t('master.subCastes') }}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url('/masters/socialstatuses') }}">{{ t('master.socialStatuses') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/masters/politicalstatuses') }}">{{ t('master.politicalStatuses') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/masters/orgstatuses') }}">{{ t('master.orgStatuses') }}</a></li>
                     </ul></li>
                 @endif
                 @if(can('RESULT_VIEW'))

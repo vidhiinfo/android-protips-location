@@ -33,11 +33,13 @@
     </div>
     <div class="table-responsive bg-white border rounded"><table class="table table-striped table-hover mb-0 align-middle">
         <thead class="table-light"><tr>@if($d['type'] === 'parties')<th></th>@endif
-            @foreach($listFields as $k => $f)<th>{{ $k === 'current' ? t('master.current') : t($f[0]) }}</th>@endforeach @if(can('MASTER_EDIT'))<th></th>@endif</tr></thead>
+            @foreach($listFields as $k => $f)<th>{{ $k === 'current' ? t('master.current') : t($f[0]) }}</th>@endforeach
+            @if(!empty($d['usage']))<th class="text-end">{{ t('dash.voters') }}</th>@endif @if(can('MASTER_EDIT'))<th></th>@endif</tr></thead>
         <tbody>
         @forelse($items as $i)
             <tr>@if($d['type'] === 'parties')<td><span class="d-inline-block rounded-circle" style="width:14px;height:14px;background:{{ $i->color ?: '#6c757d' }}"></span></td>@endif
                 @foreach($listFields as $k => $f)<td @if($f[1] === 'local') dir="auto" @endif>{{ \App\Http\Controllers\MasterController::display($i, $k, $d) }}</td>@endforeach
+                @if(!empty($d['usage']))@php($n = $usage[$i->name] ?? 0)<td class="text-end">@if($n)<a href="{{ url('/voters') }}?{{ http_build_query([['socialstatuses' => 'socialStatus', 'politicalstatuses' => 'politicalStatus', 'orgstatuses' => 'orgStatus'][$d['type']] => $i->name]) }}">{{ $n }}</a>@else 0 @endif</td>@endif
                 @if(can('MASTER_EDIT'))<td class="text-end text-nowrap">
                     <a class="btn btn-sm btn-outline-secondary" href="{{ url('/masters/'.$d['type'].'/'.$i->id.'/edit') }}" title="{{ t('common.edit') }}"><i class="bi bi-pencil"></i></a>
                     <form action="{{ url('/masters/'.$d['type'].'/'.$i->id.'/delete') }}" method="post" class="d-inline" data-confirm="{{ t('common.confirmDelete') }}">@csrf
@@ -48,5 +50,13 @@
         @endforelse
         </tbody></table></div>
     @if(!empty($d['hint']))<p class="small text-muted mt-2">{{ t($d['hint']) }}</p>@endif
+    @if(!empty($missing))
+    <div class="card mt-3"><div class="card-header fw-semibold">{{ t('master.notInMaster') }}</div><div class="card-body">
+        <p class="small text-muted">{{ t('master.notInMasterHint') }}</p>
+        <div class="d-flex flex-wrap gap-2">@foreach($missing as $v => $n)
+            <span class="border rounded px-2 py-1 bg-light"><span dir="auto">{{ $v }}</span> <span class="badge text-bg-secondary">{{ $n }}</span>
+                @if(can('MASTER_EDIT'))<a class="ms-1" href="{{ url('/masters/'.$d['type'].'/new') }}?name={{ urlencode($v) }}" title="{{ t('common.add') }}"><i class="bi bi-plus-circle"></i></a>@endif</span>
+        @endforeach</div></div></div>
+    @endif
 </div>
 @endsection
