@@ -226,8 +226,9 @@ class RollUpdateService
     {
         @set_time_limit(0);
         @ignore_user_abort(true);
-        $done = ['updated' => 0, 'added' => 0, 'deleted' => 0, 'pannaCleared' => 0, 'failed' => []];
+        $done = ['updated' => 0, 'added' => 0, 'deleted' => 0, 'pannaCleared' => 0, 'grievances' => 0, 'failed' => []];
         $now = now();
+        $this->planAreas($u);
         DB::table('roll_update_rows')->where('roll_update_id', $u->id)->whereNull('before')
             ->where(fn ($q) => $q->where('action', '<>', 'SAME')->orWhereNotNull('changes'))
             ->orderBy('id')->chunkById(self::CHUNK, function ($rows) use (&$done, $now, $u) {
@@ -258,6 +259,12 @@ class RollUpdateService
                         foreach ($upd as $f => $_) $before[$f] = $v->$f;
                         try {
                             if ($upd) self::voters()->where('id', $v->id)->update($upd + ['updated_at' => $now]);
+                            // the voter's grievances follow them to the new booth / ward
+                            $g = array_intersect_key($upd, ['booth_no' => 1, 'ward_no' => 1]);
+                            if ($g && ($n = DB::table('grievances')->where('voter_id', $v->id)->update($g))) {
+                                $before['__grv'] = array_intersect_key($before, $g);
+                                $done['grievances'] += $n;
+                            }
                             DB::table('roll_update_rows')->where('id', $r->id)->update(['before' => self::json((object) $before)]);
                             $r->action === 'DELETED' ? $done['deleted']++ : $done['updated']++;
                         } catch (\Throwable $e) { $done['failed'][] = ($r->epic_no ?: $r->name) . ': ' . $e->getMessage(); }
@@ -265,11 +272,64 @@ class RollUpdateService
                 });
             });
         if (!$done['failed']) {
+            $done['areas'] = $this->moveAreas($u);
             // rows with nothing to undo are not needed any more (the booth table is kept in "counts")
             DB::table('roll_update_rows')->where('roll_update_id', $u->id)->where('action', 'SAME')->whereNull('changes')->delete();
             $u->update(['status' => 'APPLIED', 'applied_by' => $user, 'applied_at' => $now]);
         }
         return $done;
+    }
+
+    /**
+     * Logins limited to a serial range of one booth (a panna page): remembers which voters each range covers now,
+     * before any voter is changed (kept in "counts", so a resumed apply uses the same plan).
+     */
+    private function planAreas(RollUpdate $u): void
+    {
+        $c = $u->countsData();
+        if (array_key_exists('areaPlan', $c) || !\Illuminate\Support\Facades\Schema::hasColumn('app_users', 'scope_serial_from')) return;
+        $plan = [];
+        foreach (DB::table('app_users')->where('assembly_no', $u->assembly_no)->where(fn ($q) => $q->whereNotNull('scope_serial_from')->orWhereNotNull('scope_serial_to'))
+                     ->get(['id', 'username', 'scope_booths', 'scope_serial_from', 'scope_serial_to']) as $usr) {
+            $booths = \App\Support\Area::ints($usr->scope_booths);
+            if (count($booths) !== 1 || !in_array($booths[0], $u->boothList(), true)) continue;   // booth not in the new roll: nothing changes
+            $ids = self::voters()->where('assembly_no', $u->assembly_no)->where('booth_no', $booths[0])
+                ->when($usr->scope_serial_from !== null, fn ($q) => $q->where('serial_no', '>=', $usr->scope_serial_from))
+                ->when($usr->scope_serial_to !== null, fn ($q) => $q->where('serial_no', '<=', $usr->scope_serial_to))
+                ->where(fn ($q) => $q->where('deleted', false)->orWhereNull('deleted'))->pluck('id')->all();
+            $plan[] = ['user' => $usr->id, 'username' => $usr->username, 'booth' => $booths[0], 'from' => $usr->scope_serial_from,
+                'to' => $usr->scope_serial_to, 'voters' => $ids];
+        }
+        $c['areaPlan'] = $plan;
+        $u->counts = self::json($c);
+        $u->save();
+    }
+
+    /**
+     * After the update: each planned range becomes the new first to last serial no. of the same voters still in that booth
+     * (new voters in between are included, as they are on the same roll page). A range with none of its voters left is not changed.
+     */
+    private function moveAreas(RollUpdate $u): array
+    {
+        $c = $u->countsData();
+        $out = [];
+        foreach ($c['areaPlan'] ?? [] as $p) {
+            $q = self::voters()->whereIn('id', $p['voters'] ?: [0])->where('assembly_no', $u->assembly_no)->where('booth_no', $p['booth'])
+                ->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted'));
+            $from = (clone $q)->min('serial_no');
+            $to = (clone $q)->max('serial_no');
+            $row = ['username' => $p['username'], 'booth' => $p['booth'], 'from' => $p['from'], 'to' => $p['to'], 'newFrom' => null, 'newTo' => null];
+            if ($from !== null) {
+                $row['newFrom'] = (int) $from;
+                $row['newTo'] = (int) $to;
+                DB::table('app_users')->where('id', $p['user'])->update(['scope_serial_from' => (int) $from, 'scope_serial_to' => (int) $to]);
+            }
+            $out[] = $row;
+        }
+        $c['areas'] = $out;
+        $u->counts = self::json($c);
+        $u->save();
+        return $out;
     }
 
     // ------------------------------------------------------------------ 3. undo
@@ -297,13 +357,20 @@ class RollUpdateService
                             DB::table('roll_update_rows')->where('id', $r->id)->update(['voter_id' => null]);
                             $res['removed']++;
                         } elseif ($b && empty($b['gone'])) {
-                            self::voters()->where('id', $r->voter_id)->update($b + ['updated_at' => now()]);
+                            if (isset($b['__grv'])) {
+                                if ($b['__grv']) DB::table('grievances')->where('voter_id', $r->voter_id)->update($b['__grv']);
+                                unset($b['__grv']);
+                            }
+                            if ($b) self::voters()->where('id', $r->voter_id)->update($b + ['updated_at' => now()]);
                             $res['restored']++;
                         }
                         DB::table('roll_update_rows')->where('id', $r->id)->update(['before' => null]);
                     }
                 });
             }, 'id');
+        foreach ($u->countsData()['areaPlan'] ?? [] as $p) {
+            DB::table('app_users')->where('id', $p['user'])->update(['scope_serial_from' => $p['from'], 'scope_serial_to' => $p['to']]);
+        }
         $u->update(['status' => 'UNDONE', 'undone_at' => now()]);
         return $res;
     }

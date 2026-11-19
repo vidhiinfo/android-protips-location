@@ -32,6 +32,7 @@
         <div class="alert {{ $result['failed'] ? 'alert-warning' : 'alert-success' }} py-2">
             {{ t('roll.result', number_format($result['updated']), number_format($result['added']), number_format($result['deleted'])) }}
             @if($result['pannaCleared']) {{ t('roll.pannaCleared', number_format($result['pannaCleared'])) }}@endif
+            @if($result['grievances'] ?? 0) {{ t('roll.grievances', number_format($result['grievances'])) }}@endif
             @if($result['failed'])<div class="fw-semibold mt-1">{{ t('roll.failed', count($result['failed'])) }}</div>
                 <ul class="small mb-0">@foreach(array_slice($result['failed'], 0, 20) as $f)<li>{{ $f }}</li>@endforeach</ul>@endif
         </div>
@@ -56,6 +57,18 @@
             <i class="bi bi-exclamation-triangle"></i> {{ t('roll.surveyDeleted', number_format($c['surveyDeleted'] ?? 0)) }}</a></div>
     </div>
 
+    @if(!empty($c['areas']))
+    <div class="card mb-3"><div class="card-body py-2">
+        <h6 class="mb-1"><i class="bi bi-person-lock"></i> {{ t('roll.areas') }}</h6>
+        <ul class="small mb-0">
+        @foreach($c['areas'] as $ar)
+            @if($ar['newFrom'] === null)<li class="text-danger">{{ t('roll.areaEmpty', $ar['username'], $ar['booth'], $ar['from'] ?? '', $ar['to'] ?? '') }}</li>
+            @else<li>{{ t('roll.areaMoved', $ar['username'], $ar['booth'], $ar['from'] ?? '', $ar['to'] ?? '', $ar['newFrom'], $ar['newTo']) }}</li>@endif
+        @endforeach
+        </ul>
+        @if($u->status === 'UNDONE')<div class="small text-muted mt-1">{{ t('roll.areasUndone') }}</div>@endif
+    </div></div>
+    @endif
     @if($errs)
     <details class="mb-3"><summary class="text-danger fw-semibold">{{ t('roll.errorCount', count($errs) >= 300 ? '300+' : count($errs)) }}</summary>
         <ul class="small text-danger mt-2">@foreach($errs as $e)<li>{{ $e }}</li>@endforeach</ul></details>

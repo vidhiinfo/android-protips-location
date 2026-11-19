@@ -146,4 +146,44 @@ class RollUpdateTest extends TestCase
         $this->post('/roll-update', ['assemblyNo' => 77, 'file' => $this->roll()])->assertOk()->assertSee(t('roll.error.area'));
         $this->assertSame(0, RollUpdate::count());
     }
+
+    public function test_serial_access_areas_and_grievances_follow_the_new_roll(): void
+    {
+        $this->login();   // creates the roles
+        $mk = function ($name, $booth, $from, $to) {
+            $u = AppUser::create(['username' => $name, 'full_name' => $name, 'enabled' => true, 'assembly_no' => 77, 'created_at' => now(), 'scope_booths' => (string) $booth,
+                'scope_serial_from' => $from, 'scope_serial_to' => $to, 'password_hash' => AppUser::hashPassword('secret@123')]);
+            $u->roles()->attach(Role::where('code', 'OPERATOR')->value('id'));
+            return $u;
+        };
+        $page = $mk('pp1', 1, 1, 2);     // Ram Kumar and Sita Devi
+        $gone = $mk('pp2', 2, 1, 1);     // only Gone Person, who is not in the new roll
+        $other = $mk('pp3', 3, 1, 5);    // booth 3 is not in the file
+        $grv = DB::table('grievances')->insertGetId(['voter_id' => $this->v('RU0000003')->id, 'assembly_no' => 77, 'booth_no' => 1, 'name' => 'Shyam Lal',
+            'category' => 'OTHER', 'subject' => 'Road', 'status' => 'OPEN', 'priority' => 'NORMAL', 'created_at' => now()]);
+        // the new roll renumbers booth 1: Ram Kumar 11, Sita Devi 12, a new voter 13
+        $this->post('/roll-update', ['assemblyNo' => 77, 'file' => $this->roll([
+            ['77', '1', '13', 'RU0000013', 'New In Booth One', 'X', 'M', '19', '13', ''],
+        ])]);
+        $u = RollUpdate::firstOrFail();
+        DB::table('roll_update_rows')->where('roll_update_id', $u->id)->where('epic_no', 'RU0000001')->update(['data' => json_encode(['assembly_no' => 77, 'booth_no' => 1, 'serial_no' => 11, 'epic_no' => 'RU0000001', 'name' => 'Ram Kumar']), 'changes' => '{"serial_no":[1,11]}']);
+        DB::table('roll_update_rows')->where('roll_update_id', $u->id)->where('epic_no', 'RU0000002')->update(['data' => json_encode(['assembly_no' => 77, 'booth_no' => 1, 'serial_no' => 12, 'epic_no' => 'RU0000002', 'name' => 'Seeta Devi'])]);
+        $this->post('/roll-update/' . $u->id . '/apply')->assertRedirect();
+        $this->assertSame([11, 12], [(int) $page->fresh()->scope_serial_from, (int) $page->fresh()->scope_serial_to]);
+        $this->assertSame([1, 1], [(int) $gone->fresh()->scope_serial_from, (int) $gone->fresh()->scope_serial_to]);   // nothing left: unchanged, flagged
+        $this->assertSame([1, 5], [(int) $other->fresh()->scope_serial_from, (int) $other->fresh()->scope_serial_to]);
+        $this->assertSame(2, (int) DB::table('grievances')->where('id', $grv)->value('booth_no'));
+        $this->get('/roll-update/' . $u->id)->assertOk()->assertSee(t('roll.areas'))
+            ->assertSee(t('roll.areaMoved', 'pp1', 1, 1, 2, 11, 12))->assertSee(t('roll.areaEmpty', 'pp2', 2, 1, 1));
+        // the panna pramukh login now sees its voters at their new serial numbers
+        $this->post('/logout');
+        $this->post('/login', ['username' => 'pp1', 'password' => 'secret@123', 'assemblyNo' => 77]);
+        $this->get('/voters')->assertOk()->assertSee('RU0000001')->assertSee('RU0000002')->assertDontSee('RU0000013');
+        $this->post('/logout');
+        $this->login();
+
+        $this->post('/roll-update/' . $u->id . '/undo')->assertRedirect();
+        $this->assertSame([1, 2], [(int) $page->fresh()->scope_serial_from, (int) $page->fresh()->scope_serial_to]);
+        $this->assertSame(1, (int) DB::table('grievances')->where('id', $grv)->value('booth_no'));
+    }
 }

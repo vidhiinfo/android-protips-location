@@ -1081,5 +1081,10 @@
 "roll.error.assembly": "Choose the assembly.",
 "roll.error.pending": "This assembly has a comparison waiting to be applied or discarded. Open it below.",
 "roll.error.area": "Your login is limited to some wards / booths. A roll update needs a login for the whole assembly.",
-"roll.error.undo": "Only the latest applied roll update of an assembly can be undone."
+"roll.error.undo": "Only the latest applied roll update of an assembly can be undone.",
+"roll.grievances": "{0} grievances moved to their voter's new booth.",
+"roll.areas": "Access areas (serial ranges) adjusted to the new roll",
+"roll.areaMoved": "{0}: booth {1}, serial {2}–{3} → {4}–{5}",
+"roll.areaEmpty": "{0}: booth {1}, serial {2}–{3}: none of its voters are left in this booth. Set the range again in Admin > Users.",
+"roll.areasUndone": "Undo put the old serial ranges back."
 }
