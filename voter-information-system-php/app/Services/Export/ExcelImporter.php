@@ -101,7 +101,7 @@ class ExcelImporter
         $casteCategory = \App\Models\Caste::whereNotNull('category')->get()->mapWithKeys(fn ($c) => [mb_strtolower($c->name) => $c->category])->all();
         $save = function () use (&$buf, &$inserted, &$updated, &$errors, $onlyAssembly, $fields, $casteCategory) {
             $epic = fn ($d) => strtoupper((string) Text::asciiDigits($d['epic_no']));
-            $existing = Voter::whereIn('epic_no', array_map(fn ($b) => $epic($b[1]), $buf))->get()->keyBy('epic_no')->all();
+            $existing = Voter::withoutGlobalScope('area')->whereIn('epic_no', array_map(fn ($b) => $epic($b[1]), $buf))->get()->keyBy('epic_no')->all();
             foreach ($buf as [$label, $data]) {
                 $voter = $existing[$epic($data)] ?? new Voter();
                 if ($onlyAssembly !== null && ($data['assembly_no'] !== $onlyAssembly || ($voter->exists && $voter->assembly_no !== $onlyAssembly))) {
@@ -109,6 +109,10 @@ class ExcelImporter
                     continue;
                 }
                 $isNew = !$voter->exists;
+                if (($voter->exists && !\App\Support\Area::fits($voter)) || !\App\Support\Area::fits(array_intersect_key($data, $fields) + ($voter->exists ? $voter->only(['ward_no', 'booth_no', 'serial_no']) : []))) {
+                    $errors[] = t('import.row', $label) . ': ' . t('area.outside');
+                    continue;
+                }
                 $voter->fill(array_intersect_key($data, $fields));
                 if ($voter->caste && !$voter->category) $voter->category = $casteCategory[mb_strtolower($voter->caste)] ?? null;   // from the Caste master
                 try { $voter->save(); $isNew ? $inserted++ : $updated++; $existing[$voter->epic_no] = $voter; }

@@ -973,5 +973,17 @@
 "filter.leaning": "Leaning",
 "entity.SOCIAL_STATUS": "Social Status",
 "entity.POLITICAL_STATUS": "Political Status",
-"entity.ORG_STATUS": "Organisational Status"
+"entity.ORG_STATUS": "Organisational Status",
+"area.title": "Access area",
+"area.help": "Limit this login to part of its assembly. Leave empty for the whole assembly. Applies to every screen: voter list, exports, field survey, dashboard, reports, analytics, poll day and grievances.",
+"area.wards": "Ward No(s)",
+"area.booths": "Booth No(s)",
+"area.serialFrom": "Serial from",
+"area.serialTo": "Serial to",
+"area.examples": "Examples: ward in-charge = Ward 102 · booth president = Booth 3 · panna pramukh = Booth 3, serial 31 to 60.",
+"area.serials": "Sr. {0}-{1}",
+"area.outside": "This is outside your access area (ward / booth / serial no.).",
+"area.needsAssembly": "Choose the assembly first: an access area is part of one assembly.",
+"area.oneBooth": "A serial range needs exactly one booth.",
+"area.fromTo": "\"Serial from\" must not be more than \"Serial to\"."
 }

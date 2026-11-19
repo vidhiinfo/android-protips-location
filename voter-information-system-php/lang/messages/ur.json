@@ -967,5 +967,17 @@
 "filter.leaning": "جھکاؤ",
 "entity.SOCIAL_STATUS": "سماجی حیثیت",
 "entity.POLITICAL_STATUS": "سیاسی حیثیت",
-"entity.ORG_STATUS": "تنظیمی حیثیت"
+"entity.ORG_STATUS": "تنظیمی حیثیت",
+"area.title": "رسائی کا علاقہ",
+"area.help": "اس لاگ ان کو اسمبلی کے ایک حصے تک محدود کریں۔ پوری اسمبلی کے لیے خالی چھوڑیں۔ ہر اسکرین پر لاگو۔",
+"area.wards": "وارڈ نمبر",
+"area.booths": "بوتھ نمبر",
+"area.serialFrom": "سیریل سے",
+"area.serialTo": "سیریل تک",
+"area.examples": "مثالیں: وارڈ انچارج = وارڈ 102 · بوتھ صدر = بوتھ 3 · پنّا پرمکھ = بوتھ 3، سیریل 31 سے 60۔",
+"area.serials": "سیریل {0}-{1}",
+"area.outside": "یہ آپ کے رسائی کے علاقے سے باہر ہے۔",
+"area.needsAssembly": "پہلے اسمبلی منتخب کریں۔",
+"area.oneBooth": "سیریل حد کے لیے ایک ہی بوتھ ضروری ہے۔",
+"area.fromTo": "\"سے\" \"تک\" سے بڑا نہیں ہو سکتا۔"
 }

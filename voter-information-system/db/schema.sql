@@ -330,6 +330,10 @@ CREATE TABLE IF NOT EXISTS app_users (
     full_name      VARCHAR(100) NOT NULL,
     enabled        BIT          NOT NULL DEFAULT 1,
     assembly_no    INT                   COMMENT 'NULL = may log in to any assembly',
+    scope_wards       VARCHAR(200)          COMMENT 'access area: ward numbers, e.g. "101, 102" (empty = all)',
+    scope_booths      VARCHAR(500)          COMMENT 'access area: booth numbers, e.g. "3, 4"',
+    scope_serial_from INT                   COMMENT 'access area: serial range inside one booth',
+    scope_serial_to   INT,
     last_login     DATETIME(6),
     created_at     DATETIME(6),
     CONSTRAINT uk_user_username UNIQUE (username)

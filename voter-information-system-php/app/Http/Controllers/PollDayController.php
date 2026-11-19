@@ -129,7 +129,7 @@ class PollDayController extends Controller
                 $rows[] = $row; foreach ($tot as $k => $_) $tot[$k] += $row[$k];
             }
             foreach (PollMark::where('election_id', $e->id)->where('assembly_no', $a)->get(['marked_at', 'booth_no']) as $m) {
-                if ($w !== null && !collect($rows)->contains('b', $m->booth_no)) continue;
+                if (!collect($rows)->contains('b', $m->booth_no)) continue;   // only booths of the selected ward / the user's area
                 $h = (int) $m->marked_at->format('G'); $hours[$h] = ($hours[$h] ?? 0) + 1;
             }
             ksort($hours);

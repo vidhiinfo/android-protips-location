@@ -45,6 +45,8 @@ class Voter extends Model
 
     protected static function booted(): void
     {
+        // a user with an access area (ward / booth / serial range) only ever sees the voters inside it
+        static::addGlobalScope('area', fn ($q) => \App\Support\Area::apply($q, $q->getModel()->getTable() . '.'));
         static::saving(function (Voter $v) {
             $v->epic_no = $v->epic_no === null ? null : strtoupper((string) Text::asciiDigits(trim($v->epic_no)));
             foreach (['mobile', 'alt_mobile', 'pincode'] as $f) {

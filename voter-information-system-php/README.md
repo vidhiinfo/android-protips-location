@@ -12,7 +12,7 @@ The PHP version of the Voter Information System. It has the same screens, the sa
 * **Export and print**: Excel (any size, streamed) and PDF (Hindi, Bengali, Urdu, Tamil … correctly shaped), plus print view, for voter lists and every report.
 * **Bulk import** from Excel. The template and column names work in all 9 languages. Ward-wise sheets are also read directly (`Ward, Booth, V.SNo., VoterID, Name, Gender, Relative's Name, Age, Houseno, Address, Mobile(Original), Mobile1, Membershipno, DOB, Marriage Anniv., Deleted, Shift1, Shift2, Place of Origin, Current Place, Linked With, Social Status, Political Status, Organisational Status, Beneficiary1-3, Caste, Poling Station`); pick the assembly on the import page. Dates may be dd-mm-yyyy, dd/mm/yyyy, yyyy-mm-dd or Excel dates. Age is calculated from DOB when empty.
 * **9 languages**: English, हिन्दी, বাংলা, اردو (right-to-left), मराठी, ગુજરાતી, ਪੰਜਾਬੀ, தமிழ், తెలుగు, chosen on every page. Data is stored as utf8mb4 Unicode.
-* **Login**: username, password and an Assembly drop-down. A user can be locked to one assembly, and all work is limited to the chosen assembly.
+* **Login**: username, password and an Assembly drop-down. A user can be locked to one assembly, and within it to an **access area** (wards, booths, or a serial range of one booth); every screen, export, report and analysis then shows only that area.
 * **Role-based access**: Admin, Operator, Viewer, plus your own roles from 17 permissions. Users can also come from **your existing users / roles tables** (`USER_SOURCE=external`).
 * **Campaign dashboard**: 8 charts (age/gender, booth sizes, lead/trail by booth, vote share, turnout, mobile reach, young voters, households).
 * **15 reports**: assembly / booth / village summaries, age-gender, social category, caste-wise summary, birthdays and anniversaries in the next 30 days, first-time voters, voters 85+, large households, phone-bank list, results summary, party performance, swing booths, possible duplicate voters (same assembly or same village/ward).
@@ -68,7 +68,7 @@ The demo data is fictional: three assemblies with Hindi, Urdu and Bengali names,
 ## Tests
 
 ```bash
-php artisan test        # 61 tests on in-memory SQLite
+php artisan test        # 68 tests on in-memory SQLite
 # the same suite on MySQL:
 DB_CONNECTION=mysql DB_DATABASE=voter_test DB_USERNAME=... DB_PASSWORD=... php artisan test
 ```

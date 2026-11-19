@@ -13,9 +13,23 @@ class GrievanceController extends Controller
 {
     public function __construct(private VoterService $voters) {}
 
+    /** Grievances inside the user's access area: its wards / booths; with a serial range, its voters or what the user logged. */
+    public static function areaScope($q)
+    {
+        $a = \App\Support\Area::current();
+        if (!$a) return $q;
+        if ($a['wards']) $q->whereIn('ward_no', $a['wards']);
+        if ($a['booths']) $q->whereIn('booth_no', $a['booths']);
+        if ($a['from'] !== null || $a['to'] !== null) {
+            $ids = Voter::pluck('id')->all();   // the area's voters (Voter global scope)
+            $q->where(fn ($w) => $w->whereIn('voter_id', $ids ?: [0])->orWhere('created_by', app(\App\Services\Auth\CurrentUser::class)->username()));
+        }
+        return $q;
+    }
+
     private function find(int $id): Grievance
     {
-        $g = Grievance::find($id);
+        $g = self::areaScope(Grievance::query())->find($id);
         abort_if(!$g || !$this->user()->allows($g->assembly_no), 404, t('error.notFound'));
         return $g;
     }
@@ -27,7 +41,7 @@ class GrievanceController extends Controller
             'category' => in_array($r->query('category'), Grievance::CATEGORIES, true) ? $r->query('category') : null,
             'boothNo' => $r->query('boothNo') ? (int) $r->query('boothNo') : null, 'workerId' => $r->query('workerId') ? (int) $r->query('workerId') : null,
             'q' => trim((string) $r->query('q')), 'voterId' => $r->query('voterId') ? (int) $r->query('voterId') : null];
-        $q = Grievance::with(['worker', 'voter'])->when($a, fn ($q) => $q->where('assembly_no', $a))
+        $q = self::areaScope(Grievance::with(['worker', 'voter']))->when($a, fn ($q) => $q->where('assembly_no', $a))
             ->when($f['status'] === 'ACTIVE', fn ($q) => $q->whereIn('status', ['OPEN', 'IN_PROGRESS']), fn ($q) => $q->when($f['status'] !== 'ALL', fn ($q) => $q->where('status', $f['status'])))
             ->when($f['voterId'], fn ($q, $v) => $q->where('voter_id', $v))
             ->when($f['category'], fn ($q, $c) => $q->where('category', $c))->when($f['boothNo'], fn ($q, $b) => $q->where('booth_no', $b))
@@ -35,7 +49,7 @@ class GrievanceController extends Controller
             ->when($f['q'] !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', '%' . $f['q'] . '%')->orWhere('subject', 'like', '%' . $f['q'] . '%')
                 ->orWhere('mobile', 'like', '%' . $f['q'] . '%')->orWhere('id', (int) $f['q'])))
             ->orderByRaw("case priority when 'URGENT' then 0 when 'HIGH' then 1 when 'NORMAL' then 2 else 3 end")->orderByDesc('created_at');
-        $counts = Grievance::when($a, fn ($q) => $q->where('assembly_no', $a))->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status');
+        $counts = self::areaScope(Grievance::query())->when($a, fn ($q) => $q->where('assembly_no', $a))->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status');
         return view('grievances.index', ['page' => $q->paginate(50)->withQueryString(), 'f' => $f, 'counts' => $counts, 'assemblyNo' => $a,
             'booths' => $this->voters->booths($a), 'workers' => Worker::where('active', true)->when($a, fn ($q) => $q->where('assembly_no', $a))->orderBy('name')->get()]);
     }
@@ -66,6 +80,7 @@ class GrievanceController extends Controller
         ], ['mobile.regex' => t('validation.mobile'), 'required' => t('validation.required')]);
         foreach (['mobile', 'booth_no', 'description', 'location', 'worker_id', 'resolution', 'voter_id'] as $k) $d[$k] = $d[$k] ?? null;
         $d['assembly_no'] = $this->user()->restrict($d['assembly_no']);
+        if (($ar = \App\Support\Area::current()) && $ar['booths'] && !in_array((int) $d['booth_no'], $ar['booths'], true)) $d['booth_no'] = $ar['booths'][0];   // keep it inside the area
         if ($d['worker_id'] && !Worker::where('id', $d['worker_id'])->where('assembly_no', $d['assembly_no'])->exists()) $d['worker_id'] = null;
         $g = $id ? $this->find($id) : new Grievance(['created_by' => $this->user()->username()]);
         if ($id) unset($d['voter_id']);

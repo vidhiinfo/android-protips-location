@@ -92,7 +92,7 @@
                 @endif
             </ul>
             <span class="badge text-bg-light me-2 mb-2 mb-xl-0" title="{{ t('login.assembly') }}"><i class="bi bi-geo-alt"></i>
-                {{ $me->scoped() ? $me->workAssembly() . ' - ' . $me->workAssemblyName() : t('login.allAssemblies') }}</span>
+                {{ $me->scoped() ? $me->workAssembly() . ' - ' . $me->workAssemblyName() : t('login.allAssemblies') }}@if($areaLabel = \App\Support\Area::label(\App\Support\Area::current())) · {{ $areaLabel }}@endif</span>
             @include('partials.lang', ['cls' => 'w-auto me-2 mb-2 mb-xl-0'])
             <div class="dropdown">
                 <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ $me->username() }}</a>

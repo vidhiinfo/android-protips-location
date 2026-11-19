@@ -205,11 +205,11 @@ class MasterController extends Controller
         $oldName = $item->getOriginal('name'); $oldCaste = $item instanceof SubCaste ? $item->caste?->name : null;
         $item->fill($data)->save();
         // renaming a caste / sub caste also renames it on the voters that have it
-        if (!$isNew && $type === 'castes' && $oldName !== $item->name) Voter::where('caste', $oldName)->update(['caste' => $item->name]);
+        if (!$isNew && $type === 'castes' && $oldName !== $item->name) Voter::withoutGlobalScope('area')->where('caste', $oldName)->update(['caste' => $item->name]);
         if (!$isNew && $type === 'subcastes' && $oldName !== $item->name) {
-            Voter::where('sub_caste', $oldName)->when($oldCaste, fn ($q) => $q->where('caste', $oldCaste))->update(['sub_caste' => $item->name]);
+            Voter::withoutGlobalScope('area')->where('sub_caste', $oldName)->when($oldCaste, fn ($q) => $q->where('caste', $oldCaste))->update(['sub_caste' => $item->name]);
         }
-        if (!$isNew && isset(self::STATUS[$type]) && $oldName !== $item->name) Voter::where(self::STATUS[$type], $oldName)->update([self::STATUS[$type] => $item->name]);
+        if (!$isNew && isset(self::STATUS[$type]) && $oldName !== $item->name) Voter::withoutGlobalScope('area')->where(self::STATUS[$type], $oldName)->update([self::STATUS[$type] => $item->name]);
         if ($type === 'elections' && $item->current) Election::where('id', '<>', $item->id)->update(['current' => false]);
         $this->audit()->log($isNew ? 'CREATE' : 'UPDATE', self::ENTITY[$type], $item->id, $item->name ?? '');
         $back = '/masters/' . $type . ($d['filter'] ? '?assemblyNo=' . $item->{$d['filter']} : '') . ($type === 'subcastes' ? '?casteId=' . $item->caste_id : '');
@@ -225,9 +225,9 @@ class MasterController extends Controller
             'parties' => Candidate::where('party_id', $id)->exists(),
             'elections' => Candidate::where('election_id', $id)->exists(),
             'candidates' => BoothResult::where('candidate_id', $id)->exists(),
-            'castes' => SubCaste::where('caste_id', $id)->exists() || Voter::where('caste', $item->name)->exists(),
-            'subcastes' => Voter::where('sub_caste', $item->name)->where('caste', $item->caste?->name)->exists(),
-            'socialstatuses', 'politicalstatuses', 'orgstatuses' => Voter::where(self::STATUS[$type], $item->name)->exists(),
+            'castes' => SubCaste::where('caste_id', $id)->exists() || Voter::withoutGlobalScope('area')->where('caste', $item->name)->exists(),
+            'subcastes' => Voter::withoutGlobalScope('area')->where('sub_caste', $item->name)->where('caste', $item->caste?->name)->exists(),
+            'socialstatuses', 'politicalstatuses', 'orgstatuses' => Voter::withoutGlobalScope('area')->where(self::STATUS[$type], $item->name)->exists(),
             default => false,
         };
         if ($inUse) return redirect('/masters/' . $type)->with('error', 'flash.inUse');

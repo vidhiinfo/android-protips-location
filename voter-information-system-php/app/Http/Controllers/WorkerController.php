@@ -21,7 +21,8 @@ class WorkerController extends Controller
     private function find(int $id): Worker
     {
         $w = Worker::find($id);
-        abort_if(!$w || !$this->user()->allows($w->assembly_no), 404, t('error.notFound'));
+        $ab = \App\Support\Area::current()['booths'] ?? [];
+        abort_if(!$w || !$this->user()->allows($w->assembly_no) || ($ab && !in_array((int) $w->booth_no, $ab, true)), 404, t('error.notFound'));
         return $w;
     }
 
@@ -52,7 +53,8 @@ class WorkerController extends Controller
         $a = $this->user()->restrict($r->query('assemblyNo')) ?? array_key_first($this->voters->assemblies());
         $b = $r->query('boothNo') ? (int) $r->query('boothNo') : null;
         $role = in_array($r->query('role'), Worker::ROLES, true) ? $r->query('role') : null;
-        $workers = Worker::where('assembly_no', $a)->when($b, fn ($q) => $q->where('booth_no', $b))->when($role, fn ($q) => $q->where('role', $role))
+        $ab = \App\Support\Area::current()['booths'] ?? [];
+        $workers = Worker::where('assembly_no', $a)->when($ab, fn ($q) => $q->whereIn('booth_no', $ab))->when($b, fn ($q) => $q->where('booth_no', $b))->when($role, fn ($q) => $q->where('role', $role))
             ->orderByDesc('active')->orderBy('booth_no')->orderBy('name')->get();
         $stats = $this->stats($workers->pluck('id')->all());
         $sorted = $workers->sortByDesc(fn ($w) => [$w->active ? 1 : 0, ($s = $stats[$w->id] ?? null) && $s['n'] ? $s['surveyed'] / $s['n'] : -1, $s['n'] ?? 0])->values();

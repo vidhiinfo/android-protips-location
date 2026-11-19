@@ -967,5 +967,17 @@
 "filter.leaning": "ਝੁਕਾਅ",
 "entity.SOCIAL_STATUS": "ਸਮਾਜਿਕ ਸਥਿਤੀ",
 "entity.POLITICAL_STATUS": "ਸਿਆਸੀ ਸਥਿਤੀ",
-"entity.ORG_STATUS": "ਸੰਗਠਨਾਤਮਕ ਸਥਿਤੀ"
+"entity.ORG_STATUS": "ਸੰਗਠਨਾਤਮਕ ਸਥਿਤੀ",
+"area.title": "ਪਹੁੰਚ ਖੇਤਰ",
+"area.help": "ਇਸ ਲੌਗਇਨ ਨੂੰ ਵਿਧਾਨ ਸਭਾ ਦੇ ਇੱਕ ਹਿੱਸੇ ਤੱਕ ਸੀਮਤ ਕਰੋ। ਪੂਰੀ ਵਿਧਾਨ ਸਭਾ ਲਈ ਖਾਲੀ ਛੱਡੋ। ਹਰ ਸਕ੍ਰੀਨ 'ਤੇ ਲਾਗੂ।",
+"area.wards": "ਵਾਰਡ ਨੰ.",
+"area.booths": "ਬੂਥ ਨੰ.",
+"area.serialFrom": "ਲੜੀ ਤੋਂ",
+"area.serialTo": "ਲੜੀ ਤੱਕ",
+"area.examples": "ਉਦਾਹਰਨ: ਵਾਰਡ ਇੰਚਾਰਜ = ਵਾਰਡ 102 · ਬੂਥ ਪ੍ਰਧਾਨ = ਬੂਥ 3 · ਪੰਨਾ ਪ੍ਰਮੁੱਖ = ਬੂਥ 3, ਲੜੀ 31 ਤੋਂ 60।",
+"area.serials": "ਲੜੀ {0}-{1}",
+"area.outside": "ਇਹ ਤੁਹਾਡੇ ਪਹੁੰਚ ਖੇਤਰ ਤੋਂ ਬਾਹਰ ਹੈ।",
+"area.needsAssembly": "ਪਹਿਲਾਂ ਵਿਧਾਨ ਸਭਾ ਚੁਣੋ।",
+"area.oneBooth": "ਲੜੀ ਸੀਮਾ ਲਈ ਇੱਕ ਹੀ ਬੂਥ ਚਾਹੀਦਾ ਹੈ।",
+"area.fromTo": "\"ਤੋਂ\" \"ਤੱਕ\" ਤੋਂ ਵੱਡਾ ਨਹੀਂ ਹੋ ਸਕਦਾ।"
 }

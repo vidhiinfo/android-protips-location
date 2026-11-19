@@ -87,7 +87,7 @@ class ReportService
         $r = new Report(t('report.assembly-summary'), $this->h('col.assemblyNo', 'col.assemblyName', 'report.booths', 'report.total',
             'gender.MALE', 'gender.FEMALE', 'gender.OTHER', 'report.withMobile', 'report.mobilePct', 'report.age18to25', 'report.age60plus'));
         $tot = array_fill(0, 8, 0);
-        $q = DB::table('voters')->selectRaw('assembly_no, max(assembly_name) as aname, count(distinct booth_no) as booths, ' . self::COUNTS)
+        $q = \App\Support\Area::voters()->selectRaw('assembly_no, max(assembly_name) as aname, count(distinct booth_no) as booths, ' . self::COUNTS)
             ->groupBy('assembly_no')->orderBy('assembly_no');
         if ($only !== null) $q->where('assembly_no', $only);
         if ($this->ward !== null) $q->where('ward_no', $this->ward);
@@ -103,7 +103,7 @@ class ReportService
 
     public function boothRows(?int $a)
     {
-        return DB::table('voters')->selectRaw('assembly_no, booth_no, max(booth_name) as bname, ' . self::COUNTS)
+        return \App\Support\Area::voters()->selectRaw('assembly_no, booth_no, max(booth_name) as bname, ' . self::COUNTS)
             ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->groupBy('assembly_no', 'booth_no')->orderBy('assembly_no')->orderBy('booth_no')->get();
     }
 
@@ -129,7 +129,7 @@ class ReportService
     {
         $r = (new Report(t('report.village-summary'), $this->h('col.villageWard', 'report.total', 'gender.MALE', 'gender.FEMALE', 'gender.OTHER',
             'report.withMobile', 'report.mobilePct', 'report.age18to25', 'report.age60plus')))->subtitle($this->scope($a, null));
-        $rows = DB::table('voters')->selectRaw("coalesce(village_ward, '-') as vw, " . self::COUNTS)
+        $rows = \App\Support\Area::voters()->selectRaw("coalesce(village_ward, '-') as vw, " . self::COUNTS)
             ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->groupBy('village_ward')->orderByDesc('total')->get();
         foreach ($rows as $x) $r->add([$x->vw, (int) $x->total, (int) $x->male, (int) $x->female, (int) $x->other, (int) $x->with_mobile,
             self::pct($x->with_mobile, $x->total), (int) $x->young, (int) $x->senior]);
@@ -140,7 +140,7 @@ class ReportService
     {
         $groups = [[18, 25], [26, 35], [36, 45], [46, 60], [61, 80], [81, 200]];
         $counts = array_fill(0, count($groups) + 1, ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0]);
-        $rows = DB::table('voters')->selectRaw('age, gender, count(*) as c')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))
+        $rows = \App\Support\Area::voters()->selectRaw('age, gender, count(*) as c')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))
             ->when($b !== null, fn ($q) => $q->where('booth_no', $b))->groupBy('age', 'gender')->get();
         foreach ($rows as $x) {
             $idx = count($groups);
@@ -175,7 +175,7 @@ class ReportService
     {
         $r = (new Report(t('report.caste-summary'), $this->h('col.caste', 'gender.MALE', 'gender.FEMALE', 'gender.OTHER', 'report.total',
             'report.sharePct', 'report.withMobile', 'report.mobilePct')))->subtitle($this->scope($a, $b) . ' | ' . t('report.sensitiveNote'));
-        $rows = DB::table('voters')->selectRaw("trim(coalesce(caste, '')) as caste, gender, count(*) as c,
+        $rows = \App\Support\Area::voters()->selectRaw("trim(coalesce(caste, '')) as caste, gender, count(*) as c,
                 sum(case when mobile is not null and mobile <> '' then 1 else 0 end) as m")
             ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->when($b !== null, fn ($q) => $q->where('booth_no', $b))
             ->where(fn ($q) => $q->where('deleted', false)->orWhereNull('deleted'))
@@ -237,7 +237,7 @@ class ReportService
         $r = (new Report(t('report.category-summary'), $this->h('col.assemblyNo', 'col.boothNo', 'col.boothName', 'report.cat.GEN', 'report.cat.OBC',
             'report.cat.SC', 'report.cat.ST', 'report.cat.other', 'report.cat.none', 'report.total')))
             ->subtitle($this->scope($a, null) . ' | ' . t('report.sensitiveNote'));
-        $rows = DB::table('voters')->selectRaw("assembly_no, booth_no, upper(trim(coalesce(category, ''))) as cat, count(*) as c")
+        $rows = \App\Support\Area::voters()->selectRaw("assembly_no, booth_no, upper(trim(coalesce(category, ''))) as cat, count(*) as c")
             ->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->groupBy('assembly_no', 'booth_no', DB::raw("upper(trim(coalesce(category, '')))"))
             ->orderBy('assembly_no')->orderBy('booth_no')->get();
         $by = [];

@@ -36,7 +36,7 @@ class DashboardService
         ];
         $groups = [[18, 25], [26, 35], [36, 45], [46, 60], [61, 200]];
         $ag = array_fill(0, 5, ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0]);
-        foreach ($w(DB::table('voters')->selectRaw('age, gender, count(*) as c')->where('assembly_no', $a))->whereNotNull('age')->groupBy('age', 'gender')->get() as $x) {
+        foreach ($w(\App\Support\Area::voters()->selectRaw('age, gender, count(*) as c')->where('assembly_no', $a))->whereNotNull('age')->groupBy('age', 'gender')->get() as $x) {
             foreach ($groups as $i => $g) if ($x->age >= $g[0] && $x->age <= $g[1]) { $ag[$i][$x->gender] += (int) $x->c; break; }
         }
         $as = [self::series(t('gender.MALE'), 'male', array_column($ag, 'MALE')), self::series(t('gender.FEMALE'), 'female', array_column($ag, 'FEMALE'))];
@@ -44,7 +44,7 @@ class DashboardService
         $out['ageGender'] = ['labels' => ['18-25', '26-35', '36-45', '46-60', '60+'], 'series' => $as];
 
         $sizes = array_fill(0, 6, 0); $houses = $big = $housed = 0;
-        $rows = $w(DB::table('voters')->selectRaw('count(*) as c')->where('assembly_no', $a))->whereNotNull('house_no')->where('house_no', '<>', '')
+        $rows = $w(\App\Support\Area::voters()->selectRaw('count(*) as c')->where('assembly_no', $a))->whereNotNull('house_no')->where('house_no', '<>', '')
             ->groupBy(DB::raw(\App\Support\Text::HOUSE_KEY_SQL), DB::raw("lower(trim(coalesce(address, '')))"), DB::raw("lower(trim(coalesce(village_ward, '')))"))->get();
         foreach ($rows as $x) { $n = (int) $x->c; $sizes[min($n, 6) - 1]++; $houses++; $housed += $n; if ($n >= 5) $big++; }
         $out['household'] = ['labels' => ['1', '2', '3', '4', '5', '6+'], 'series' => [self::series(t('dash.houses'), 'single', $sizes)]];

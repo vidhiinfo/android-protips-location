@@ -51,7 +51,7 @@ class AnalyticsService
     /** Voters in scope (assembly, ward, booth), without voters deleted from the roll. */
     public function base(?int $a, ?int $b = null, bool $withDeleted = false)
     {
-        return DB::table('voters')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))
+        return \App\Support\Area::voters()->when($a !== null, fn ($q) => $q->where('assembly_no', $a))
             ->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))->when($b !== null, fn ($q) => $q->where('booth_no', $b))
             ->when(!$withDeleted, fn ($q) => $q->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted')));
     }
@@ -408,6 +408,7 @@ class AnalyticsService
             'an.pending', 'an.deliveredPct')))->subtitle($this->scope($a) . ' | ' . t('an.optOutsTotal', DB::table('message_optouts')->count()));
         $q = DB::table('message_outbox as o')->join('message_campaigns as c', 'c.id', '=', 'o.campaign_id')
             ->leftJoin('voters as v', 'v.id', '=', 'o.voter_id')
+            ->when(\App\Support\Area::current(), fn ($q) => \App\Support\Area::apply($q->whereNotNull('v.id'), 'v.'))
             ->when($a !== null, fn ($q) => $q->where('v.assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('v.ward_no', $this->ward))
             ->selectRaw("c.id, c.name, c.channel, c.created_at, count(*) as n, sum(case when o.status = 'SENT' then 1 else 0 end) as sent,
                 sum(case when o.status = 'FAILED' then 1 else 0 end) as failed, sum(case when o.status = 'SKIPPED' then 1 else 0 end) as skipped,
@@ -429,7 +430,7 @@ class AnalyticsService
         $cats = \App\Models\Grievance::CATEGORIES;
         $r = (new Report(t('report.grievances'), $this->h('col.boothNo', 'gr.total', 'gr.status.OPEN', 'gr.status.IN_PROGRESS', 'gr.status.RESOLVED', 'gr.status.CLOSED',
             'gr.resolvedPct', 'gr.avgDays', 'gr.oldestOpen', 'gr.topCategory')))->subtitle($this->scope($a));
-        $rows = DB::table('grievances')->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))
+        $rows = \App\Http\Controllers\GrievanceController::areaScope(DB::table('grievances'))->when($a !== null, fn ($q) => $q->where('assembly_no', $a))->when($this->ward !== null, fn ($q) => $q->where('ward_no', $this->ward))
             ->get(['booth_no', 'status', 'category', 'created_at', 'resolved_at']);
         $by = []; $catStatus = [];
         foreach ($rows as $g) {

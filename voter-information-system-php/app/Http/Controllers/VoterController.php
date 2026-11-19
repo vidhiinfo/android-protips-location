@@ -163,8 +163,9 @@ class VoterController extends Controller
         if ($this->user()->scoped()) $data['assembly_no'] = $this->user()->workAssembly();
         $validator = validator($data, VoterService::rules(), Validation::messages());
         $epic = strtoupper((string) Text::asciiDigits((string) ($data['epic_no'] ?? '')));
-        $validator->after(function ($val) use ($epic, $v) {
-            if ($epic !== '' && Voter::where('epic_no', $epic)->when($v->exists, fn ($q) => $q->where('id', '<>', $v->id))->exists()) {
+        $validator->after(function ($val) use ($epic, $v, $data) {
+            if (!\App\Support\Area::fits($data)) $val->errors()->add('booth_no', t('area.outside'));   // ward / booth / serial outside the user's area
+            if ($epic !== '' && Voter::withoutGlobalScope('area')->where('epic_no', $epic)->when($v->exists, fn ($q) => $q->where('id', '<>', $v->id))->exists()) {
                 $val->errors()->add('epic_no', t('validation.epic.duplicate'));
             }
         });
