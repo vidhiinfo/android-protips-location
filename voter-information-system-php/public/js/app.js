@@ -303,3 +303,46 @@ document.addEventListener('click', function (e) {
     if (asm) asm.addEventListener('change', refresh);
     refresh();
 })();
+
+// Field survey: one tap for the political status (fills its drop-down), and the first member's caste / sub caste /
+// place of origin fill in automatically for family members that are still empty (shown in yellow; change if different).
+(function () {
+    var form = document.getElementById('surveyForm');
+    if (!form) return;
+    form.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-quick-value]');
+        if (!b) return;
+        var box = b.closest('[data-quick]'), sel = form.querySelector('[name="' + box.dataset.quick + '"]');
+        if (!sel) return;
+        var v = b.dataset.quickValue;
+        if (sel.tagName === 'SELECT' && !Array.prototype.some.call(sel.options, function (o) { return o.value === v; })) sel.add(new Option(v, v));
+        sel.value = v;
+        box.querySelectorAll('[data-quick-value]').forEach(function (x) {
+            var c = x.dataset.quickClass;
+            x.className = 'btn btn-sm ' + (x === b ? 'btn-' + c : 'btn-outline-' + c);
+        });
+    });
+    // picking from the drop-down highlights the matching quick button
+    form.addEventListener('change', function (e) {
+        var t = e.target;
+        if (t.name && /\[political_status\]$/.test(t.name)) {
+            var box = form.querySelector('[data-quick="' + t.name + '"]');
+            if (box) box.querySelectorAll('[data-quick-value]').forEach(function (x) { var c = x.dataset.quickClass; x.className = 'btn btn-sm ' + (x.dataset.quickValue === t.value ? 'btn-' + c : 'btn-outline-' + c); });
+        }
+        var cards = form.querySelectorAll('[data-member]');
+        if (cards.length < 2 || !t.dataset || !t.dataset.f || ['caste', 'sub_caste', 'place_of_origin'].indexOf(t.dataset.f) < 0) return;
+        if (!cards[0].contains(t)) return;
+        setTimeout(function () {   // after the sub caste list has been rebuilt for the new caste
+            for (var i = 1; i < cards.length; i++) {
+                ['caste', 'sub_caste', 'place_of_origin'].forEach(function (f) {
+                    var src = cards[0].querySelector('[data-f="' + f + '"]'), dst = cards[i].querySelector('[data-f="' + f + '"]');
+                    if (!src || !dst || (dst.value && !dst.classList.contains('autofilled'))) return;
+                    if (dst.tagName === 'SELECT' && src.tagName === 'SELECT' && f === 'sub_caste') dst.innerHTML = src.innerHTML;
+                    dst.value = src.value;
+                    dst.classList.toggle('autofilled', !!src.value);
+                });
+            }
+        }, 0);
+    });
+    form.addEventListener('input', function (e) { if (e.target.classList) e.target.classList.remove('autofilled'); });
+})();

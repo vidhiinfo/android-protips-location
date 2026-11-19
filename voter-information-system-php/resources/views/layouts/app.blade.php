@@ -36,6 +36,7 @@
                         <li><a class="dropdown-item" href="{{ url('/masters/socialstatuses') }}">{{ t('master.socialStatuses') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/masters/politicalstatuses') }}">{{ t('master.politicalStatuses') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/masters/orgstatuses') }}">{{ t('master.orgStatuses') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/masters/beneficiaries') }}">{{ t('master.beneficiaries') }}</a></li>
                     </ul></li>
                 @endif
                 @if(can('RESULT_VIEW'))

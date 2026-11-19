@@ -16,7 +16,8 @@ use Illuminate\Http\Request;
 class FieldSurveyController extends Controller
 {
     /** Fields a field worker fills for each member of the house. */
-    public const FIELDS = ['mobile', 'caste', 'sub_caste', 'political_status', 'social_status', 'beneficiary1', 'beneficiary2', 'beneficiary3', 'place_of_origin', 'membership_no'];
+    public const FIELDS = ['mobile', 'alt_mobile', 'political_status', 'social_status', 'caste', 'sub_caste', 'beneficiary1', 'beneficiary2', 'beneficiary3',
+        'organisational_status', 'dob', 'place_of_origin', 'membership_no', 'remarks'];
     public const STATUSES = ['Supporter', 'Karyakarta', 'Neutral', 'Opposition'];
 
     public function __construct(private VoterService $voters) {}
@@ -75,7 +76,9 @@ class FieldSurveyController extends Controller
         $i = array_search($members->first()->id ?? $v->id, $anchors);
         if ($i === false) foreach ($members as $m) if (($i = array_search($m->id, $anchors)) !== false) break;
         return view('survey.house', ['v' => $v, 'members' => $members, 'casteTree' => Caste::tree(),
-            'statusOpts' => ['political_status' => \App\Support\StatusMasters::options('political_status'), 'social_status' => \App\Support\StatusMasters::options('social_status')],
+            'statusOpts' => array_map(fn ($c) => \App\Support\StatusMasters::options($c), ['political_status' => 'political_status', 'social_status' => 'social_status',
+                'organisational_status' => 'organisational_status', 'beneficiary' => 'beneficiary']),
+            'quick' => \App\Support\StatusMasters::quickLeanings(),
             'statuses' => array_values(array_unique(array_merge(self::STATUSES, $this->voters->distinctValues('political_status', $v->assembly_no)))),
             'schemes' => array_values(array_unique(array_merge($this->voters->distinctValues('beneficiary1', $v->assembly_no), $this->voters->distinctValues('beneficiary2', $v->assembly_no)))),
             'prev' => $i !== false && $i > 0 ? $anchors[$i - 1] : null, 'next' => $i !== false && $i < count($anchors) - 1 ? $anchors[$i + 1] : null,
@@ -87,7 +90,7 @@ class FieldSurveyController extends Controller
         $v = $this->load($voter);
         $members = $this->voters->household($v)->keyBy('id');
         $rules = array_intersect_key(VoterService::rules(), array_flip(self::FIELDS));
-        $fv = new FastValidator($rules, ['regex' => t('validation.mobile'), 'max' => t('validation.max')]);
+        $fv = new FastValidator($rules, ['regex' => t('validation.mobile'), 'max' => t('validation.max'), 'date_format' => t('validation.date'), 'before_or_equal' => t('validation.date'), 'after' => t('validation.date')]);
         $tree = Caste::tree();
         $n = 0;
         foreach ((array) $r->input('m', []) as $id => $data) {
@@ -95,14 +98,18 @@ class FieldSurveyController extends Controller
             if (!$m || !$this->user()->allowsVoter($m) || !is_array($data)) continue;
             $row = [];
             foreach (self::FIELDS as $f) $row[$f] = isset($data[$f]) && trim((string) $data[$f]) !== '' ? trim((string) $data[$f]) : null;
-            foreach (['political_status', 'social_status'] as $sf) $row[$sf] = \App\Support\StatusMasters::normalize($sf, $row[$sf]);
+            foreach (array_keys(\App\Support\StatusMasters::COLUMNS) as $sf) if (array_key_exists($sf, $row)) $row[$sf] = \App\Support\StatusMasters::normalize($sf, $row[$sf]);
+            if ($row['alt_mobile']) $row['alt_mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['alt_mobile']));
             if ($row['mobile']) $row['mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['mobile']));
             if ($err = $fv->firstError($row)) {
                 return redirect('/survey/house/' . $v->id)->withInput()->with('error', $m->name . ': ' . t('col.' . lcfirst(str_replace('_', '', ucwords($err[0], '_')))) . ' - ' . $err[1]);
             }
             if ($tree && $row['sub_caste'] && $row['caste'] && !in_array($row['sub_caste'], $tree[$row['caste']] ?? [], true) && $row['sub_caste'] !== $m->sub_caste) $row['sub_caste'] = null;
             $changed = false;
-            foreach ($row as $f => $val) if ((string) $m->$f !== (string) $val) { $m->$f = $val; $changed = true; }
+            foreach ($row as $f => $val) {
+                $old = $f === 'dob' ? $m->dob?->format('Y-m-d') : $m->$f;
+                if ((string) $old !== (string) $val) { $m->$f = $val; $changed = true; }
+            }
             if ($row['caste'] && !$m->category && ($cat = Caste::where('name', $row['caste'])->value('category'))) $m->category = $cat;
             if ($changed) { $m->save(); $n++; }
         }

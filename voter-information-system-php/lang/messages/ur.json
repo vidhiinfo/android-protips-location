@@ -986,5 +986,14 @@
 "area.pageHelp": "فہرست کا صفحہ (30 ووٹر) منتخب کریں یا سیریل لکھیں۔ ایک ہی بوتھ ضروری۔",
 "area.selectedN": "{0} منتخب",
 "area.noData": "اس اسمبلی کا ابھی ڈیٹا نہیں",
-"area.notInAssembly": "یہ وارڈ / بوتھ منتخب اسمبلی میں نہیں۔"
+"area.notInAssembly": "یہ وارڈ / بوتھ منتخب اسمبلی میں نہیں۔",
+"master.beneficiaries": "مستفید / مدد",
+"master.beneficiary": "مستفید / مدد",
+"master.benCategory": "قسم",
+"master.benCat.HELP": "ہماری دی گئی مدد",
+"master.benCat.SCHEME": "سرکاری اسکیم",
+"entity.BENEFICIARY": "مستفید / مدد",
+"fs.doneEdit": "مکمل · ترمیم",
+"fs.notMet": "نہیں ملے",
+"fs.copyHint2": "پہلے رکن کا جواب سب میں کاپی کرنے کے لیے بٹن دبائیں۔ ذات اور آبائی مقام خالی ارکان میں خود بھر جاتے ہیں (پیلے)۔"
 }

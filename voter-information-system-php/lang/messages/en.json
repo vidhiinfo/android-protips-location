@@ -992,5 +992,14 @@
 "area.pageHelp": "Pick a roll page (30 voters) or type the serial numbers. Needs exactly one booth.",
 "area.selectedN": "{0} selected",
 "area.noData": "No data for this assembly yet",
-"area.notInAssembly": "This ward / booth is not in the selected assembly."
+"area.notInAssembly": "This ward / booth is not in the selected assembly.",
+"master.beneficiaries": "Beneficiary / Help",
+"master.beneficiary": "Beneficiary / Help",
+"master.benCategory": "Type",
+"master.benCat.HELP": "Help given by us",
+"master.benCat.SCHEME": "Government scheme",
+"entity.BENEFICIARY": "Beneficiary / Help",
+"fs.doneEdit": "Done · edit",
+"fs.notMet": "Not met",
+"fs.copyHint2": "Tap a button to copy the first member's answer to everyone. Caste and place of origin also fill in by themselves for empty members (yellow): change anyone who differs."
 }

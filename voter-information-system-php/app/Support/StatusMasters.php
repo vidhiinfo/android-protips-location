@@ -14,7 +14,11 @@ class StatusMasters
 {
     /** voter column => [table, group column] */
     public const TABLES = ['social_status' => ['social_statuses', 'group_name'], 'political_status' => ['political_statuses', 'leaning'],
-        'organisational_status' => ['org_statuses', 'level']];
+        'organisational_status' => ['org_statuses', 'level'], 'beneficiary' => ['beneficiaries', 'category']];
+    /** Voter column => master key (Beneficiary 1 / 2 / 3 share one master). */
+    public const COLUMNS = ['social_status' => 'social_status', 'political_status' => 'political_status', 'organisational_status' => 'organisational_status',
+        'beneficiary1' => 'beneficiary', 'beneficiary2' => 'beneficiary', 'beneficiary3' => 'beneficiary'];
+    public const BEN_CATEGORIES = ['HELP', 'SCHEME'];
     public const SOCIAL_GROUPS = ['INFLUENCE', 'PROFESSION', 'WORK', 'OTHER'];
     public const LEANINGS = ['S', 'N', 'O', 'U'];
     public const ORG_LEVELS = ['BOOTH', 'WARD', 'DISTRICT', 'FRONT', 'ELECTED'];
@@ -40,6 +44,18 @@ class StatusMasters
             ['Leaning Towards Opposition', 'विपक्ष की ओर झुकाव', 'O'], ['Opposition Supporter', 'विपक्ष समर्थक', 'O'], ['Opposition Worker', 'विपक्ष कार्यकर्ता', 'O'],
             ['Not Met / Not Available', 'नहीं मिले', 'U'],
         ],
+        'beneficiaries' => [
+            ['Admission (school / college)', 'स्कूल / कॉलेज में दाखिला', 'HELP'], ['Ration Card', 'राशन कार्ड', 'HELP'], ['Ayushman Card', 'आयुष्मान कार्ड', 'HELP'],
+            ['Aadhaar Card', 'आधार कार्ड', 'HELP'], ['Voter ID Card', 'वोटर कार्ड', 'HELP'], ['Old Age Pension', 'वृद्धावस्था पेंशन', 'HELP'],
+            ['Widow Pension', 'विधवा पेंशन', 'HELP'], ['Disability Pension', 'दिव्यांग पेंशन', 'HELP'], ['Hospital Treatment', 'अस्पताल में इलाज', 'HELP'],
+            ['Job / Employment', 'नौकरी / रोज़गार', 'HELP'], ['Birth / Death Certificate', 'जन्म / मृत्यु प्रमाण पत्र', 'HELP'],
+            ['Caste / Income Certificate', 'जाति / आय प्रमाण पत्र', 'HELP'], ['Scholarship', 'छात्रवृत्ति', 'HELP'], ['Bank Account', 'बैंक खाता', 'HELP'],
+            ['Electricity / Water Connection', 'बिजली / पानी कनेक्शन', 'HELP'], ['Police / Legal Help', 'पुलिस / कानूनी मदद', 'HELP'],
+            ['PM Awas Yojana', 'प्रधानमंत्री आवास योजना', 'SCHEME'], ['Ujjwala Gas', 'उज्ज्वला गैस', 'SCHEME'], ['Free Ration', 'मुफ़्त राशन', 'SCHEME'],
+            ['PM Kisan', 'पीएम किसान', 'SCHEME'], ['Jan Dhan Account', 'जन धन खाता', 'SCHEME'], ['Mudra Loan', 'मुद्रा लोन', 'SCHEME'],
+            ['Ladli / Girl Child Scheme', 'लाडली योजना', 'SCHEME'], ['Free Bus Travel (Women)', 'महिलाओं की मुफ़्त बस यात्रा', 'SCHEME'],
+            ['Free Electricity', 'मुफ़्त बिजली', 'SCHEME'], ['Free Water', 'मुफ़्त पानी', 'SCHEME'],
+        ],
         'org_statuses' => [
             ['Panna Pramukh', 'पन्ना प्रमुख', 'BOOTH'], ['Booth Committee Member', 'बूथ समिति सदस्य', 'BOOTH'], ['Booth Agent', 'बूथ एजेंट', 'BOOTH'],
             ['Booth President', 'बूथ अध्यक्ष', 'BOOTH'],
@@ -57,6 +73,8 @@ class StatusMasters
     /** Active master rows for a voter column, in list order. */
     public static function rows(string $column): array
     {
+        $column = self::COLUMNS[$column] ?? $column;
+        if (!isset(self::TABLES[$column])) return [];
         if (isset(self::$cache[$column])) return self::$cache[$column];
         [$table, $group] = self::TABLES[$column];
         if (!Schema::hasTable($table)) return self::$cache[$column] = [];
@@ -84,6 +102,19 @@ class StatusMasters
         return $v;
     }
 
+    /** Is this voter column a drop-down from one of these masters? */
+    public static function has(string $column): bool { return isset(self::COLUMNS[$column]) && self::rows($column); }
+
+    /** First political status of each leaning, for the one-tap buttons of the field survey: ['S' => 'Supporter', ...]. */
+    public static function quickLeanings(): array
+    {
+        $q = [];
+        foreach (self::rows('political_status') as $r) if ($r['grp'] && !isset($q[$r['grp']])) $q[$r['grp']] = $r['name'];
+        // prefer the plain "Supporter" over "Strong Supporter" when both exist
+        foreach (self::rows('political_status') as $r) if ($r['grp'] === 'S' && mb_strtolower($r['name']) === 'supporter') $q['S'] = $r['name'];
+        return array_intersect_key($q, array_flip(['S', 'N', 'O', 'U']));
+    }
+
     /** Political status name => leaning (S / N / O / U). */
     public static function leanings(): array
     {
@@ -99,7 +130,7 @@ class StatusMasters
     public static function seed(string $table): void
     {
         if (!Schema::hasTable($table) || DB::table($table)->exists()) return;
-        $group = ['social_statuses' => 'group_name', 'political_statuses' => 'leaning', 'org_statuses' => 'level'][$table];
+        $group = ['social_statuses' => 'group_name', 'political_statuses' => 'leaning', 'org_statuses' => 'level', 'beneficiaries' => 'category'][$table];
         foreach (self::DEFAULTS[$table] as $i => [$name, $local, $g]) {
             DB::table($table)->insert(['name' => $name, 'name_local' => $local, $group => $g, 'sort_order' => ($i + 1) * 10, 'active' => true]);
         }

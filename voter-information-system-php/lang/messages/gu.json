@@ -986,5 +986,14 @@
 "area.pageHelp": "યાદીનું પાનું (30 મતદારો) પસંદ કરો અથવા ક્રમાંક લખો. એક જ બૂથ જોઈએ.",
 "area.selectedN": "{0} પસંદ",
 "area.noData": "આ વિધાનસભાનો હજી ડેટા નથી",
-"area.notInAssembly": "આ વોર્ડ / બૂથ પસંદ વિધાનસભામાં નથી."
+"area.notInAssembly": "આ વોર્ડ / બૂથ પસંદ વિધાનસભામાં નથી.",
+"master.beneficiaries": "લાભાર્થી / મદદ",
+"master.beneficiary": "લાભાર્થી / મદદ",
+"master.benCategory": "પ્રકાર",
+"master.benCat.HELP": "અમે આપેલી મદદ",
+"master.benCat.SCHEME": "સરકારી યોજના",
+"entity.BENEFICIARY": "લાભાર્થી / મદદ",
+"fs.doneEdit": "પૂર્ણ · સુધારો",
+"fs.notMet": "મળ્યા નથી",
+"fs.copyHint2": "પહેલા સભ્યનો જવાબ બધામાં કૉપિ કરવા બટન દબાવો. જ્ઞાતિ અને મૂળ સ્થળ ખાલી સભ્યોમાં આપોઆપ ભરાય છે (પીળા)."
 }

@@ -986,5 +986,14 @@
 "area.pageHelp": "ਸੂਚੀ ਦਾ ਪੰਨਾ (30 ਵੋਟਰ) ਚੁਣੋ ਜਾਂ ਲੜੀ ਨੰਬਰ ਲਿਖੋ। ਇੱਕ ਹੀ ਬੂਥ ਚਾਹੀਦਾ।",
 "area.selectedN": "{0} ਚੁਣੇ",
 "area.noData": "ਇਸ ਵਿਧਾਨ ਸਭਾ ਦਾ ਅਜੇ ਡਾਟਾ ਨਹੀਂ",
-"area.notInAssembly": "ਇਹ ਵਾਰਡ / ਬੂਥ ਚੁਣੀ ਵਿਧਾਨ ਸਭਾ ਵਿੱਚ ਨਹੀਂ।"
+"area.notInAssembly": "ਇਹ ਵਾਰਡ / ਬੂਥ ਚੁਣੀ ਵਿਧਾਨ ਸਭਾ ਵਿੱਚ ਨਹੀਂ।",
+"master.beneficiaries": "ਲਾਭਪਾਤਰੀ / ਮਦਦ",
+"master.beneficiary": "ਲਾਭਪਾਤਰੀ / ਮਦਦ",
+"master.benCategory": "ਕਿਸਮ",
+"master.benCat.HELP": "ਸਾਡੇ ਵੱਲੋਂ ਦਿੱਤੀ ਮਦਦ",
+"master.benCat.SCHEME": "ਸਰਕਾਰੀ ਯੋਜਨਾ",
+"entity.BENEFICIARY": "ਲਾਭਪਾਤਰੀ / ਮਦਦ",
+"fs.doneEdit": "ਪੂਰਾ · ਸੋਧੋ",
+"fs.notMet": "ਨਹੀਂ ਮਿਲੇ",
+"fs.copyHint2": "ਪਹਿਲੇ ਮੈਂਬਰ ਦਾ ਜਵਾਬ ਸਾਰਿਆਂ ਵਿੱਚ ਕਾਪੀ ਕਰਨ ਲਈ ਬਟਨ ਦਬਾਓ। ਜਾਤ ਅਤੇ ਮੂਲ ਸਥਾਨ ਖਾਲੀ ਮੈਂਬਰਾਂ ਵਿੱਚ ਆਪਣੇ ਆਪ ਭਰ ਜਾਂਦੇ ਹਨ (ਪੀਲੇ)।"
 }

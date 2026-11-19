@@ -24,59 +24,84 @@
             <button type="button" class="btn btn-sm btn-outline-primary" data-copy="caste,sub_caste"><i class="bi bi-files"></i> {{ t('col.caste') }}</button>
             <button type="button" class="btn btn-sm btn-outline-primary" data-copy="political_status"><i class="bi bi-files"></i> {{ t('col.politicalStatus') }}</button>
             <button type="button" class="btn btn-sm btn-outline-primary" data-copy="place_of_origin"><i class="bi bi-files"></i> {{ t('col.placeOfOrigin') }}</button>
-        </div><div class="small text-muted mt-1">{{ t('fs.copyHint') }}</div></div>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-copy="social_status"><i class="bi bi-files"></i> {{ t('col.socialStatus') }}</button>
+        </div><div class="small text-muted mt-1">{{ t('fs.copyHint2') }}</div></div>
     @endif
     @foreach($members as $i => $m)
     @php($val = fn ($f) => old("m.{$m->id}.$f", $m->$f))
+    @php($done = $m->political_status && $m->caste)
+    @php($sel = function ($f, $opts) use ($m, $val) { $cur = (string) $val($f); if ($cur !== '' && !isset($opts[$cur])) $opts[$cur] = $cur; return $opts; })
     <div class="card mb-2 member {{ $m->deleted ? 'opacity-50' : '' }}" data-member>
         <div class="card-body pb-2">
-            <div class="d-flex align-items-baseline gap-2 mb-2">
+            <div class="d-flex align-items-baseline gap-2 mb-1 flex-wrap">
                 <span class="badge text-bg-secondary">{{ $m->serial_no }}</span>
                 <span class="fw-semibold">{{ $m->name }}</span>
                 <span class="small text-muted">{{ $m->genderLabel() }}, {{ $m->age }}</span>
                 @if($m->booth_no != $v->booth_no)<span class="badge text-bg-info">{{ t('col.boothNo') }} {{ $m->booth_no }}</span>@endif
                 @if($m->deleted)<span class="badge text-bg-danger">{{ t('col.deleted') }}</span>@endif
+                @if($done)<a class="ms-auto small" data-bs-toggle="collapse" href="#f-{{ $m->id }}"><i class="bi bi-check-circle-fill text-success"></i> {{ t('fs.doneEdit') }}</a>@endif
             </div>
-            <div class="small text-muted mb-2">{{ $m->relationDisplay() }} · <code>{{ $m->epic_no }}</code></div>
+            <div class="small text-muted mb-2">{{ $m->relationDisplay() }} · <code>{{ $m->epic_no }}</code>
+                @if($done) · <span class="text-body">{{ $m->political_status }} · {{ $m->caste }}{{ $m->sub_caste ? ' / ' . $m->sub_caste : '' }}{{ $m->mobile ? ' · ' . $m->mobile : '' }}</span>@endif</div>
+            <div class="collapse {{ $done ? '' : 'show' }}" id="f-{{ $m->id }}">
+            {{-- one tap for the political status; the full list stays in the drop-down --}}
+            @if($quick)
+            <div class="d-flex flex-wrap gap-1 mb-2" data-quick="m[{{ $m->id }}][political_status]">
+                @foreach($quick as $lean => $name)
+                <button type="button" class="btn btn-sm {{ $val('political_status') === $name ? 'btn-' . ['S' => 'primary', 'N' => 'secondary', 'O' => 'danger', 'U' => 'dark'][$lean] : 'btn-outline-' . ['S' => 'primary', 'N' => 'secondary', 'O' => 'danger', 'U' => 'dark'][$lean] }}"
+                        data-quick-value="{{ $name }}" data-quick-class="{{ ['S' => 'primary', 'N' => 'secondary', 'O' => 'danger', 'U' => 'dark'][$lean] }}">{{ t(['S' => 'an.support', 'N' => 'an.neutral', 'O' => 'an.opposition', 'U' => 'fs.notMet'][$lean]) }}</button>
+                @endforeach
+            </div>
+            @endif
             <div class="row g-2">
-                <div class="col-12 col-sm-6"><label class="form-label small mb-0">{{ t('col.mobile') }}</label>
-                    <input name="m[{{ $m->id }}][mobile]" value="{{ $val('mobile') }}" class="form-control" inputmode="tel" maxlength="14" autocomplete="off"></div>
-                <div class="col-12 col-sm-6"><label class="form-label small mb-0">{{ t('col.politicalStatus') }}</label>
-                    @if($statusOpts['political_status'])
-                    <select name="m[{{ $m->id }}][political_status]" class="form-select" data-f="political_status"><option value="">--</option>
-                        @foreach($statusOpts['political_status'] + ($val('political_status') && !isset($statusOpts['political_status'][$val('political_status')]) ? [$val('political_status') => $val('political_status')] : []) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val('political_status'))>{{ $lbl }}</option>@endforeach</select>
-                    @else<input name="m[{{ $m->id }}][political_status]" value="{{ $val('political_status') }}" class="form-control" list="dl-status" data-f="political_status" maxlength="100">@endif</div>
+                @php($sel2 = fn ($f, $label, $col = 'col-6 col-md-3') => compact('f', 'label', 'col'))
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.mobile') }}</label>
+                    <input name="m[{{ $m->id }}][mobile]" value="{{ $val('mobile') }}" class="form-control" type="tel" inputmode="tel" maxlength="14" autocomplete="off"></div>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.altMobile') }}</label>
+                    <input name="m[{{ $m->id }}][alt_mobile]" value="{{ $val('alt_mobile') }}" class="form-control" type="tel" inputmode="tel" maxlength="14" autocomplete="off"></div>
+                @foreach(['political_status' => 'col.politicalStatus', 'social_status' => 'col.socialStatus'] as $sf => $sl)
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t($sl) }}</label>
+                    @if($statusOpts[$sf])
+                    <select name="m[{{ $m->id }}][{{ $sf }}]" class="form-select" data-f="{{ $sf }}"><option value="">--</option>
+                        @foreach($sel($sf, $statusOpts[$sf]) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val($sf))>{{ $lbl }}</option>@endforeach</select>
+                    @else<input name="m[{{ $m->id }}][{{ $sf }}]" value="{{ $val($sf) }}" class="form-control" data-f="{{ $sf }}" maxlength="100">@endif</div>
+                @endforeach
                 @php($castes = array_keys($casteTree))
                 @if($val('caste') && !in_array($val('caste'), $castes))@php($castes[] = $val('caste'))@endif
-                <div class="col-6"><label class="form-label small mb-0">{{ t('col.caste') }}</label>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.caste') }}</label>
                     @if($casteTree)
                     <select name="m[{{ $m->id }}][caste]" class="form-select" data-f="caste" data-caste-select data-sub-select="sub-{{ $m->id }}" data-map='@json((object) $casteTree)' data-labels='@json((object) \App\Models\Caste::labels())'>
                         <option value="">--</option>@foreach($castes as $c)<option value="{{ $c }}" @selected($c === $val('caste'))>{{ \App\Models\Caste::labels()[$c] ?? $c }}</option>@endforeach</select>
                     @else<input name="m[{{ $m->id }}][caste]" value="{{ $val('caste') }}" class="form-control" data-f="caste">@endif</div>
-                <div class="col-6"><label class="form-label small mb-0">{{ t('col.subCaste') }}</label>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.subCaste') }}</label>
                     @if($casteTree)
                     @php($subs = $casteTree[$val('caste')] ?? [])
                     @if($val('sub_caste') && !in_array($val('sub_caste'), $subs))@php($subs[] = $val('sub_caste'))@endif
                     <select name="m[{{ $m->id }}][sub_caste]" id="sub-{{ $m->id }}" class="form-select" data-f="sub_caste">
                         <option value="">--</option>@foreach($subs as $s)<option value="{{ $s }}" @selected($s === $val('sub_caste'))>{{ \App\Models\Caste::labels()[$s] ?? $s }}</option>@endforeach</select>
                     @else<input name="m[{{ $m->id }}][sub_caste]" value="{{ $val('sub_caste') }}" class="form-control" data-f="sub_caste">@endif</div>
-            </div>
-            <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#more-{{ $m->id }}">{{ t('fs.more') }} <i class="bi bi-chevron-down"></i></a>
-            <div class="collapse {{ $val('beneficiary1') || $val('social_status') || $val('place_of_origin') || $val('membership_no') ? 'show' : '' }}" id="more-{{ $m->id }}"><div class="row g-2 mt-0">
                 @foreach(['beneficiary1', 'beneficiary2', 'beneficiary3'] as $bf)
-                <div class="col-12 col-sm-4"><label class="form-label small mb-0">{{ t('col.'.$bf) }}</label>
-                    <input name="m[{{ $m->id }}][{{ $bf }}]" value="{{ $val($bf) }}" class="form-control" list="dl-scheme" maxlength="150"></div>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.'.$bf) }}</label>
+                    @if($statusOpts['beneficiary'])
+                    <select name="m[{{ $m->id }}][{{ $bf }}]" class="form-select"><option value="">--</option>
+                        @foreach($sel($bf, $statusOpts['beneficiary']) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val($bf))>{{ $lbl }}</option>@endforeach</select>
+                    @else<input name="m[{{ $m->id }}][{{ $bf }}]" value="{{ $val($bf) }}" class="form-control" maxlength="150">@endif</div>
                 @endforeach
-                <div class="col-12 col-sm-4"><label class="form-label small mb-0">{{ t('col.socialStatus') }}</label>
-                    @if($statusOpts['social_status'])
-                    <select name="m[{{ $m->id }}][social_status]" class="form-select"><option value="">--</option>
-                        @foreach($statusOpts['social_status'] + ($val('social_status') && !isset($statusOpts['social_status'][$val('social_status')]) ? [$val('social_status') => $val('social_status')] : []) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val('social_status'))>{{ $lbl }}</option>@endforeach</select>
-                    @else<input name="m[{{ $m->id }}][social_status]" value="{{ $val('social_status') }}" class="form-control" maxlength="100">@endif</div>
-                <div class="col-6 col-sm-4"><label class="form-label small mb-0">{{ t('col.placeOfOrigin') }}</label>
-                    <input name="m[{{ $m->id }}][place_of_origin]" value="{{ $val('place_of_origin') }}" class="form-control" data-f="place_of_origin" maxlength="100"></div>
-                <div class="col-6 col-sm-4"><label class="form-label small mb-0">{{ t('col.membershipNo') }}</label>
-                    <input name="m[{{ $m->id }}][membership_no]" value="{{ $val('membership_no') }}" class="form-control" maxlength="30"></div>
-            </div></div>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.organisationalStatus') }}</label>
+                    @if($statusOpts['organisational_status'])
+                    <select name="m[{{ $m->id }}][organisational_status]" class="form-select"><option value="">--</option>
+                        @foreach($sel('organisational_status', $statusOpts['organisational_status']) as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $val('organisational_status'))>{{ $lbl }}</option>@endforeach</select>
+                    @else<input name="m[{{ $m->id }}][organisational_status]" value="{{ $val('organisational_status') }}" class="form-control" maxlength="100">@endif</div>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.dob') }}</label>
+                    <input name="m[{{ $m->id }}][dob]" value="{{ old("m.{$m->id}.dob", $m->dob?->format('Y-m-d')) }}" class="form-control" type="date" max="{{ date('Y-m-d') }}"></div>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.placeOfOrigin') }}</label>
+                    <input name="m[{{ $m->id }}][place_of_origin]" value="{{ $val('place_of_origin') }}" class="form-control" data-f="place_of_origin" maxlength="150"></div>
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.membershipNo') }}</label>
+                    <input name="m[{{ $m->id }}][membership_no]" value="{{ $val('membership_no') }}" class="form-control" maxlength="50"></div>
+                <div class="col-12 col-md-6"><label class="form-label small mb-0">{{ t('col.remarks') }}</label>
+                    <input name="m[{{ $m->id }}][remarks]" value="{{ $val('remarks') }}" class="form-control" maxlength="500" dir="auto"></div>
+            </div>
+            </div>
         </div>
     </div>
     @endforeach

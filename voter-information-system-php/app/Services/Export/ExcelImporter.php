@@ -161,7 +161,7 @@ class ExcelImporter
             }
             // ward / booth lists usually have no assembly column: use the one chosen on the import page
             $data['assembly_no'] ??= $onlyAssembly ?? $defaultAssembly;
-            foreach (array_keys(\App\Support\StatusMasters::TABLES) as $sf) if (isset($data[$sf])) $data[$sf] = \App\Support\StatusMasters::normalize($sf, $data[$sf]);   // Hindi name -> master name
+            foreach (array_keys(\App\Support\StatusMasters::COLUMNS) as $sf) if (isset($data[$sf])) $data[$sf] = \App\Support\StatusMasters::normalize($sf, $data[$sf]);   // Hindi name -> master name
             foreach (['dob', 'anniversary'] as $dField) if (isset($idx[$dField])) $data[$dField] = self::parseDate($row[$idx[$dField]] ?? '');
             if (isset($idx['deleted'])) $data['deleted'] = isset($yes[self::norm($data['deleted'] ?? '')]) ? 1 : 0;
             if ($data['age'] === null && !empty($data['dob']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $data['dob'])) {

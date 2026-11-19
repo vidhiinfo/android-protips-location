@@ -51,7 +51,8 @@ class VoterController extends Controller
             'casteTreeAll' => $tree, 'politicalStatuses' => $this->voters->distinctValues('political_status', $a),
             'statusFilter' => ['politicalStatus' => \App\Support\StatusMasters::options('political_status', $this->voters->distinctValues('political_status', $a)),
                 'socialStatus' => \App\Support\StatusMasters::options('social_status', $this->voters->distinctValues('social_status', $a)),
-                'orgStatus' => \App\Support\StatusMasters::options('organisational_status', $this->voters->distinctValues('organisational_status', $a))],
+                'orgStatus' => \App\Support\StatusMasters::options('organisational_status', $this->voters->distinctValues('organisational_status', $a)),
+                'beneficiary' => \App\Support\StatusMasters::options('beneficiary', array_merge($this->voters->distinctValues('beneficiary1', $a), $this->voters->distinctValues('beneficiary2', $a), $this->voters->distinctValues('beneficiary3', $a)))],
             'workers' => \App\Models\Worker::where('active', true)->when($a, fn ($q) => $q->where('assembly_no', $a))->orderBy('booth_no')->orderBy('name')->get(),
             'total' => $this->voters->total($this->user()->workAssembly()), 'genderCounts' => $this->voters->genderCounts($this->user()->workAssembly())]);
     }
@@ -104,7 +105,7 @@ class VoterController extends Controller
             $val = trim((string) $r->input($f));
             if ($val === '') continue;
             if (mb_strlen($val) > 100) return redirect($back)->with('error', 'validation.required');
-            $set[$f] = $val === '-' ? null : (isset(\App\Support\StatusMasters::TABLES[$f]) ? \App\Support\StatusMasters::normalize($f, $val) : $val);   // "-" clears the field
+            $set[$f] = $val === '-' ? null : (isset(\App\Support\StatusMasters::COLUMNS[$f]) ? \App\Support\StatusMasters::normalize($f, $val) : $val);   // "-" clears the field
         }
         $wid = trim((string) $r->input('worker_id'));
         if ($wid !== '' && $this->user()->can('WORKER_MANAGE')) {

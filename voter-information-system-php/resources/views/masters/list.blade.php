@@ -39,7 +39,7 @@
         @forelse($items as $i)
             <tr>@if($d['type'] === 'parties')<td><span class="d-inline-block rounded-circle" style="width:14px;height:14px;background:{{ $i->color ?: '#6c757d' }}"></span></td>@endif
                 @foreach($listFields as $k => $f)<td @if($f[1] === 'local') dir="auto" @endif>{{ \App\Http\Controllers\MasterController::display($i, $k, $d) }}</td>@endforeach
-                @if(!empty($d['usage']))@php($n = $usage[$i->name] ?? 0)<td class="text-end">@if($n)<a href="{{ url('/voters') }}?{{ http_build_query([['socialstatuses' => 'socialStatus', 'politicalstatuses' => 'politicalStatus', 'orgstatuses' => 'orgStatus'][$d['type']] => $i->name]) }}">{{ $n }}</a>@else 0 @endif</td>@endif
+                @if(!empty($d['usage']))@php($n = $usage[$i->name] ?? 0)<td class="text-end">@if($n)<a href="{{ url('/voters') }}?{{ http_build_query([\App\Http\Controllers\MasterController::STATUS_FILTER[$d['type']] => $i->name]) }}">{{ $n }}</a>@else 0 @endif</td>@endif
                 @if(can('MASTER_EDIT'))<td class="text-end text-nowrap">
                     <a class="btn btn-sm btn-outline-secondary" href="{{ url('/masters/'.$d['type'].'/'.$i->id.'/edit') }}" title="{{ t('common.edit') }}"><i class="bi bi-pencil"></i></a>
                     <form action="{{ url('/masters/'.$d['type'].'/'.$i->id.'/delete') }}" method="post" class="d-inline" data-confirm="{{ t('common.confirmDelete') }}">@csrf

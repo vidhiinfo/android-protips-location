@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Assembly, Booth, BoothResult, Candidate, Caste, Election, OrgStatus, Party, PoliticalStatus, SocialStatus, SubCaste, Voter};
+use App\Models\{Assembly, Beneficiary, Booth, BoothResult, Candidate, Caste, Election, OrgStatus, Party, PoliticalStatus, SocialStatus, SubCaste, Voter};
 use App\Support\StatusMasters;
 use App\Support\Validation;
 use Illuminate\Http\Request;
@@ -14,9 +14,12 @@ use Illuminate\Http\Request;
 class MasterController extends Controller
 {
     private const ENTITY = ['assemblies' => 'ASSEMBLY', 'booths' => 'BOOTH', 'parties' => 'PARTY', 'elections' => 'ELECTION', 'candidates' => 'CANDIDATE',
-        'castes' => 'CASTE', 'subcastes' => 'SUB_CASTE', 'socialstatuses' => 'SOCIAL_STATUS', 'politicalstatuses' => 'POLITICAL_STATUS', 'orgstatuses' => 'ORG_STATUS'];
+        'castes' => 'CASTE', 'subcastes' => 'SUB_CASTE', 'socialstatuses' => 'SOCIAL_STATUS', 'politicalstatuses' => 'POLITICAL_STATUS', 'orgstatuses' => 'ORG_STATUS', 'beneficiaries' => 'BENEFICIARY'];
     /** Status masters: master type => voter column whose values follow a rename. */
-    public const STATUS = ['socialstatuses' => 'social_status', 'politicalstatuses' => 'political_status', 'orgstatuses' => 'organisational_status'];
+    public const STATUS = ['socialstatuses' => ['social_status'], 'politicalstatuses' => ['political_status'], 'orgstatuses' => ['organisational_status'],
+        'beneficiaries' => ['beneficiary1', 'beneficiary2', 'beneficiary3']];
+    /** Voter list filter parameter for each status master. */
+    public const STATUS_FILTER = ['socialstatuses' => 'socialStatus', 'politicalstatuses' => 'politicalStatus', 'orgstatuses' => 'orgStatus', 'beneficiaries' => 'beneficiary'];
 
     private function defs(): array
     {
@@ -84,16 +87,17 @@ class MasterController extends Controller
                 'unique' => [['caste_id', 'name']], 'filter' => null],
             'socialstatuses' => $this->statusDef(SocialStatus::class, 'master.socialStatuses', 'col.socialStatus', 'group_name', 'master.group', StatusMasters::SOCIAL_GROUPS, 'master.group.'),
             'politicalstatuses' => $this->statusDef(PoliticalStatus::class, 'master.politicalStatuses', 'col.politicalStatus', 'leaning', 'master.leaning', StatusMasters::LEANINGS, 'master.leaning.'),
+            'beneficiaries' => $this->statusDef(Beneficiary::class, 'master.beneficiaries', 'master.beneficiary', 'category', 'master.benCategory', StatusMasters::BEN_CATEGORIES, 'master.benCat.', 150),
             'orgstatuses' => $this->statusDef(OrgStatus::class, 'master.orgStatuses', 'col.organisationalStatus', 'level', 'master.level', StatusMasters::ORG_LEVELS, 'master.level.'),
         ];
     }
 
-    private function statusDef(string $model, string $title, string $one, string $group, string $groupLabel, array $groups, string $prefix): array
+    private function statusDef(string $model, string $title, string $one, string $group, string $groupLabel, array $groups, string $prefix, int $max = 100): array
     {
         return ['model' => $model, 'title' => $title, 'one' => $one, 'order' => ['sort_order', 'name'],
             'fields' => [
-                'name' => ['master.statusName', 'text', ['required', 'max:100']],
-                'name_local' => ['master.nameLocal', 'local', ['nullable', 'max:100']],
+                'name' => ['master.statusName', 'text', ['required', 'max:' . $max]],
+                'name_local' => ['master.nameLocal', 'local', ['nullable', 'max:' . $max]],
                 $group => [$groupLabel, 'select', ['nullable', 'in:' . implode(',', $groups)], fn () => ['' => '--'] + array_combine($groups, array_map(fn ($g) => t($prefix . $g), $groups))],
                 'sort_order' => ['master.sortOrder', 'number', ['nullable', 'integer', 'min:0', 'max:100000']],
                 'active' => ['master.active', 'checkbox', ['nullable']]],
@@ -119,10 +123,11 @@ class MasterController extends Controller
             $field === 'poll_date' => $v?->format('d-m-Y'),
             $field === 'caste_id' => $item->caste?->name,
             $field === 'active' => $v ? '✓' : '',
-            $field === 'category' => $v ? t('report.cat.' . $v) : '',
+            $field === 'category' && ($def['type'] ?? '') !== 'beneficiaries' => $v ? t('report.cat.' . $v) : '',
             $field === 'leaning' => $v ? t('master.leaning.' . $v) : '',
             $field === 'group_name' => $v ? t('master.group.' . $v) : '',
             $field === 'level' => $v ? t('master.level.' . $v) : '',
+            $field === 'category' => $v ? t('master.benCat.' . $v) : '',
             default => $v,
         };
     }
@@ -156,9 +161,10 @@ class MasterController extends Controller
         // status masters: how many voters have each value, and values on voters that are not in the master yet
         $usage = []; $missing = [];
         if (isset(self::STATUS[$type])) {
-            $col = self::STATUS[$type];
-            $usage = Voter::whereNotNull($col)->where($col, '<>', '')->when($this->user()->workAssembly(), fn ($q, $a) => $q->where('assembly_no', $a))
-                ->groupBy($col)->selectRaw("$col as v, count(*) as n")->pluck('n', 'v')->all();
+            foreach (self::STATUS[$type] as $col) {
+                foreach (Voter::whereNotNull($col)->where($col, '<>', '')->when($this->user()->workAssembly(), fn ($q, $a) => $q->where('assembly_no', $a))
+                             ->groupBy($col)->selectRaw("$col as v, count(*) as n")->pluck('n', 'v')->all() as $v => $n) $usage[$v] = ($usage[$v] ?? 0) + $n;
+            }
             $known = $items->pluck('name')->map(fn ($n) => mb_strtolower($n))->all();
             foreach ($usage as $v => $n) if (!in_array(mb_strtolower($v), $known, true)) $missing[$v] = $n;
             arsort($missing);
@@ -209,7 +215,9 @@ class MasterController extends Controller
         if (!$isNew && $type === 'subcastes' && $oldName !== $item->name) {
             Voter::withoutGlobalScope('area')->where('sub_caste', $oldName)->when($oldCaste, fn ($q) => $q->where('caste', $oldCaste))->update(['sub_caste' => $item->name]);
         }
-        if (!$isNew && isset(self::STATUS[$type]) && $oldName !== $item->name) Voter::withoutGlobalScope('area')->where(self::STATUS[$type], $oldName)->update([self::STATUS[$type] => $item->name]);
+        if (!$isNew && isset(self::STATUS[$type]) && $oldName !== $item->name) {
+            foreach (self::STATUS[$type] as $col) Voter::withoutGlobalScope('area')->where($col, $oldName)->update([$col => $item->name]);
+        }
         if ($type === 'elections' && $item->current) Election::where('id', '<>', $item->id)->update(['current' => false]);
         $this->audit()->log($isNew ? 'CREATE' : 'UPDATE', self::ENTITY[$type], $item->id, $item->name ?? '');
         $back = '/masters/' . $type . ($d['filter'] ? '?assemblyNo=' . $item->{$d['filter']} : '') . ($type === 'subcastes' ? '?casteId=' . $item->caste_id : '');
@@ -227,7 +235,7 @@ class MasterController extends Controller
             'candidates' => BoothResult::where('candidate_id', $id)->exists(),
             'castes' => SubCaste::where('caste_id', $id)->exists() || Voter::withoutGlobalScope('area')->where('caste', $item->name)->exists(),
             'subcastes' => Voter::withoutGlobalScope('area')->where('sub_caste', $item->name)->where('caste', $item->caste?->name)->exists(),
-            'socialstatuses', 'politicalstatuses', 'orgstatuses' => Voter::withoutGlobalScope('area')->where(self::STATUS[$type], $item->name)->exists(),
+            'socialstatuses', 'politicalstatuses', 'orgstatuses', 'beneficiaries' => Voter::withoutGlobalScope('area')->where(fn ($q) => array_map(fn ($c) => $q->orWhere($c, $item->name), self::STATUS[$type]))->exists(),
             default => false,
         };
         if ($inUse) return redirect('/masters/' . $type)->with('error', 'flash.inUse');

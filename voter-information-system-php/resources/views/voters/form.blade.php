@@ -73,7 +73,7 @@
                         <option value="">--</option>
                         @foreach($subs as $sc)<option value="{{ $sc }}" @selected($sc === $v->sub_caste)>{{ \App\Models\Caste::labels()[$sc] ?? $sc }}</option>@endforeach
                     </select></div>
-                @elseif(isset(\App\Support\StatusMasters::TABLES[$field]) && \App\Support\StatusMasters::rows($field))
+                @elseif(\App\Support\StatusMasters::has($field))
                 {{-- Social / Political / Organisational Status from their masters (Masters menu) --}}
                 @php($cur = old($field, $v->$field))
                 <div class="col-md-3"><label class="form-label" for="{{ $field }}">{{ t('col.'.$key) }}</label>

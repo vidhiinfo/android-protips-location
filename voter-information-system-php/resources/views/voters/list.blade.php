@@ -62,7 +62,9 @@
             <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.leaning') }}</label>
                 <select name="sentiment" class="form-select"><option value="">{{ t('common.all') }}</option>
                     @foreach(['S' => 'an.support', 'N' => 'an.neutral', 'O' => 'an.opposition', 'X' => 'an.other', 'U' => 'an.unknown'] as $o => $lbl)<option value="{{ $o }}" @selected($o === $f->get('sentiment'))>{{ t($lbl) }}</option>@endforeach</select></div>
-            <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.beneficiary') }}</label><input name="beneficiary" value="{{ $f->get('beneficiary') }}" class="form-control" dir="auto"></div>
+            <div class="col-6 col-md-2"><label class="form-label">{{ t('filter.beneficiary') }}</label>
+                <select name="beneficiary" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach($statusFilter['beneficiary'] as $o => $lbl)<option value="{{ $o }}" @selected((string) $o === (string) $f->get('beneficiary'))>{{ $lbl }}</option>@endforeach</select></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.membershipNo') }}</label><input name="membershipNo" value="{{ $f->get('membershipNo') }}" class="form-control"></div>
             @if($workers->count() && !$me->workerId())
             <div class="col-6 col-md-2"><label class="form-label">{{ t('worker.worker') }}</label>

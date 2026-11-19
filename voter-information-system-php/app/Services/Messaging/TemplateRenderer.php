@@ -22,6 +22,8 @@ class TemplateRenderer
             'serialNo' => fn (Voter $v) => $v->serial_no,
             'houseNo' => fn (Voter $v) => $v->house_no,
             'villageWard' => fn (Voter $v) => $v->village_ward,
+            // help given / schemes (Beneficiary 1-3), e.g. "We helped you with {helpGiven}."
+            'helpGiven' => fn (Voter $v) => implode(', ', array_filter([$v->beneficiary1, $v->beneficiary2, $v->beneficiary3])),
         ];
     }
 
