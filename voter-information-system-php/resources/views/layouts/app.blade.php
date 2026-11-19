@@ -90,6 +90,7 @@
                         <li><a class="dropdown-item" href="{{ url('/admin/roles') }}">{{ t('admin.roles') }}</a></li>@endif
                         @if(can('AUDIT_VIEW'))<li><a class="dropdown-item" href="{{ url('/admin/audit') }}">{{ t('admin.audit') }}</a></li>@endif
                         @if(can('SYSTEM_VIEW'))<li><a class="dropdown-item" href="{{ url('/admin/system') }}">{{ t('admin.system') }}</a></li>@endif
+                        @if(can('USER_ADMIN'))<li><a class="dropdown-item" href="{{ url('/admin/backups') }}">{{ t('backup.title') }}</a></li>@endif
                     </ul></li>
                 @endif
             </ul>

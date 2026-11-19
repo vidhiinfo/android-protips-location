@@ -52,6 +52,13 @@ return [
         'pdf_max_rows' => (int) env('PDF_MAX_ROWS', 5000),
     ],
 
+    // database backup to storage/app/backups (Admin > Backups): daily cron "php artisan vis:backup", or once a day after a page visit
+    'backup' => [
+        'keep' => (int) env('BACKUP_KEEP', 14),                 // number of backups kept (one a day = two weeks)
+        'every_hours' => (int) env('BACKUP_EVERY_HOURS', 24),
+        'on_visit' => (bool) env('BACKUP_ON_VISIT', true),      // fallback when there is no cron job
+    ],
+
     // false hides Ward No everywhere (lists, forms, filters, exports, access areas), e.g. where the rolls have no wards
     'show_ward_no' => (bool) env('SHOW_WARD_NO', true),
 

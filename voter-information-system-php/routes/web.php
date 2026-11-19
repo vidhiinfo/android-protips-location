@@ -177,6 +177,12 @@ Route::middleware('login.required')->group(function () {
     });
     Route::get('/admin/audit', [AdminController::class, 'auditLog'])->middleware('perm:AUDIT_VIEW');
     Route::get('/admin/system', [AdminController::class, 'system'])->middleware('perm:SYSTEM_VIEW');
+    Route::middleware('perm:USER_ADMIN')->group(function () {
+        $bk = \App\Http\Controllers\BackupController::class;
+        Route::get('/admin/backups', [$bk, 'index']);
+        Route::post('/admin/backups', [$bk, 'run']);
+        Route::get('/admin/backups/{name}', [$bk, 'file'])->where('name', '[A-Za-z0-9_.-]+');
+    });
 
     Route::get('/account/password', [AccountController::class, 'form']);
     Route::post('/account/password', [AccountController::class, 'change']);
