@@ -78,6 +78,7 @@ class BackupService
                     $buf = [];
                 };
                 $hasId = in_array('id', $this->columns($driver, $t), true);
+                $skip = array_flip($this->generated($driver, $t));   // computed columns (house_key) are rebuilt by the database
                 $last = 0; $offset = 0;
                 while (true) {
                     // big tables are read in slices of 500 rows by id (fast at any size); tables without id by offset
@@ -85,7 +86,7 @@ class BackupService
                                    : DB::table($t)->offset($offset)->limit(self::ROWS)->get();
                     if ($rows->isEmpty()) break;
                     foreach ($rows as $r) {
-                        $r = (array) $r;
+                        $r = array_diff_key((array) $r, $skip);
                         $cols ??= array_map(fn ($c) => $driver === 'mysql' ? "`$c`" : "\"$c\"", array_keys($r));
                         $buf[] = '(' . implode(', ', array_map(fn ($v) => $v === null ? 'NULL' : (is_int($v) || is_float($v) ? (string) $v : $pdo->quote((string) $v)), $r)) . ')';
                         if (++$n % 200 === 0) $flush();
@@ -118,6 +119,16 @@ class BackupService
     private function columns(string $driver, string $t): array
     {
         return \Illuminate\Support\Facades\Schema::getColumnListing($t);
+    }
+
+    /** Columns computed by the database (cannot be inserted). */
+    private function generated(string $driver, string $t): array
+    {
+        if ($driver === 'mysql') {
+            return array_map(fn ($r) => $r->c, DB::select("select column_name as c from information_schema.columns where table_schema = database() and table_name = ?
+                and (extra like '%GENERATED%' or extra like '%VIRTUAL%' or extra like '%PERSISTENT%' or extra like '%STORED%')", [$t]));
+        }
+        return array_map(fn ($r) => $r->name, array_filter(DB::select("pragma table_xinfo(\"$t\")"), fn ($r) => in_array((int) $r->hidden, [2, 3], true)));
     }
 
     /** Keeps the newest BACKUP_KEEP (14) backups. */

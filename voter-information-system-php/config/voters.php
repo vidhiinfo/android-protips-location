@@ -59,6 +59,9 @@ return [
         'on_visit' => (bool) env('BACKUP_ON_VISIT', true),      // fallback when there is no cron job
     ],
 
+    // seconds that drop-down lists and header counts (read from the whole assembly) are kept; 0 = always fresh
+    'lookup_cache_seconds' => (int) env('LOOKUP_CACHE_SECONDS', 300),
+
     // false hides Ward No everywhere (lists, forms, filters, exports, access areas), e.g. where the rolls have no wards
     'show_ward_no' => (bool) env('SHOW_WARD_NO', true),
 

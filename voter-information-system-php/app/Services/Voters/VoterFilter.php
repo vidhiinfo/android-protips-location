@@ -82,13 +82,15 @@ class VoterFilter
     public function apply($q)
     {
         $like = fn ($s) => '%' . addcslashes(Text::lower(Text::asciiDigits($s)), '%_\\') . '%';
+        // MySQL compares these utf8mb4_unicode_ci columns without case already: lower() on every row only slows a big assembly down
+        $col = \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'mysql' ? fn ($c) => $c : fn ($c) => "lower($c)";
         if ($s = $this->get('q')) {
             foreach (preg_split('/\s+/u', (string) Text::nfc($s)) as $term) {
                 $l = $like($term);
-                $q->where(function ($w) use ($l) {
+                $q->where(function ($w) use ($l, $col) {
                     foreach (['name', 'name_local', 'relative_name', 'relative_name_local', 'epic_no', 'mobile', 'alt_mobile', 'house_no',
                                  'address', 'address_local', 'village_ward', 'booth_name', 'membership_no', 'caste'] as $c) {
-                        $w->orWhereRaw("lower($c) like ?", [$l]);
+                        $w->orWhereRaw($col($c) . ' like ?', [$l]);
                     }
                 });
             }
@@ -98,10 +100,11 @@ class VoterFilter
                      'beneficiary' => ['beneficiary1', 'beneficiary2', 'beneficiary3']] as $k => $cols) {
             if ($s = $this->get($k)) {
                 $l = $like($s);
-                $q->where(function ($w) use ($cols, $l) { foreach ($cols as $c) $w->orWhereRaw("lower($c) like ?", [$l]); });
+                $q->where(function ($w) use ($cols, $l, $col) { foreach ($cols as $c) $w->orWhereRaw($col($c) . ' like ?', [$l]); });
             }
         }
-        if ($s = $this->get('houseNo')) $q->whereRaw(Text::HOUSE_KEY_SQL . ' = ?', [Text::houseKey($s)]);   // RZ-154 = R Z-154
+        if ($s = $this->get('houseNo')) VoterService::hasHouseKey()   // RZ-154 = R Z-154 (indexed house_key column after the upgrade)
+            ? $q->where('house_key', Text::houseKey($s)) : $q->whereRaw(Text::HOUSE_KEY_SQL . ' = ?', [Text::houseKey($s)]);
         foreach (['assemblyNo' => 'assembly_no', 'wardNo' => 'ward_no', 'boothNo' => 'booth_no', 'gender' => 'gender', 'district' => 'district', 'villageWard' => 'village_ward',
                      'caste' => 'caste', 'subCaste' => 'sub_caste', 'politicalStatus' => 'political_status', 'socialStatus' => 'social_status',
                      'orgStatus' => 'organisational_status'] as $k => $c) {

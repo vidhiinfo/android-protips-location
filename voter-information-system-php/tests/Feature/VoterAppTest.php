@@ -269,7 +269,7 @@ class VoterAppTest extends TestCase
         $c = \App\Models\Caste::create(['name' => 'Saini', 'category' => 'OBC', 'active' => true]);
         \App\Models\SubCaste::create(['caste_id' => $c->id, 'name' => 'Mali', 'active' => true]);
         // apply to the whole house
-        $wife = Voter::where('assembly_no', 45)->where('relation_type', 'HUSBAND')->first();
+        $wife = Voter::where('assembly_no', 45)->where('relation_type', 'HUSBAND')->orderBy('booth_no')->orderBy('serial_no')->first();
         $house = app(\App\Services\Voters\VoterService::class)->household($wife);
         $this->assertGreaterThan(1, count($house));
         $this->get("/voters/{$wife->id}/household?fragment=1")->assertOk()->assertSee(t('household.applyCaste', count($house)));
@@ -299,7 +299,7 @@ class VoterAppTest extends TestCase
         $before = Voter::where('epic_no', $target[1])->first();
         $this->post('/voters/import', ['file' => new UploadedFile($path, 'survey.xlsx', null, null, true)])->assertOk();
         $after = Voter::where('epic_no', $target[1])->first();
-        $this->assertSame(['Saini', '9876501234', 'OBC'], [$after->caste, $after->mobile, $after->category ?: 'OBC']);
+        $this->assertSame(['Saini', '9876501234', $before->category ?: 'OBC'], [$after->caste, $after->mobile, $after->category]);   // category from the caste master only when empty
         $this->assertSame([$before->relation_type, $before->name, $before->age, $before->house_no], [$after->relation_type, $after->name, $after->age, $after->house_no]);
         $this->assertSame($wife->fresh()->relation_type, 'HUSBAND');   // wives keep "Husband" after the upload
         $this->get('/voters?assemblyNo=45')->assertSee(t('survey.sheet'));

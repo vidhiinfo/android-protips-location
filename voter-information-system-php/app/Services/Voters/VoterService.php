@@ -39,13 +39,18 @@ class VoterService
     }
 
     /** Everyone at the same assembly, house no., address and village/ward (ignoring case and spaces). */
+    private static ?bool $houseKey = null;
+    public static function hasHouseKey(): bool { return self::$houseKey ??= \Illuminate\Support\Facades\Schema::hasColumn('voters', 'house_key'); }
+
     public function household(Voter $v)
     {
         $q = Voter::where('assembly_no', $v->assembly_no);
         foreach (['house_no', 'address', 'village_ward'] as $c) {
             $val = $v->$c;
             if ($val === null || trim($val) === '') $q->where(fn ($w) => $w->whereNull($c)->orWhere($c, ''));
-            elseif ($c === 'house_no') $q->whereRaw(\App\Support\Text::HOUSE_KEY_SQL . ' = ?', [\App\Support\Text::houseKey($val)]);   // RZ-154 = R Z-154
+            elseif ($c === 'house_no') self::hasHouseKey()   // RZ-154 = R Z-154; the indexed house_key column when the upgrade has run
+                ? $q->where('house_key', \App\Support\Text::houseKey($val))
+                : $q->whereRaw(\App\Support\Text::HOUSE_KEY_SQL . ' = ?', [\App\Support\Text::houseKey($val)]);
             else $q->whereRaw("lower(trim($c)) = ?", [mb_strtolower(trim($val))]);
         }
         return $q->orderBy('serial_no')->orderBy('age')->orderBy('id')->get();
@@ -72,50 +77,67 @@ class VoterService
     public function assemblies(): array
     {
         $m = [];
-        foreach (Voter::select('assembly_no', DB::raw('max(assembly_name) as n'))->groupBy('assembly_no')->get() as $r) $m[$r->assembly_no] = (string) $r->n;
+        foreach ($this->cached('assemblies', [], fn () => Voter::select('assembly_no', DB::raw('max(assembly_name) as n'))->groupBy('assembly_no')->get()->map(fn ($r) => [$r->assembly_no, (string) $r->n])->all()) as [$no, $n]) $m[$no] = $n;
         foreach (Assembly::orderBy('assembly_no')->get() as $a) $m[$a->assembly_no] = $a->name;
         ksort($m);
         return $m;
     }
 
+    /**
+     * Lists for drop-downs and header counts read the whole assembly (lakhs of rows), so they are kept for a few minutes
+     * (LOOKUP_CACHE_SECONDS, default 300) per assembly and per access area. New values appear within that time.
+     */
+    private function cached(string $name, array $args, \Closure $fn)
+    {
+        $ttl = (int) config('voters.lookup_cache_seconds', 300);
+        if ($ttl <= 0) return $fn();
+        $who = json_encode([\App\Support\Area::current(), app(\App\Services\Auth\CurrentUser::class)->workerId()]);
+        return \Illuminate\Support\Facades\Cache::remember('vis.lookup.' . $name . '.' . md5(json_encode($args) . $who), $ttl, $fn);
+    }
+
     public function booths(?int $a, ?int $ward = null): array
     {
-        return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->when($ward, fn ($q) => $q->where('ward_no', $ward))
-            ->distinct()->orderBy('booth_no')->pluck('booth_no')->all();
+        return $this->cached('booths', [$a, $ward], fn () => Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->when($ward, fn ($q) => $q->where('ward_no', $ward))
+            ->distinct()->orderBy('booth_no')->pluck('booth_no')->all());
     }
 
     /** Ward numbers present in the voter data (of one assembly, or all). */
     public function wards(?int $a): array
     {
         if (!Voter::showWard()) return [];   // no Ward No drop-downs anywhere
-        return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('ward_no')->distinct()->orderBy('ward_no')->pluck('ward_no')->all();
+        return $this->cached('wards', [$a], fn () => Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('ward_no')->distinct()->orderBy('ward_no')->pluck('ward_no')->all());
     }
 
     /** Which booths lie in which ward: [ward_no => [booth_no, ...]] - drives the Booth drop-down when a ward is chosen. */
     public function boothsByWard(?int $a): array
     {
+        if (!Voter::showWard()) return [];
+        return $this->cached('boothsByWard', [$a], function () use ($a) {
         $map = [];
         foreach (Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('ward_no')->select('ward_no', 'booth_no')->distinct()
                      ->orderBy('ward_no')->orderBy('booth_no')->get() as $r) $map[$r->ward_no][] = $r->booth_no;
         return $map;
+        });
     }
-    public function districts(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('district')->where('district', '<>', '')->distinct()->orderBy('district')->pluck('district')->all(); }
-    public function villages(?int $a): array { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('village_ward')->where('village_ward', '<>', '')->distinct()->orderBy('village_ward')->pluck('village_ward')->all(); }
+    public function districts(?int $a): array { return $this->cached('districts', [$a], fn () => Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('district')->where('district', '<>', '')->distinct()->orderBy('district')->pluck('district')->all()); }
+    public function villages(?int $a): array { return $this->cached('villages', [$a], fn () => Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('village_ward')->where('village_ward', '<>', '')->distinct()->orderBy('village_ward')->pluck('village_ward')->all()); }
 
     /** Distinct non-empty values of a column (filter drop-downs: caste, political status). */
     public function distinctValues(string $column, ?int $a): array
     {
-        return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull($column)->where($column, '<>', '')
-            ->distinct()->orderBy($column)->limit(300)->pluck($column)->all();
+        return $this->cached('distinct.' . $column, [$a], fn () => Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull($column)->where($column, '<>', '')
+            ->distinct()->orderBy($column)->limit(300)->pluck($column)->all());
     }
 
-    public function total(?int $a): int { return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->count(); }
+    public function total(?int $a): int { return $this->cached('total', [$a], fn () => Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->count()); }
 
     public function genderCounts(?int $a): array
     {
-        $m = ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0];
-        foreach (Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->select('gender', DB::raw('count(*) as c'))->groupBy('gender')->get() as $r) $m[$r->gender] = (int) $r->c;
-        return $m;
+        return $this->cached('genders', [$a], function () use ($a) {
+            $m = ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0];
+            foreach (Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->select('gender', DB::raw('count(*) as c'))->groupBy('gender')->get() as $r) $m[$r->gender] = (int) $r->c;
+            return $m;
+        });
     }
 
     /** Validation rules (messages are translated keys). */
