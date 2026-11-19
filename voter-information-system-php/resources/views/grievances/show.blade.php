@@ -18,7 +18,7 @@
             <dl class="row mb-0">
                 <dt class="col-sm-4">{{ t('gr.complainant') }}</dt><dd class="col-sm-8">@if($g->voter_id)<a href="{{ url('/voters/'.$g->voter_id) }}">{{ $g->name }}</a>@else{{ $g->name }}@endif</dd>
                 <dt class="col-sm-4">{{ t('col.mobile') }}</dt><dd class="col-sm-8">@if($g->mobile)<a href="tel:{{ $g->mobile }}">{{ $g->mobile }}</a>@else - @endif</dd>
-                <dt class="col-sm-4">{{ t('col.boothNo') }}</dt><dd class="col-sm-8">{{ $g->assembly_no }} / {{ $g->booth_no ?: '-' }}@if($g->ward_no) · {{ t('col.wardNo') }} {{ $g->ward_no }}@endif</dd>
+                <dt class="col-sm-4">{{ t('col.boothNo') }}</dt><dd class="col-sm-8">{{ $g->assembly_no }} / {{ $g->booth_no ?: '-' }}@if($g->ward_no && \App\Models\Voter::showWard()) · {{ t('col.wardNo') }} {{ $g->ward_no }}@endif</dd>
                 <dt class="col-sm-4">{{ t('gr.location') }}</dt><dd class="col-sm-8">{{ $g->location ?: '-' }}</dd>
                 <dt class="col-sm-4">{{ t('gr.assigned') }}</dt><dd class="col-sm-8">@if($g->worker)<a href="{{ url('/workers/'.$g->worker_id) }}">{{ $g->worker->name }}</a>@else - @endif</dd>
                 <dt class="col-sm-4">{{ t('gr.description') }}</dt><dd class="col-sm-8" style="white-space:pre-line">{{ $g->description ?: '-' }}</dd>

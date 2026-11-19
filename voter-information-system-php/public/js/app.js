@@ -257,7 +257,9 @@ document.addEventListener('click', function (e) {
     var from = root.querySelector('[name=scope_serial_from]'), to = root.querySelector('[name=scope_serial_to]'), page = root.querySelector('[data-area-page]');
     function data() { return map[asm && asm.value] || { wards: [], booths: {} }; }
     function render(f, items) {
-        var dd = root.querySelector('[data-area-dd="' + f + '"]'), menu = dd.querySelector('.dropdown-menu'), btn = dd.querySelector('button');
+        var dd = root.querySelector('[data-area-dd="' + f + '"]');
+        if (!dd) return;   // Ward No hidden (SHOW_WARD_NO=false)
+        var menu = dd.querySelector('.dropdown-menu'), btn = dd.querySelector('button');
         var chosen = ints(val(f).value).filter(function (x) { return items.indexOf(x) >= 0; });
         val(f).value = chosen.join(', ');
         menu.innerHTML = '';
@@ -271,7 +273,7 @@ document.addEventListener('click', function (e) {
         btn.textContent = chosen.length ? (chosen.length <= 4 ? chosen.join(', ') : root.dataset.selectedN.replace('{0}', chosen.length)) : root.dataset.all;
     }
     function booths() {
-        var d = data(), wards = ints(val('scope_wards').value);
+        var d = data(), wards = val('scope_wards') ? ints(val('scope_wards').value) : [];
         return Object.keys(d.booths || {}).map(Number).filter(function (b) { return !wards.length || wards.indexOf(d.booths[b].ward) >= 0; }).sort(function (a, b) { return a - b; });
     }
     function pages() {

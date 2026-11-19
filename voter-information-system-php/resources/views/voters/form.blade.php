@@ -37,7 +37,7 @@
             @include('partials.input', ['name' => 'address', 'label' => 'col.address', 'cls' => 'col-md-5', 'value' => $v->address])
             @include('partials.input', ['name' => 'address_local', 'label' => 'col.addressLocal', 'cls' => 'col-md-5', 'value' => $v->address_local, 'local' => true])
             @include('partials.input', ['name' => 'village_ward', 'label' => 'col.villageWard', 'cls' => 'col-md-3', 'value' => $v->village_ward, 'local' => true])
-            @include('partials.input', ['name' => 'ward_no', 'label' => 'col.wardNo', 'cls' => 'col-md-2', 'type' => 'number', 'value' => $v->ward_no])
+            @if(\App\Models\Voter::showWard())@include('partials.input', ['name' => 'ward_no', 'label' => 'col.wardNo', 'cls' => 'col-md-2', 'type' => 'number', 'value' => $v->ward_no])@endif
             @include('partials.input', ['name' => 'district', 'label' => 'col.district', 'cls' => 'col-md-4', 'value' => $v->district, 'local' => true])
             @include('partials.input', ['name' => 'pincode', 'label' => 'col.pincode', 'cls' => 'col-md-3', 'value' => $v->pincode])
             @include('partials.input', ['name' => 'mobile', 'label' => 'col.mobile', 'cls' => 'col-md-4', 'type' => 'tel', 'value' => $v->mobile])

@@ -24,7 +24,7 @@
                 <div class="row g-2" data-area-picker data-map='@json((object) $areaMap)' data-all="{{ t('common.all') }}" data-none="{{ t('area.noData') }}"
                      data-selected-n="{{ t('area.selectedN') }}" data-page="{{ t('area.page') }}">
                     @php($ae = fn ($f) => isset($errors) ? $errors->first($f) : null)
-                    @foreach(['scope_wards' => 'area.wards', 'scope_booths' => 'area.booths'] as $fld => $lbl)
+                    @foreach(\App\Models\Voter::showWard() ? ['scope_wards' => 'area.wards', 'scope_booths' => 'area.booths'] : ['scope_booths' => 'area.booths'] as $fld => $lbl)
                     <div class="col-md-{{ $fld === 'scope_wards' ? 4 : 8 }}"><label class="form-label small mb-0">{{ t($lbl) }}</label>
                         <input type="hidden" name="{{ $fld }}" value="{{ old($fld, $item->$fld) }}" data-area-value="{{ $fld }}">
                         <div class="dropdown" data-area-dd="{{ $fld }}">

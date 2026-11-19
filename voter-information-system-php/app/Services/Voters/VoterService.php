@@ -87,6 +87,7 @@ class VoterService
     /** Ward numbers present in the voter data (of one assembly, or all). */
     public function wards(?int $a): array
     {
+        if (!Voter::showWard()) return [];   // no Ward No drop-downs anywhere
         return Voter::when($a, fn ($q) => $q->where('assembly_no', $a))->whereNotNull('ward_no')->distinct()->orderBy('ward_no')->pluck('ward_no')->all();
     }
 

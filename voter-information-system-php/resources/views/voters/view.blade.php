@@ -30,7 +30,7 @@
             <dt class="col-sm-3">{{ t('col.epicNo') }}</dt><dd class="col-sm-9"><code>{{ $v->epic_no }}</code></dd>
             <dt class="col-sm-3">{{ t('col.gender') }} / {{ t('col.age') }}</dt><dd class="col-sm-9">{{ $v->genderLabel() }}{{ $v->age ? ' / '.$v->age : '' }}</dd>
             <dt class="col-sm-3">{{ t('col.assemblyNo') }}</dt><dd class="col-sm-9">{{ $v->assembly_no }}{{ $v->assembly_name ? ' - '.$v->assembly_name : '' }}</dd>
-            @if($v->ward_no)<dt class="col-sm-3">{{ t('col.wardNo') }}</dt><dd class="col-sm-9">{{ $v->ward_no }}</dd>@endif
+            @if($v->ward_no && \App\Models\Voter::showWard())<dt class="col-sm-3">{{ t('col.wardNo') }}</dt><dd class="col-sm-9">{{ $v->ward_no }}</dd>@endif
             <dt class="col-sm-3">{{ t('col.boothNo') }}</dt><dd class="col-sm-9">{{ $v->booth_no }}{{ $v->booth_name ? ' - '.$v->booth_name : '' }}</dd>
             <dt class="col-sm-3">{{ t('col.serialNo') }}</dt><dd class="col-sm-9">{{ $v->serial_no ?? '-' }}</dd>
             @if($v->worker_id && ($wk = \App\Models\Worker::find($v->worker_id)))<dt class="col-sm-3">{{ t('worker.worker') }}</dt><dd class="col-sm-9">@if(can('WORKER_MANAGE'))<a href="{{ url('/workers/'.$wk->id) }}">{{ $wk->name }}</a>@else{{ $wk->name }}@endif @if($wk->mobile)· <a href="tel:{{ $wk->mobile }}">{{ $wk->mobile }}</a>@endif</dd>@endif

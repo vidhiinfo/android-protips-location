@@ -2,6 +2,7 @@
 
 namespace App\Services\Export;
 
+use App\Models\Voter;
 use App\Services\Reports\Report;
 use App\Support\Lang;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -84,6 +85,8 @@ class ExcelExporter
             ['col.houseNo', 'house_no'], ['col.epicNo', 'epic_no'], ['col.name', 'name'], ['col.relativeName', 'relative_name'],
             ['col.gender', 'gender'], ['col.age', 'age'], ['col.caste', 'caste'], ['col.subCaste', 'sub_caste'], ['col.politicalStatus', 'political_status'],
             ['col.socialStatus', 'social_status'], ['col.mobile', 'mobile'], ['col.remarks', 'remarks']];
+        $widths = [8, 7, 7, 7, 12, 14, 26, 26, 9, 6, 18, 18, 22, 20, 14, 24];
+        if (!Voter::showWard()) { array_splice($cols, 1, 1); array_splice($widths, 1, 1); }
         $fill = ['caste', 'sub_caste', 'political_status', 'social_status', 'mobile', 'remarks'];
         $book = new Spreadsheet();
         $sh = $book->getActiveSheet();
@@ -140,7 +143,7 @@ class ExcelExporter
         }
         $sh->freezePane('A4');
         $sh->setAutoFilter("A3:{$last}{$end}");
-        foreach ([8, 7, 7, 7, 12, 14, 26, 26, 9, 6, 18, 18, 22, 20, 14, 24] as $i => $w) $sh->getColumnDimension(Coordinate::stringFromColumnIndex($i + 1))->setWidth($w);
+        foreach ($widths as $i => $w) $sh->getColumnDimension(Coordinate::stringFromColumnIndex($i + 1))->setWidth($w);
         $sh->getPageSetup()->setOrientation('landscape')->setFitToWidth(1)->setFitToHeight(0);
         $sh->getPageSetup()->setRowsToRepeatAtTopByStartAndEnd(3, 3);
         $book->setActiveSheetIndex(0);
@@ -154,6 +157,7 @@ class ExcelExporter
         $sample = [101, 'Sample Nagar', 5, 12, 345, 'ABC1234567', 'Ramesh Kumar', 'रमेश कुमार', t('relation.FATHER'), 'Suresh Kumar', 'सुरेश कुमार',
             t('gender.MALE'), 42, '12-B', 'Main Road', 'मुख्य मार्ग', 'Ward 5', 'Jaipur', '302001', '9876543210', '', '', 'Govt. School Room 1', '', '',
             'M-1024', '15-08-1982', '20-11-2008', 'Saini', '', 'Influencer', 'Supporter', 'Booth Committee', 'PM Awas', 'Ujjwala', '', 'Jaipur', 'Jaipur', 'Ward 5 President', '', '', ''];
+        if (!Voter::showWard()) array_splice($sample, 2, 1);   // no Ward No column
         $book = new Spreadsheet();
         $sh = $book->getActiveSheet();
         $sh->setTitle(t('excel.sheet'));

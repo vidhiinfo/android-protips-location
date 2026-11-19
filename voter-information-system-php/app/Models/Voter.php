@@ -40,6 +40,9 @@ class Voter extends Model
         'deleted' => ['deleted', 'checkbox', null],
     ];
 
+    /** Ward No is shown unless SHOW_WARD_NO=false. */
+    public static function showWard(): bool { return (bool) config('voters.show_ward_no', true); }
+
     public const GENDERS = ['MALE', 'FEMALE', 'OTHER'];
     public const RELATIONS = ['FATHER', 'HUSBAND', 'MOTHER', 'OTHER'];
 

@@ -12,7 +12,7 @@
         @if($next)<a href="{{ url('/survey/house/'.$next) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chevron-right"></i></a>@endif
     </div>
     <h4 class="mb-0"><i class="bi bi-house-door"></i> {{ t('fs.house') }} {{ $v->house_no ?: '-' }}</h4>
-    <p class="small text-muted mb-2">{{ t('col.boothNo') }} {{ $v->booth_no }}@if($v->ward_no) · {{ t('col.wardNo') }} {{ $v->ward_no }}@endif · {{ $v->fullAddress() }} · {{ t('household.count', $members->count()) }}</p>
+    <p class="small text-muted mb-2">{{ t('col.boothNo') }} {{ $v->booth_no }}@if($v->ward_no && \App\Models\Voter::showWard()) · {{ t('col.wardNo') }} {{ $v->ward_no }}@endif · {{ $v->fullAddress() }} · {{ t('household.count', $members->count()) }}</p>
 
     <form method="post" action="{{ url('/survey/house/'.$v->id) }}" id="surveyForm">@csrf
     <input type="hidden" name="next" value="{{ $next }}">

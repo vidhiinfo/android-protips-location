@@ -9,6 +9,12 @@ class Columns
 {
     public static function all(): array
     {
+        $cols = self::columns();
+        return Voter::showWard() ? $cols : array_values(array_filter($cols, fn ($c) => $c[0] !== 'col.wardNo'));
+    }
+
+    private static function columns(): array
+    {
         return [
             ['col.assemblyNo', fn (Voter $v) => $v->assembly_no, 4],
             ['col.assemblyName', fn (Voter $v) => $v->assembly_name, 0],

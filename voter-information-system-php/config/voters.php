@@ -52,6 +52,9 @@ return [
         'pdf_max_rows' => (int) env('PDF_MAX_ROWS', 5000),
     ],
 
+    // false hides Ward No everywhere (lists, forms, filters, exports, access areas), e.g. where the rolls have no wards
+    'show_ward_no' => (bool) env('SHOW_WARD_NO', true),
+
     'branding' => [
         'banner_image' => env('BRAND_BANNER', '/images/login-banner.svg'),
         'organisation' => env('BRAND_ORGANISATION', ''),
