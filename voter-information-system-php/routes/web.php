@@ -36,6 +36,16 @@ Route::middleware('login.required')->group(function () {
         Route::get('/voters/import/template', [VoterController::class, 'template']);
         Route::post('/voters/import', [VoterController::class, 'import']);
     });
+    Route::middleware('perm:ROLL_UPDATE')->group(function () {
+        $ru = \App\Http\Controllers\RollUpdateController::class;
+        Route::get('/roll-update', [$ru, 'index']);
+        Route::post('/roll-update', [$ru, 'upload']);
+        Route::get('/roll-update/{id}', [$ru, 'show'])->whereNumber('id');
+        Route::get('/roll-update/{id}/report', [$ru, 'report'])->whereNumber('id');
+        Route::post('/roll-update/{id}/apply', [$ru, 'apply'])->whereNumber('id');
+        Route::post('/roll-update/{id}/undo', [$ru, 'undo'])->whereNumber('id');
+        Route::post('/roll-update/{id}/discard', [$ru, 'discard'])->whereNumber('id');
+    });
     Route::get('/voters/export/slips', [VoterController::class, 'slips'])->middleware('perm:VOTER_EXPORT');
     Route::middleware('perm:WORKER_MANAGE')->group(function () {
         $w = \App\Http\Controllers\WorkerController::class;

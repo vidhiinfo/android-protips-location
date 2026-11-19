@@ -346,3 +346,11 @@ document.addEventListener('click', function (e) {
     });
     form.addEventListener('input', function (e) { if (e.target.classList) e.target.classList.remove('autofilled'); });
 })();
+
+// long-running forms (roll update compare / apply): show progress and stop double submits
+document.addEventListener('submit', function (e) {
+    if (e.defaultPrevented) return;
+    var b = e.target.querySelector('button[data-busy]');
+    if (!b) return;
+    setTimeout(function () { b.disabled = true; b.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + b.getAttribute('data-busy'); }, 0);
+});

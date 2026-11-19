@@ -82,21 +82,9 @@ class ExcelImporter
 
     public function import(string $path, ?int $onlyAssembly, ?int $defaultAssembly = null): array
     {
-        $headerMap = self::ALIASES; $genders = []; $relations = []; $yes = ['yes' => 1, 'y' => 1, '1' => 1, 'true' => 1, 'deleted' => 1, 'd' => 1, 'del' => 1];
-        $keys = self::FIELD_BY_KEY + array_combine(array_map(fn ($d) => 'col.' . $d[0], Voter::PROFILE), array_keys(Voter::PROFILE));
-        foreach (array_keys(Lang::languages()) as $code) {
-            foreach ($keys as $key => $field) $headerMap[self::headerKey(Lang::get($key, [], $code))] = $field;
-            $yes[self::norm(Lang::get('common.yes', [], $code))] = 1;
-            $yes[self::norm(Lang::get('col.deleted', [], $code))] = 1;
-            foreach (Voter::GENDERS as $g) $genders[self::norm(Lang::get("gender.$g", [], $code))] = $g;
-            foreach (Voter::RELATIONS as $r) $relations[self::norm(Lang::get("relation.$r", [], $code))] = $r;
-        }
         @set_time_limit(0);
-        $reader = new Reader();
-        $reader->open($path);
-        $validator = null;
-        $idx = null; $inserted = 0; $updated = 0; $errors = []; $buf = [];
-        $fields = array_flip(array_values($keys));   // includes ward_no
+        $inserted = 0; $updated = 0; $errors = []; $buf = [];
+        $fields = array_flip(array_values(self::fieldKeys()));   // includes ward_no
         // saves 500 rows per transaction, looking up their EPIC numbers with one query
         $casteCategory = \App\Models\Caste::whereNotNull('category')->get()->mapWithKeys(fn ($c) => [mb_strtolower($c->name) => $c->category])->all();
         $save = function () use (&$buf, &$inserted, &$updated, &$errors, $onlyAssembly, $fields, $casteCategory) {
@@ -124,8 +112,47 @@ class ExcelImporter
         };
         DB::beginTransaction();
         try {
+            $found = $this->eachRow($path, $onlyAssembly, $defaultAssembly, function ($label, $data) use (&$buf, $save) {
+                $buf[] = [$label, $data];
+                if (count($buf) >= 500) $save();
+            }, $errors);
+            if ($buf) $save();
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+        if (!$found) return ['inserted' => 0, 'updated' => 0, 'errors' => [t('import.error.header')]];
+        return compact('inserted', 'updated', 'errors');
+    }
+
+    /** Header key => voter column, for every recognised column title. */
+    private static function fieldKeys(): array
+    {
+        return self::FIELD_BY_KEY + array_combine(array_map(fn ($d) => 'col.' . $d[0], Voter::PROFILE), array_keys(Voter::PROFILE));
+    }
+
+    /**
+     * Reads the first sheet row by row (lakhs of rows do not have to fit in memory) and calls $onRow(rowLabel, cleanData)
+     * for every valid voter row. Invalid rows are added to $errors. Returns false when no header row (EPIC No + Name) was found.
+     * Also used by the roll update (App\Services\Voters\RollUpdateService).
+     */
+    public function eachRow(string $path, ?int $onlyAssembly, ?int $defaultAssembly, callable $onRow, array &$errors): bool
+    {
+        $headerMap = self::ALIASES; $genders = []; $relations = []; $yes = ['yes' => 1, 'y' => 1, '1' => 1, 'true' => 1, 'deleted' => 1, 'd' => 1, 'del' => 1];
+        $keys = self::fieldKeys();
+        foreach (array_keys(Lang::languages()) as $code) {
+            foreach ($keys as $key => $field) $headerMap[self::headerKey(Lang::get($key, [], $code))] = $field;
+            $yes[self::norm(Lang::get('common.yes', [], $code))] = 1;
+            $yes[self::norm(Lang::get('col.deleted', [], $code))] = 1;
+            foreach (Voter::GENDERS as $g) $genders[self::norm(Lang::get("gender.$g", [], $code))] = $g;
+            foreach (Voter::RELATIONS as $r) $relations[self::norm(Lang::get("relation.$r", [], $code))] = $r;
+        }
+        $reader = new Reader();
+        $reader->open($path);
+        $validator = null; $idx = null;
+        try {
         foreach ($reader->getSheetIterator() as $sheet) {
-        // rows are streamed one by one: a file with lakhs of voters does not have to fit in memory
         foreach ($sheet->getRowIterator() as $rowNo => $rowObj) {
             $row = array_map(fn ($c) => $c instanceof \DateTimeInterface ? $c->format('Y-m-d') : $c, $rowObj->toArray());
             if ($idx === null) {
@@ -173,21 +200,14 @@ class ExcelImporter
                 $errors[] = t('import.row', $label) . ': ' . t('field.' . \Illuminate\Support\Str::camel($err[0])) . ' - ' . $err[1];
                 continue;
             }
-            $buf[] = [$label, $data];
-            if (count($buf) >= 500) $save();
+            $onRow($label, $data);
             if (count($errors) > 200) { $errors[] = t('import.error.tooMany'); break; }
         }
         break;   // first sheet only
         }
-        if ($buf) $save();
-        DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            throw $e;
         } finally {
             $reader->close();
         }
-        if ($idx === null) return ['inserted' => 0, 'updated' => 0, 'errors' => [t('import.error.header')]];
-        return compact('inserted', 'updated', 'errors');
+        return $idx !== null;
     }
 }
