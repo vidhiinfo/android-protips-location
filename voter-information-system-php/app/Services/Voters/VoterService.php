@@ -127,7 +127,7 @@ class VoterService
         $ttl = (int) config('voters.lookup_cache_seconds', 300);
         if ($ttl <= 0) return $fn();
         $who = json_encode([\App\Support\Area::current(), app(\App\Services\Auth\CurrentUser::class)->workerId()]);
-        return \Illuminate\Support\Facades\Cache::remember('vis.lookup.' . $name . '.' . md5(json_encode($args) . $who), $ttl, $fn);
+        return \App\Support\SharedCache::remember('vis.lookup.' . $name . '.' . md5(json_encode($args) . $who), $ttl, $fn);
     }
 
     public function booths(?int $a, ?int $ward = null): array

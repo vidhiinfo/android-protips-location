@@ -44,6 +44,6 @@ class DashboardController extends Controller
         $make = fn () => $d->build($a, $e, $party, $ward);
         if ($ttl <= 0) return $make();
         $key = 'vis.dash.' . md5(json_encode([$a, $e?->id, $party, $ward, \App\Support\Area::current(), $this->user()->workerId(), \App\Support\Lang::current()]));
-        return \Illuminate\Support\Facades\Cache::remember($key, $ttl, $make);
+        return \App\Support\SharedCache::remember($key, $ttl, $make);
     }
 }
