@@ -1087,6 +1087,6 @@
 "roll.areaMoved": "{0}: booth {1}, serial {2}–{3} → {4}–{5}",
 "roll.areaEmpty": "{0}: booth {1}, serial {2}–{3}: none of its voters are left in this booth. Set the range again in Admin > Users.",
 "roll.areasUndone": "Undo put the old serial ranges back.",
-"brand.by": "A solution by {0}",
+"brand.by": "Powered by {0}",
 "brand.copyright": "© {0} {1}. All rights reserved."
 }
