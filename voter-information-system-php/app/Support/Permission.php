@@ -12,14 +12,14 @@ class Permission
         'RESULT_VIEW' => 'results', 'RESULT_ENTRY' => 'results',
         'REPORT_VIEW' => 'reports', 'REPORT_SENSITIVE' => 'reports',
         'MESSAGE_SEND' => 'messages', 'MESSAGE_ADMIN' => 'messages',
-        'WORKER_MANAGE' => 'workers', 'POLL_DAY' => 'pollday', 'GRIEVANCE' => 'grievances', 'ROLL_UPDATE' => 'voters',
+        'WORKER_MANAGE' => 'workers', 'POLL_DAY' => 'pollday', 'GRIEVANCE' => 'grievances', 'ROLL_UPDATE' => 'voters', 'STATE_VIEW' => 'reports',
         'USER_ADMIN' => 'admin', 'AUDIT_VIEW' => 'admin', 'SYSTEM_VIEW' => 'admin',
     ];
 
     public const OPERATOR = ['DASHBOARD_VIEW', 'VOTER_VIEW', 'VOTER_EDIT', 'VOTER_DELETE', 'VOTER_IMPORT', 'VOTER_EXPORT', 'MASTER_VIEW',
         'RESULT_VIEW', 'RESULT_ENTRY', 'REPORT_VIEW', 'MESSAGE_SEND', 'WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE'];
     /** Added in a later version: given to the built-in roles of existing installations once. */
-    public const ADDED = ['ADMIN' => ['WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE', 'ROLL_UPDATE'], 'OPERATOR' => ['WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE']];
+    public const ADDED = ['ADMIN' => ['WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE', 'ROLL_UPDATE', 'STATE_VIEW'], 'OPERATOR' => ['WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE']];
     public const VIEWER = ['DASHBOARD_VIEW', 'VOTER_VIEW', 'VOTER_EXPORT', 'MASTER_VIEW', 'RESULT_VIEW', 'REPORT_VIEW'];
 
     public static function codes(): array { return array_keys(self::ALL); }

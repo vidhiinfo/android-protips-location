@@ -23,6 +23,8 @@ Route::get('/site.webmanifest', function () {
     foreach ($m['shortcuts'] ?? [] as $i => $sc) { $m['shortcuts'][$i]['url'] = url(ltrim($sc['url'], '.')); foreach ($sc['icons'] ?? [] as $j => $ic) $m['shortcuts'][$i]['icons'][$j]['src'] = asset($ic['src']); }
     return response()->json($m, 200, ['Content-Type' => 'application/manifest+json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 });
+// state summary feed for the state server (token, totals only; see StateController)
+Route::get('/state-feed', [\App\Http\Controllers\StateController::class, 'feed'])->middleware('throttle:30,1');
 // Mobile app: how to install on Android / iPhone (no login needed, so it can be shared as a link or QR code)
 Route::get('/mobile-app', fn () => view('app-install', [
     'apk' => is_file(public_path('downloads/voter-system.apk')) ? 'downloads/voter-system.apk' : null,
@@ -49,6 +51,10 @@ Route::middleware('login.required')->group(function () {
         Route::get('/voters/import', [VoterController::class, 'importForm']);
         Route::get('/voters/import/template', [VoterController::class, 'template']);
         Route::post('/voters/import', [VoterController::class, 'import']);
+    });
+    Route::middleware('perm:STATE_VIEW')->group(function () {
+        Route::get('/state', [\App\Http\Controllers\StateController::class, 'index']);
+        Route::get('/state/export', [\App\Http\Controllers\StateController::class, 'export']);
     });
     Route::middleware('perm:ROLL_UPDATE')->group(function () {
         $ru = \App\Http\Controllers\RollUpdateController::class;

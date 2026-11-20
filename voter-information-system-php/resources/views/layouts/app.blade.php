@@ -56,6 +56,7 @@
                     </ul></li>
                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-graph-up-arrow"></i> {{ t('nav.analytics') }}</a>
                     <ul class="dropdown-menu">
+                        @if(can('STATE_VIEW') && \App\Services\State\StateSummaryService::enabled())<li><a class="dropdown-item fw-semibold" href="{{ url('/state') }}"><i class="bi bi-map"></i> {{ t('state.title') }}</a></li>@endif
                         <li><a class="dropdown-item" href="{{ url('/analytics') }}">{{ t('an.home') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
                         @foreach($analyticsIds as $r)<li><a class="dropdown-item" href="{{ url('/reports/'.$r) }}">{{ t('report.'.$r) }}</a></li>@endforeach

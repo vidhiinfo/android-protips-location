@@ -65,6 +65,15 @@ return [
     // seconds a quick search of the voter list may run before it is stopped (protects shared hosting); 0 = no limit
     'search_seconds' => (int) env('SEARCH_SECONDS', 8),
 
+    // State summary across division installations (see docs: each division serves /state-feed, the state site collects them)
+    'state' => [
+        'feed_token' => env('STATE_FEED_TOKEN', ''),         // division site: secret the state site must send; empty = no feed
+        'feed_name' => env('STATE_FEED_NAME', ''),           // division site: name shown on the state summary (default: product name)
+        'feed_seconds' => (int) env('STATE_FEED_SECONDS', 120),
+        'sources' => env('STATE_SOURCES', ''),               // state site: "Name|https://url|TOKEN;Name|https://url|TOKEN"
+        'refresh_seconds' => (int) env('STATE_REFRESH_SECONDS', 180),
+    ],
+
     // false hides Ward No everywhere (lists, forms, filters, exports, access areas), e.g. where the rolls have no wards
     'show_ward_no' => (bool) env('SHOW_WARD_NO', true),
 
