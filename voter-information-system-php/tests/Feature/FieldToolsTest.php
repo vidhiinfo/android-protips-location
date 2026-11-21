@@ -90,6 +90,7 @@ class FieldToolsTest extends TestCase
     {
         $w = $this->workerLogin();
         $this->login();
+        $this->travel(1)->minutes();   // voters were seeded before the task was given
         $this->post('/workers/tasks', ['assembly_no' => 45, 'title' => 'Survey booth 1', 'kind' => 'SURVEY', 'worker_id' => $w->id, 'target' => 4, 'due_date' => now()->subDay()->toDateString()])
             ->assertRedirect()->assertSessionHas('success');
         $this->post('/workers/tasks', ['assembly_no' => 45, 'title' => 'Call 50 voters', 'kind' => 'CALL', 'worker_id' => $w->id, 'target' => 50, 'due_date' => now()->toDateString()])->assertRedirect();
@@ -132,5 +133,38 @@ class FieldToolsTest extends TestCase
         $this->post('/logout');
         $this->login();
         $this->get('/workers/attendance?assemblyNo=45')->assertOk()->assertSee('Field One')->assertSee('1 / 7');
+    }
+
+    public function test_duplicates_are_found_merged_and_undone(): void
+    {
+        $base = Voter::where('assembly_no', 45)->where('deleted', false)->orderBy('id')->first();
+        $keep = Voter::create(array_merge($base->only(['assembly_no', 'assembly_name', 'booth_no', 'gender', 'house_no', 'address', 'village_ward']),
+            ['epic_no' => 'DUP0000001', 'name' => 'Ramkishan Yadav', 'relative_name' => 'Shyamlal Yadav', 'age' => 40, 'mobile' => null, 'caste' => 'Yadav', 'political_status' => null, 'deleted' => false]));
+        $drop = Voter::create(array_merge($keep->only(['assembly_no', 'assembly_name', 'booth_no', 'gender', 'house_no', 'address', 'village_ward']),
+            ['epic_no' => 'DUP0000002', 'name' => 'RAMKISHAN  yadav', 'relative_name' => 'Shyam-lal Yadav', 'age' => 41, 'mobile' => '9876543210', 'caste' => 'Other', 'political_status' => 'Supporter', 'deleted' => false]));
+        // same names but 30 years apart: not offered by default
+        Voter::create(array_merge($keep->only(['assembly_no', 'assembly_name', 'booth_no', 'gender']), ['epic_no' => 'DUP0000003', 'name' => 'Ramkishan Yadav', 'relative_name' => 'Shyamlal Yadav', 'age' => 71, 'deleted' => false]));
+        $gid = DB::table('grievances')->insertGetId(['voter_id' => $drop->id, 'assembly_no' => 45, 'name' => 'x', 'category' => 'WATER', 'subject' => 'Water', 'created_at' => now()]);
+        $this->login();
+        $page = $this->get('/voters/duplicates?assemblyNo=45')->assertOk()->assertSee('DUP0000001')->assertSee('DUP0000002')->assertDontSee('DUP0000003');
+        $this->get('/voters/duplicates?assemblyNo=45&anyAge=1')->assertSee('DUP0000003');
+        $this->post('/voters/duplicates/merge', ['keep' => $keep->id, 'drop' => [$drop->id]])->assertRedirect()->assertSessionHas('success');
+        $k = $keep->fresh();
+        $this->assertSame(['9876543210', 'Yadav', 'Supporter'], [$k->mobile, $k->caste, $k->political_status]);   // caste kept, empty fields filled
+        $this->assertTrue((bool) $drop->fresh()->deleted);
+        $this->assertSame($keep->id, (int) DB::table('grievances')->find($gid)->voter_id);
+        // the mobile is corrected after the merge; undo keeps it but clears the status copied from the duplicate
+        $k->update(['mobile' => '9999988888']);
+        $mid = DB::table('voter_merges')->value('id');
+        $this->post('/voters/duplicates/' . $mid . '/undo')->assertRedirect()->assertSessionHas('success');
+        $k = $keep->fresh();
+        $this->assertSame(['9999988888', null], [$k->mobile, $k->political_status]);
+        $this->assertFalse((bool) $drop->fresh()->deleted);
+        $this->assertSame($drop->id, (int) DB::table('grievances')->find($gid)->voter_id);
+        $this->post('/voters/duplicates/' . $mid . '/undo')->assertSessionHas('error');
+        // viewers cannot merge
+        $this->post('/logout');
+        $this->login('viewer', 'viewer@123');
+        $this->get('/voters/duplicates')->assertForbidden();
     }
 }

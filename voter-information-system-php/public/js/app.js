@@ -419,3 +419,9 @@ document.addEventListener('submit', function (e) {
         q.onerror = function () { d.close(); done(); };
     };
 });
+
+// duplicates: the voter chosen to keep is never also ticked for merging
+document.addEventListener('change', function (e) {
+    if (!e.target.matches('[data-dup-keep]')) return;
+    e.target.form.querySelectorAll('[data-dup-drop]').forEach(function (c) { c.checked = c.value !== e.target.value; });
+});

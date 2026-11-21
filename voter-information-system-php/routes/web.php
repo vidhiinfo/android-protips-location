@@ -130,6 +130,11 @@ Route::middleware('login.required')->group(function () {
         Route::post('/admin/privacy/{id}/close', [$pc, 'close'])->whereNumber('id');
         Route::post('/admin/privacy/retention', [$pc, 'retention']);
     });
+    Route::middleware(['perm:VOTER_EDIT', 'perm:VOTER_DELETE'])->group(function () {
+        Route::get('/voters/duplicates', [\App\Http\Controllers\DuplicateController::class, 'index']);
+        Route::post('/voters/duplicates/merge', [\App\Http\Controllers\DuplicateController::class, 'merge']);
+        Route::post('/voters/duplicates/{id}/undo', [\App\Http\Controllers\DuplicateController::class, 'undo'])->whereNumber('id');
+    });
     Route::middleware('perm:VOTER_EDIT')->group(function () {
         Route::get('/voters/bulk-changes', [\App\Http\Controllers\BulkChangeController::class, 'index']);
         Route::post('/voters/bulk-changes/{id}/undo', [\App\Http\Controllers\BulkChangeController::class, 'undo'])->whereNumber('id');
