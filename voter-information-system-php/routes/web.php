@@ -114,6 +114,17 @@ Route::middleware('login.required')->group(function () {
         Route::post('/phonebank/{id}', [\App\Http\Controllers\PhoneBankController::class, 'save'])->whereNumber('id')->middleware('throttle:60,1');
         Route::post('/phonebank/{id}/skip', [\App\Http\Controllers\PhoneBankController::class, 'skip'])->whereNumber('id');
     });
+    Route::middleware(['perm:GRIEVANCE', 'perm:MASTER_EDIT'])->group(function () {
+        Route::get('/grievances/deadlines', [\App\Http\Controllers\GrievanceController::class, 'deadlines']);
+        Route::post('/grievances/deadlines', [\App\Http\Controllers\GrievanceController::class, 'saveDeadlines']);
+    });
+    Route::middleware('perm:POLL_DAY')->group(function () {
+        $tr = \App\Http\Controllers\TransportController::class;
+        Route::get('/transport', [$tr, 'index']);
+        Route::post('/transport', [$tr, 'store']);
+        Route::get('/transport/print', [$tr, 'print']);
+        Route::post('/transport/{id}', [$tr, 'update'])->whereNumber('id');
+    });
     Route::middleware('perm:POLL_DAY')->group(function () {
         $p = \App\Http\Controllers\PollDayController::class;
         Route::get('/pollday', [$p, 'index']);
@@ -132,6 +143,10 @@ Route::middleware('login.required')->group(function () {
         Route::get('/grievances/{id}/edit', [$g, 'form'])->whereNumber('id');
         Route::post('/grievances/{id}', [$g, 'save'])->whereNumber('id');
         Route::post('/grievances/{id}/status', [$g, 'status'])->whereNumber('id');
+        Route::post('/grievances/{id}/note', [$g, 'note'])->whereNumber('id');
+        Route::post('/grievances/{id}/photos', [$g, 'upload'])->whereNumber('id')->middleware('throttle:20,1');
+        Route::get('/grievances/{id}/photos/{pid}', [$g, 'showPhoto'])->whereNumber('id')->whereNumber('pid');
+        Route::post('/grievances/{id}/photos/{pid}/delete', [$g, 'deletePhoto'])->whereNumber('id')->whereNumber('pid');
     });
     Route::post('/voters/bulk', [VoterController::class, 'bulkUpdate'])->middleware('perm:VOTER_EDIT');
     Route::post('/voters/{id}/consent', [\App\Http\Controllers\PrivacyController::class, 'consent'])->whereNumber('id')->middleware('perm:VOTER_EDIT');

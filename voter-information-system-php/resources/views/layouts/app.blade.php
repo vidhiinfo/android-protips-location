@@ -73,6 +73,7 @@
                         <li><a class="dropdown-item" href="{{ url('/pollday') }}">{{ t('poll.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/pollday/grid') }}">{{ t('poll.grid') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/pollday/live') }}"><i class="bi bi-broadcast text-danger"></i> {{ t('poll.live') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/transport') }}"><i class="bi bi-truck"></i> {{ t('tr.title') }}</a></li>
                     </ul></li>
                 @endif
                 @if(can('GRIEVANCE'))<li class="nav-item"><a class="nav-link" href="{{ url('/grievances') }}"><i class="bi bi-megaphone"></i> {{ t('gr.title') }}</a></li>@endif

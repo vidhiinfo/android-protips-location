@@ -24,6 +24,10 @@
                 @foreach(\App\Models\Grievance::PRIORITIES as $p)<option value="{{ $p }}" @selected($p === old('priority', $g->priority))>{{ t('gr.pr.'.$p) }}</option>@endforeach</select></div>
             <div class="col-md-4"><label class="form-label">{{ t('gr.status') }}</label><select name="status" class="form-select">
                 @foreach(\App\Models\Grievance::STATUSES as $s)<option value="{{ $s }}" @selected($s === old('status', $g->status))>{{ t('gr.status.'.$s) }}</option>@endforeach</select></div>
+            @if(\Illuminate\Support\Facades\Schema::hasColumn('grievances', 'due_at'))
+            <div class="col-md-4"><label class="form-label">{{ t('grv.dueDate') }}</label><input type="date" name="due_date" class="form-control" value="{{ old('due_date', $g->due_at?->format('Y-m-d')) }}">
+                <div class="form-text">{{ t('grv.dueHint') }}</div></div>
+            @endif
             <div class="col-md-4"><label class="form-label">{{ t('gr.assigned') }}</label><select name="worker_id" class="form-select"><option value="">-</option>
                 @foreach($workers as $w)<option value="{{ $w->id }}" @selected($w->id == old('worker_id', $g->worker_id))>{{ $w->label() }}</option>@endforeach</select></div>
             <div class="col-12"><label class="form-label">{{ t('gr.resolution') }}</label><textarea name="resolution" class="form-control" rows="2" maxlength="1000">{{ old('resolution', $g->resolution) }}</textarea></div>

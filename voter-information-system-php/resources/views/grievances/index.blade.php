@@ -8,6 +8,7 @@
     <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
         <div class="me-auto"><h4 class="mb-0"><i class="bi bi-megaphone"></i> {{ t('gr.title') }}</h4><div class="small text-muted">{{ t('gr.intro') }}</div></div>
         @if(can('REPORT_VIEW'))<a class="btn btn-sm btn-outline-secondary" href="{{ url('/reports/grievances') }}?assemblyNo={{ $assemblyNo }}"><i class="bi bi-graph-up"></i> {{ t('report.grievances') }}</a>@endif
+        @if(can('MASTER_EDIT'))<a class="btn btn-sm btn-outline-secondary" href="{{ url('/grievances/deadlines') }}"><i class="bi bi-alarm"></i> {{ t('grv.deadlines') }}</a>@endif
         <a class="btn btn-sm btn-primary" href="{{ url('/grievances/new') }}?assemblyNo={{ $assemblyNo }}"><i class="bi bi-plus-lg"></i> {{ t('gr.add') }}</a>
     </div>
     <div class="d-flex flex-wrap gap-2 mb-3">
@@ -15,6 +16,8 @@
         <a class="btn btn-sm {{ $f['status'] === $st ? 'btn-dark' : 'btn-outline-secondary' }}" href="?{{ http_build_query(array_merge(array_filter($f), ['status' => $st])) }}">
             {{ t('gr.status.'.$st) }} <span class="badge text-bg-light">{{ $st === 'ACTIVE' ? ($counts['OPEN'] ?? 0) + ($counts['IN_PROGRESS'] ?? 0) : ($st === 'ALL' ? $counts->sum() : ($counts[$st] ?? 0)) }}</span></a>
         @endforeach
+        <a class="btn btn-sm {{ $f['status'] === 'OVERDUE' ? 'btn-danger' : 'btn-outline-danger' }}" href="?{{ http_build_query(array_merge(array_filter($f), ['status' => 'OVERDUE'])) }}">
+            <i class="bi bi-alarm"></i> {{ t('grv.overdue') }} <span class="badge text-bg-light">{{ $overdue }}</span></a>
     </div>
     <form method="get" class="card card-body py-2 mb-3"><input type="hidden" name="status" value="{{ $f['status'] }}"><div class="row g-2 align-items-end">
         <div class="col-md-3"><label class="form-label small mb-0">{{ t('common.search') }}</label><input name="q" value="{{ $f['q'] }}" class="form-control form-control-sm" placeholder="{{ t('gr.searchHint') }}"></div>
@@ -36,7 +39,8 @@
                 <td>@if($g->voter_id)<a href="{{ url('/voters/'.$g->voter_id) }}">{{ $g->name }}</a>@else{{ $g->name }}@endif @if($g->mobile)<div class="small"><a href="tel:{{ $g->mobile }}">{{ $g->mobile }}</a></div>@endif</td>
                 <td>{{ $g->booth_no }}</td><td><span class="badge {{ $prCls[$g->priority] }}">{{ t('gr.pr.'.$g->priority) }}</span></td>
                 <td><span class="badge {{ $stCls[$g->status] }}">{{ t('gr.status.'.$g->status) }}</span></td>
-                <td class="small">{{ $g->worker?->name }}</td><td class="text-end {{ $g->isOpen() && $g->ageDays() > 7 ? 'text-danger fw-semibold' : '' }}">{{ $g->ageDays() }}</td></tr>
+                <td class="small">{{ $g->worker?->name }}</td><td class="text-end {{ $g->overdue() || (!$g->due_at && $g->isOpen() && $g->ageDays() > 7) ? 'text-danger fw-semibold' : '' }}">{{ $g->ageDays() }}
+                    @if($g->overdue())<div><span class="badge text-bg-danger">{{ t('grv.overdue') }}</span></div>@elseif($g->isOpen() && $g->due_at)<div class="small text-muted text-nowrap">{{ t('grv.due') }} {{ $g->due_at->format('d-m') }}</div>@endif</td></tr>
         @empty <tr><td colspan="9" class="text-center text-muted py-4">{{ t('gr.none') }}</td></tr> @endforelse</tbody></table></div>
     <div class="mt-3">{{ $page->links() }}</div>
 </div>

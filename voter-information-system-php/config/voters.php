@@ -104,6 +104,11 @@ return [
         'reminder_from' => env('TASK_REMINDER_FROM', '08:00'),
     ],
 
+    'grievance' => [
+        // told when a grievance is overdue (Grievances > Deadlines names who): none | sms | whatsapp
+        'alert_channel' => env('GRIEVANCE_ALERT_CHANNEL', 'none'),
+    ],
+
     'branding' => [
         'banner_image' => env('BRAND_BANNER', '/images/login-banner.svg'),
         'organisation' => env('BRAND_ORGANISATION', ''),

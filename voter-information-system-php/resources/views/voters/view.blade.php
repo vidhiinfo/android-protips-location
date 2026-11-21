@@ -18,6 +18,7 @@
         @endif
         <button class="btn btn-sm btn-secondary" data-print><i class="bi bi-printer"></i> {{ t('view.printSlip') }}</button>
         @if(can('GRIEVANCE'))<a href="{{ url('/grievances/new') }}?voterId={{ $v->id }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-megaphone"></i> {{ t('gr.logForVoter') }}</a>@endif
+        @if(can('POLL_DAY') && \Illuminate\Support\Facades\Schema::hasTable('transport_requests'))<a href="{{ url('/transport') }}?{{ http_build_query(['assemblyNo' => $v->assembly_no, 'boothNo' => $v->booth_no, 'voterId' => $v->id]) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-truck"></i> {{ t('tr.request') }}</a>@endif
         @if(can('VOTER_EDIT'))<a href="{{ url('/voters/'.$v->id.'/edit') }}" class="btn btn-sm btn-primary"><i class="bi bi-pencil"></i> {{ t('common.edit') }}</a>@endif
         @if(can('VOTER_DELETE'))<form action="{{ url('/voters/'.$v->id.'/delete') }}" method="post" data-confirm="{{ t('common.confirmDelete') }}">@csrf
             <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> {{ t('common.delete') }}</button></form>@endif
