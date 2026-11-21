@@ -16,7 +16,9 @@
                         <li><a class="dropdown-item" href="{{ url('/voters') }}">{{ t('nav.voterList') }}</a></li>
                         @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/new') }}">{{ t('nav.addVoter') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/survey') }}"><i class="bi bi-clipboard2-check"></i> {{ t('fs.title') }}</a></li>@endif
-                        @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>@endif
+                        @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/workers/tasks') }}"><i class="bi bi-list-check"></i> {{ t('task.title') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/workers/attendance') }}"><i class="bi bi-calendar-check"></i> {{ t('att.title') }}</a></li>@endif
                         @if(can('VOTER_IMPORT'))<li><a class="dropdown-item" href="{{ url('/voters/import') }}">{{ t('nav.import') }}</a></li>@endif
                         @if(can('ROLL_UPDATE'))<li><a class="dropdown-item" href="{{ url('/roll-update') }}">{{ t('nav.rollUpdate') }}</a></li>@endif
                         @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/bulk-changes') }}">{{ t('bulkUndo.title') }}</a></li>@endif
@@ -101,12 +103,16 @@
                 {{ $me->scoped() ? $me->workAssembly() . ' - ' . $me->workAssemblyName() : t('login.allAssemblies') }}@if($areaLabel = \App\Support\Area::label(\App\Support\Area::current())) · {{ $areaLabel }}@endif</span>
             @include('partials.lang', ['cls' => 'w-auto me-2 mb-2 mb-xl-0'])
             <div class="dropdown">
-                <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ $me->username() }}</a>
+                @php($dueTasks = app(\App\Services\Workers\TaskService::class)->dueFor($me->username()))
+                <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ $me->username() }}@if($dueTasks) <span class="badge rounded-pill text-bg-danger" title="{{ t('task.dueBadge') }}">{{ $dueTasks }}</span>@endif</a>
                 <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url('/my/tasks') }}"><i class="bi bi-list-check"></i> {{ t('task.my') }}@if($dueTasks) <span class="badge text-bg-danger">{{ $dueTasks }}</span>@endif</a></li>
+                    <li><a class="dropdown-item" href="{{ url('/my/attendance') }}"><i class="bi bi-calendar-check"></i> {{ t('att.my') }}</a></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{{ url('/account/password') }}">{{ t('account.changePassword') }}</a></li>
                     @if(config('voters.security.user_source') !== 'external')<li><a class="dropdown-item" href="{{ url('/account/security') }}"><i class="bi bi-shield-lock"></i> {{ t('otp.account') }}</a></li>@endif
                     <li class="native-hide"><a class="dropdown-item" href="{{ url('/mobile-app') }}"><i class="bi bi-phone"></i> {{ t('app.install.link') }}</a></li>
-                    <li><form action="{{ url('/logout') }}" method="post">@csrf<button class="dropdown-item">{{ t('nav.logout') }}</button></form></li>
+                    <li><form action="{{ url('/logout') }}" method="post" data-logout data-l-unsent="{{ t('off.unsentLogout') }}">@csrf<button class="dropdown-item">{{ t('nav.logout') }}</button></form></li>
                 </ul>
             </div>
         </div>

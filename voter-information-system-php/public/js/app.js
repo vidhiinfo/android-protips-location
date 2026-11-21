@@ -364,3 +364,58 @@ document.addEventListener('submit', function (e) {
     var qr = qrcode(0, 'M'); qr.addData(el.getAttribute('data-uri')); qr.make();
     el.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2 });
 })();
+
+// map of surveyed houses (vendor/leaflet): green = surveyed, orange = partly, red = not yet
+(function () {
+    var el = document.getElementById('houseMap');
+    if (!el || typeof L === 'undefined') return;
+    var pts = JSON.parse(el.getAttribute('data-points') || '[]');
+    var map = L.map(el);
+    L.tileLayer(el.getAttribute('data-tiles'), { maxZoom: 19, attribution: el.getAttribute('data-attribution') }).addTo(map);
+    var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+    var bounds = [];
+    pts.forEach(function (p) {
+        var c = p.done >= p.n ? '#198754' : p.done ? '#fd7e14' : '#dc3545';
+        L.circleMarker([p.lat, p.lng], { radius: 8, color: '#fff', weight: 2, fillColor: c, fillOpacity: 0.9 }).addTo(map)
+            .bindPopup('<b>' + esc(p.house) + '</b><br>' + esc(p.addr) + '<br>' + esc(el.getAttribute('data-l-members').replace('{0}', p.n)) + ' · ' + p.done + '/' + p.n
+                + '<br><a href="' + esc(p.url) + '">' + esc(el.getAttribute('data-l-open')) + '</a>');
+        bounds.push([p.lat, p.lng]);
+    });
+    if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 18 });
+})();
+
+// field survey house page: take the house's GPS location (saved with the form)
+document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-geo]');
+    if (!b) return;
+    e.preventDefault();
+    var form = b.closest('form'), out = document.getElementById(b.getAttribute('data-geo'));
+    if (!navigator.geolocation) { out.textContent = b.getAttribute('data-l-failed'); return; }
+    out.textContent = b.getAttribute('data-l-taking');
+    navigator.geolocation.getCurrentPosition(function (p) {
+        form.querySelector('[name=lat]').value = p.coords.latitude.toFixed(7);
+        form.querySelector('[name=lng]').value = p.coords.longitude.toFixed(7);
+        form.querySelector('[name=acc]').value = Math.round(p.coords.accuracy);
+        out.textContent = b.getAttribute('data-l-ready').replace('{0}', Math.round(p.coords.accuracy));
+    }, function () { out.textContent = b.getAttribute('data-l-failed'); }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
+});
+
+// logout: remove an offline booth from the phone (warn when answers have not been sent yet)
+document.addEventListener('submit', function (e) {
+    if (!e.target.matches('[data-logout]') || !window.indexedDB || e.target.dataset.cleared) return;
+    e.preventDefault();
+    var form = e.target, done = function () { form.dataset.cleared = '1'; form.submit(); };
+    var r = indexedDB.open('vis-offline', 1);
+    r.onupgradeneeded = function () { r.transaction.abort(); };   // never used on this phone
+    r.onerror = done;
+    r.onsuccess = function () {
+        var d = r.result, q = d.transaction('queue').objectStore('queue').count();
+        q.onsuccess = function () {
+            if (q.result > 0 && !confirm(form.getAttribute('data-l-unsent') || 'Unsent offline survey answers will be lost. Log out?')) { d.close(); return; }
+            d.close();
+            var del = indexedDB.deleteDatabase('vis-offline');
+            del.onsuccess = del.onerror = del.onblocked = done;
+        };
+        q.onerror = function () { d.close(); done(); };
+    };
+});

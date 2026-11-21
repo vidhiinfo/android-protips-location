@@ -1,10 +1,12 @@
 /*
  * Service worker: makes the application installable as an app on Android / iPhone (PWA)
- * and shows a friendly page when there is no internet. Voter data is never stored on the phone:
- * pages always come from the server; only the app's own CSS / JS / fonts / icons are cached.
+ * and shows a friendly page when there is no internet. Pages always come from the server; only the app's own
+ * CSS / JS / fonts / icons are cached, plus the empty "Offline survey" page so it opens without internet.
+ * Voter data is kept on the phone only when a worker downloads a booth there (IndexedDB, removed after a few days / on logout).
  */
-const VERSION = 'vis-app-2026-11-17';
-const SHELL = ['offline.html', 'js/offline.js', 'images/app/icon-192.png', 'manifest.webmanifest'];
+const VERSION = 'vis-app-2026-12-01';
+const SHELL = ['offline.html', 'js/offline.js', 'js/offline-survey.js', 'images/app/icon-192.png', 'manifest.webmanifest'];
+const SURVEY_PAGE = 'survey-offline-page';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -20,6 +22,14 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (req.mode === 'navigate' && /\/survey\/offline$/.test(url.pathname)) {
+    // offline survey page: from the network when possible, else the copy kept from the last visit
+    e.respondWith(fetch(req).then((res) => {
+      if (res.ok && !res.redirected) { const copy = res.clone(); caches.open(VERSION).then((c) => c.put(SURVEY_PAGE, copy)); }
+      return res;
+    }).catch(() => caches.open(VERSION).then((c) => c.match(SURVEY_PAGE)).then((hit) => hit || caches.match('offline.html', { ignoreSearch: true }))));
+    return;
+  }
   if (req.mode === 'navigate') {
     // pages (voter lists etc.): always from the network; offline page when there is no connection
     e.respondWith(fetch(req).catch(() => caches.match('offline.html', { ignoreSearch: true })));

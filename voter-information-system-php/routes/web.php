@@ -87,6 +87,19 @@ Route::middleware('login.required')->group(function () {
         Route::post('/workers/{id}/unassign', [$w, 'unassign'])->whereNumber('id');
         Route::post('/workers/{id}/delete', [$w, 'destroy'])->whereNumber('id');
     });
+    Route::middleware('perm:WORKER_MANAGE')->group(function () {
+        $tc = \App\Http\Controllers\TaskController::class;
+        Route::get('/workers/tasks', [$tc, 'index']);
+        Route::post('/workers/tasks', [$tc, 'save']);
+        Route::post('/workers/tasks/{id}', [$tc, 'save'])->whereNumber('id');
+        Route::post('/workers/tasks/{id}/status', [$tc, 'status'])->whereNumber('id');
+        Route::post('/workers/tasks/{id}/delete', [$tc, 'destroy'])->whereNumber('id');
+        Route::get('/workers/attendance', [$tc, 'attendance']);
+    });
+    Route::get('/my/tasks', [\App\Http\Controllers\TaskController::class, 'mine']);
+    Route::post('/my/tasks/{id}', [\App\Http\Controllers\TaskController::class, 'report'])->whereNumber('id');
+    Route::get('/my/attendance', [\App\Http\Controllers\TaskController::class, 'myAttendance']);
+    Route::post('/my/attendance', [\App\Http\Controllers\TaskController::class, 'punch'])->middleware('throttle:10,1');
     Route::middleware('perm:POLL_DAY')->group(function () {
         $p = \App\Http\Controllers\PollDayController::class;
         Route::get('/pollday', [$p, 'index']);
@@ -125,6 +138,10 @@ Route::middleware('login.required')->group(function () {
         Route::get('/survey', [\App\Http\Controllers\FieldSurveyController::class, 'index']);
         Route::get('/survey/house/{voter}', [\App\Http\Controllers\FieldSurveyController::class, 'house'])->whereNumber('voter');
         Route::post('/survey/house/{voter}', [\App\Http\Controllers\FieldSurveyController::class, 'save'])->whereNumber('voter');
+        Route::get('/survey/map', [\App\Http\Controllers\FieldSurveyController::class, 'map']);
+        Route::get('/survey/offline', [\App\Http\Controllers\FieldSurveyController::class, 'offline']);
+        Route::get('/survey/offline/data', [\App\Http\Controllers\FieldSurveyController::class, 'offlineData'])->middleware('throttle:20,1');
+        Route::post('/survey/offline/sync', [\App\Http\Controllers\FieldSurveyController::class, 'offlineSync'])->middleware('throttle:30,1');
     });
     Route::post('/voters/{voter}/household/caste', [VoterController::class, 'householdCaste'])->whereNumber('voter')->middleware('perm:VOTER_EDIT');
     Route::middleware('perm:VOTER_EXPORT')->group(function () {

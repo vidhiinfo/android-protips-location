@@ -16,5 +16,6 @@ class BackupOnVisit
     public function terminate(Request $request, $response): void
     {
         app(\App\Services\System\BackupService::class)->runIfDue();
+        try { app(\App\Services\Workers\TaskService::class)->remind(); } catch (\Throwable $e) { report($e); }
     }
 }

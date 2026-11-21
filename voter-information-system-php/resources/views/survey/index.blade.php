@@ -3,7 +3,11 @@
 @section('content')
 <div class="container px-3 survey" style="max-width:820px">
     @include('partials.flash')
-    <h4 class="mb-1"><i class="bi bi-clipboard2-check"></i> {{ t('fs.title') }}</h4>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+        <h4 class="mb-0 me-auto"><i class="bi bi-clipboard2-check"></i> {{ t('fs.title') }}</h4>
+        <a href="{{ url('/survey/map') . '?' . http_build_query(['assemblyNo' => $assemblyNo, 'boothNo' => $boothNo]) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-map"></i> {{ t('map.title') }}</a>
+        <a href="{{ url('/survey/offline') . '?' . http_build_query(['assemblyNo' => $assemblyNo, 'boothNo' => $boothNo]) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-cloud-slash"></i> {{ t('off.title') }}</a>
+    </div>
     <p class="small text-muted">{{ t('fs.intro') }}</p>
     <form method="get" class="card card-body py-2 mb-3"><div class="row g-2 align-items-end">
         @unless($me->scoped())

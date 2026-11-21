@@ -87,6 +87,23 @@ return [
     // false hides Ward No everywhere (lists, forms, filters, exports, access areas), e.g. where the rolls have no wards
     'show_ward_no' => (bool) env('SHOW_WARD_NO', true),
 
+    // map of surveyed houses (Field survey > Map). Tiles are images only; no voter data is sent to the map server.
+    'map' => [
+        'tiles' => env('MAP_TILES', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+        'attribution' => env('MAP_ATTRIBUTION', '&copy; OpenStreetMap contributors'),
+    ],
+
+    'survey' => [
+        // offline survey: days a downloaded booth may stay on the phone before it must be downloaded again
+        'offline_days' => (int) env('OFFLINE_KEEP_DAYS', 3),
+    ],
+
+    'tasks' => [
+        // daily reminder to workers (SMS / WhatsApp through the messaging gateway) for tasks due today or overdue: none | sms | whatsapp
+        'reminder_channel' => env('TASK_REMINDER_CHANNEL', 'none'),
+        'reminder_from' => env('TASK_REMINDER_FROM', '08:00'),
+    ],
+
     'branding' => [
         'banner_image' => env('BRAND_BANNER', '/images/login-banner.svg'),
         'organisation' => env('BRAND_ORGANISATION', ''),

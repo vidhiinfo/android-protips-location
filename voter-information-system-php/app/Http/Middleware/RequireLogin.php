@@ -14,7 +14,7 @@ class RequireLogin
     public function handle(Request $request, Closure $next)
     {
         $this->defaults->ensure();
-        if (!$this->user->check()) return redirect('/login');
+        if (!$this->user->check()) return $request->expectsJson() ? response()->json(['login' => url('/login')], 401) : redirect('/login');
         return $next($request);
     }
 }

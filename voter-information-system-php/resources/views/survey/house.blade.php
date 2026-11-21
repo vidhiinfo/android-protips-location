@@ -109,6 +109,15 @@
         </div>
     </div>
     @endforeach
+    <div class="card card-body py-2 mb-2">
+        <input type="hidden" name="lat"><input type="hidden" name="lng"><input type="hidden" name="acc">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" data-geo="geoOut" data-l-taking="{{ t('off.locTaking') }}" data-l-failed="{{ t('off.locFailed') }}" data-l-ready="{{ t('map.ready') }}">
+                <i class="bi bi-geo-alt"></i> {{ $loc ? t('map.retake') : t('off.location') }}</button>
+            <span class="small text-muted" id="geoOut">@if($loc){{ t('map.saved', $loc['acc'] ?? '-', \Illuminate\Support\Str::limit($loc['at'], 16, '')) }}@endif</span>
+            <a class="small ms-auto" href="{{ url('/survey/map') . '?' . http_build_query(['assemblyNo' => $v->assembly_no, 'boothNo' => $v->booth_no]) }}"><i class="bi bi-map"></i> {{ t('map.title') }}</a>
+        </div>
+    </div>
     <div class="survey-actions d-flex gap-2 py-2">
         <button name="go" value="stay" class="btn btn-outline-primary flex-fill"><i class="bi bi-check2"></i> {{ t('common.save') }}</button>
         @if($next)<button name="go" value="next" class="btn btn-primary flex-fill"><i class="bi bi-check2-all"></i> {{ t('fs.saveNext') }}</button>@endif

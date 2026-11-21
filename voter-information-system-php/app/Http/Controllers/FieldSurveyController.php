@@ -28,14 +28,42 @@ class FieldSurveyController extends Controller
         $out = [];
         foreach (Voter::where('assembly_no', $a)->where('booth_no', $b)->when($this->user()->workerId(), fn ($q, $w) => $q->where('worker_id', $w))->orderByRaw('serial_no is null')->orderBy('serial_no')->orderBy('id')
                      ->get(['id', 'house_no', 'address', 'village_ward', 'political_status', 'caste', 'deleted']) as $v) {
-            $k = Text::houseKey($v->house_no) === '' ? '#' . $v->id
-                : Text::houseKey($v->house_no) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
+            $k = self::houseRef($v);
             $out[$k] ??= ['anchor' => $v->id, 'house' => $v->house_no, 'addr' => $v->address ?: $v->village_ward, 'n' => 0, 'done' => 0];
             if ($v->deleted) continue;
             $out[$k]['n']++;
             if ($v->political_status || $v->caste) $out[$k]['done']++;
         }
         return array_filter($out, fn ($h) => $h['n'] > 0);
+    }
+
+    /** Key of a voter's house inside a booth: house no. (without spaces / hyphens) + address + village; voters without a house no. are a house each. */
+    public static function houseRef(Voter $v): string
+    {
+        $k = Text::houseKey($v->house_no) === '' ? '#' . $v->id
+            : Text::houseKey($v->house_no) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
+        return strlen($k) > 191 ? substr($k, 0, 150) . '~' . md5($k) : $k;
+    }
+
+    /** Saved GPS points of a booth's houses: [house ref => ['lat' =>, 'lng' =>, 'acc' =>, 'at' =>]]. */
+    public static function locations(int $a, int $b): array
+    {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('house_locations')) return [];
+        return \Illuminate\Support\Facades\DB::table('house_locations')->where('assembly_no', $a)->where('booth_no', $b)->get()
+            ->mapWithKeys(fn ($l) => [$l->house_ref => ['lat' => (float) $l->lat, 'lng' => (float) $l->lng, 'acc' => $l->accuracy_m, 'at' => (string) $l->at, 'by' => $l->by_user]])->all();
+    }
+
+    /** Stores (or moves) the GPS point of a house. Ignores points outside India / impossible values. */
+    public function saveLocation(Voter $v, $lat, $lng, $acc): bool
+    {
+        if (!is_numeric($lat) || !is_numeric($lng)) return false;
+        $lat = (float) $lat; $lng = (float) $lng;
+        if ($lat < 6 || $lat > 38 || $lng < 68 || $lng > 98) return false;
+        \Illuminate\Support\Facades\DB::table('house_locations')->updateOrInsert(
+            ['assembly_no' => $v->assembly_no, 'booth_no' => $v->booth_no, 'house_ref' => self::houseRef($v)],
+            ['voter_id' => $v->id, 'lat' => round($lat, 7), 'lng' => round($lng, 7), 'accuracy_m' => is_numeric($acc) ? min(99999, (int) round($acc)) : null,
+             'by_user' => $this->user()->username(), 'at' => now()]);
+        return true;
     }
 
     public function index(Request $r)
@@ -75,7 +103,8 @@ class FieldSurveyController extends Controller
         $anchors = array_column($this->houses($v->assembly_no, $v->booth_no), 'anchor');
         $i = array_search($members->first()->id ?? $v->id, $anchors);
         if ($i === false) foreach ($members as $m) if (($i = array_search($m->id, $anchors)) !== false) break;
-        return view('survey.house', ['v' => $v, 'members' => $members, 'casteTree' => Caste::tree(),
+        $loc = self::locations($v->assembly_no, $v->booth_no)[self::houseRef($v)] ?? null;
+        return view('survey.house', ['v' => $v, 'members' => $members, 'casteTree' => Caste::tree(), 'loc' => $loc,
             'statusOpts' => array_map(fn ($c) => \App\Support\StatusMasters::options($c), ['political_status' => 'political_status', 'social_status' => 'social_status',
                 'organisational_status' => 'organisational_status', 'beneficiary' => 'beneficiary']),
             'quick' => \App\Support\StatusMasters::quickLeanings(),
@@ -85,44 +114,172 @@ class FieldSurveyController extends Controller
             'pos' => $i === false ? null : $i + 1, 'count' => count($keys)]);
     }
 
+    private function validator(): FastValidator
+    {
+        return new FastValidator(array_intersect_key(VoterService::rules(), array_flip(self::FIELDS)),
+            ['regex' => t('validation.mobile'), 'max' => t('validation.max'), 'date_format' => t('validation.date'), 'before_or_equal' => t('validation.date'), 'after' => t('validation.date')]);
+    }
+
+    /**
+     * Writes one family member's answers (all FIELDS + optional consent) to the voter.
+     * Returns [changed?, error message or null]; nothing is saved when there is an error.
+     */
+    private function applyMember(Voter $m, array $data, FastValidator $fv, array $tree): array
+    {
+        $row = [];
+        foreach (self::FIELDS as $f) $row[$f] = isset($data[$f]) && trim((string) $data[$f]) !== '' ? trim((string) $data[$f]) : null;
+        foreach (array_keys(\App\Support\StatusMasters::COLUMNS) as $sf) if (array_key_exists($sf, $row)) $row[$sf] = \App\Support\StatusMasters::normalize($sf, $row[$sf]);
+        if ($row['alt_mobile']) $row['alt_mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['alt_mobile']));
+        if ($row['mobile']) $row['mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['mobile']));
+        if ($err = $fv->firstError($row)) return [false, t('col.' . lcfirst(str_replace('_', '', ucwords($err[0], '_')))) . ' - ' . $err[1]];
+        if ($tree && $row['sub_caste'] && $row['caste'] && !in_array($row['sub_caste'], $tree[$row['caste']] ?? [], true) && $row['sub_caste'] !== $m->sub_caste) $row['sub_caste'] = null;
+        $changed = false;
+        foreach ($row as $f => $val) {
+            if ((string) $this->current($m, $f) !== (string) $val) { $m->$f = $val; $changed = true; }
+        }
+        if ($row['caste'] && !$m->category && ($cat = Caste::where('name', $row['caste'])->value('category'))) $m->category = $cat;
+        if ($changed) $m->save();
+        // consent asked at the door: recorded with its history (DPDP)
+        if (array_key_exists('consent', $data) && \App\Services\Privacy\PrivacyService::enabled()) {
+            $cv = in_array($data['consent'], ['Y', 'N'], true) ? $data['consent'] : null;
+            if ($cv !== $m->consent_contact && ($cv !== null || $m->consent_contact !== null)) {
+                app(\App\Services\Privacy\PrivacyService::class)->setConsent($m, $cv, 'survey', null, $this->user()->username());
+                $changed = true;
+            }
+        }
+        return [$changed, null];
+    }
+
+    private function current(Voter $m, string $f): ?string
+    {
+        if ($f === 'consent') return $m->consent_contact;
+        return $f === 'dob' ? $m->dob?->format('Y-m-d') : ($m->$f === null ? null : (string) $m->$f);
+    }
+
     public function save(Request $r, int $voter)
     {
         $v = $this->load($voter);
         $members = $this->voters->household($v)->keyBy('id');
-        $rules = array_intersect_key(VoterService::rules(), array_flip(self::FIELDS));
-        $fv = new FastValidator($rules, ['regex' => t('validation.mobile'), 'max' => t('validation.max'), 'date_format' => t('validation.date'), 'before_or_equal' => t('validation.date'), 'after' => t('validation.date')]);
+        $fv = $this->validator();
         $tree = Caste::tree();
         $n = 0;
         foreach ((array) $r->input('m', []) as $id => $data) {
             $m = $members[(int) $id] ?? null;
             if (!$m || !$this->user()->allowsVoter($m) || !is_array($data)) continue;
-            $row = [];
-            foreach (self::FIELDS as $f) $row[$f] = isset($data[$f]) && trim((string) $data[$f]) !== '' ? trim((string) $data[$f]) : null;
-            foreach (array_keys(\App\Support\StatusMasters::COLUMNS) as $sf) if (array_key_exists($sf, $row)) $row[$sf] = \App\Support\StatusMasters::normalize($sf, $row[$sf]);
-            if ($row['alt_mobile']) $row['alt_mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['alt_mobile']));
-            if ($row['mobile']) $row['mobile'] = preg_replace('/^(\+?91|0)/', '', preg_replace('/\D/', '', $row['mobile']));
-            if ($err = $fv->firstError($row)) {
-                return redirect('/survey/house/' . $v->id)->withInput()->with('error', $m->name . ': ' . t('col.' . lcfirst(str_replace('_', '', ucwords($err[0], '_')))) . ' - ' . $err[1]);
-            }
-            if ($tree && $row['sub_caste'] && $row['caste'] && !in_array($row['sub_caste'], $tree[$row['caste']] ?? [], true) && $row['sub_caste'] !== $m->sub_caste) $row['sub_caste'] = null;
-            $changed = false;
-            foreach ($row as $f => $val) {
-                $old = $f === 'dob' ? $m->dob?->format('Y-m-d') : $m->$f;
-                if ((string) $old !== (string) $val) { $m->$f = $val; $changed = true; }
-            }
-            if ($row['caste'] && !$m->category && ($cat = Caste::where('name', $row['caste'])->value('category'))) $m->category = $cat;
-            if ($changed) { $m->save(); $n++; }
-            // consent asked at the door: recorded with its history (DPDP)
-            if (array_key_exists('consent', $data) && \App\Services\Privacy\PrivacyService::enabled()) {
-                $cv = in_array($data['consent'], ['Y', 'N'], true) ? $data['consent'] : null;
-                if ($cv !== $m->consent_contact && ($cv !== null || $m->consent_contact !== null)) {
-                    app(\App\Services\Privacy\PrivacyService::class)->setConsent($m, $cv, 'survey', null, $this->user()->username());
-                    if (!$changed) $n++;
-                }
-            }
+            [$changed, $err] = $this->applyMember($m, $data, $fv, $tree);
+            if ($err) return redirect('/survey/house/' . $v->id)->withInput()->with('error', $m->name . ': ' . $err);
+            if ($changed) $n++;
         }
-        $this->audit()->log('UPDATE', 'VOTER', $v->id, "field survey: $n voters of house {$v->house_no}, booth {$v->booth_no}");
+        $located = $r->filled('lat') && $this->saveLocation($v, $r->input('lat'), $r->input('lng'), $r->input('acc'));
+        $this->audit()->log('UPDATE', 'VOTER', $v->id, "field survey: $n voters of house {$v->house_no}, booth {$v->booth_no}" . ($located ? ', location saved' : ''));
         $to = $r->input('go') === 'next' && $r->input('next') ? '/survey/house/' . (int) $r->input('next') : '/survey/house/' . $v->id;
         return redirect($to)->with('success', t('fs.saved', $n, $v->house_no ?: '-'));
+    }
+
+    // ---------------------------------------------------------------- map of houses
+
+    /** Booth picker shared by the survey list, the map and the offline page. */
+    private function pick(Request $r): array
+    {
+        $a = $this->user()->restrict($r->query('assemblyNo')) ?? array_key_first($this->voters->assemblies());
+        $w = is_numeric($r->query('wardNo')) ? (int) $r->query('wardNo') : null;
+        $booths = $a ? $this->voters->booths($a, $w) : [];
+        $b = $r->query('boothNo') && in_array((int) $r->query('boothNo'), $booths) ? (int) $r->query('boothNo') : null;
+        return [$a, $w, $booths, $b];
+    }
+
+    public function map(Request $r)
+    {
+        [$a, $w, $booths, $b] = $this->pick($r);
+        $points = []; $missing = 0;
+        if ($a && $b) {
+            $locs = self::locations($a, $b);
+            foreach ($this->houses($a, $b) as $ref => $h) {
+                if (!isset($locs[$ref])) { $missing++; continue; }
+                $points[] = ['lat' => $locs[$ref]['lat'], 'lng' => $locs[$ref]['lng'], 'house' => (string) ($h['house'] ?: '-'), 'addr' => (string) $h['addr'],
+                    'n' => $h['n'], 'done' => $h['done'], 'url' => url('/survey/house/' . $h['anchor'])];
+            }
+        }
+        return view('survey.map', ['assemblies' => $this->voters->assemblies(), 'assemblyNo' => $a, 'wards' => $a ? $this->voters->wards($a) : [],
+            'wardNo' => $w, 'booths' => $booths, 'boothNo' => $b, 'points' => $points, 'missing' => $missing,
+            'tiles' => (string) config('voters.map.tiles'), 'attribution' => (string) config('voters.map.attribution')]);
+    }
+
+    // ---------------------------------------------------------------- offline survey
+
+    public function offline(Request $r)
+    {
+        [$a, $w, $booths, $b] = $this->pick($r);
+        return view('survey.offline', ['assemblies' => $this->voters->assemblies(), 'assemblyNo' => $a, 'wards' => $a ? $this->voters->wards($a) : [],
+            'wardNo' => $w, 'booths' => $booths, 'boothNo' => $b, 'keepDays' => (int) config('voters.survey.offline_days')]);
+    }
+
+    /** One booth for the phone to keep: houses in roll order with each member's survey answers and the drop-down choices. */
+    public function offlineData(Request $r)
+    {
+        [$a, , , $b] = $this->pick($r);
+        abort_unless($a && $b, 404, t('error.notFound'));
+        $voters = Voter::where('assembly_no', $a)->where('booth_no', $b)->where('deleted', false)
+            ->when($this->user()->workerId(), fn ($q, $w) => $q->where('worker_id', $w))
+            ->orderByRaw('serial_no is null')->orderBy('serial_no')->orderBy('id')->get();
+        $houses = [];
+        foreach ($voters as $v) {
+            if (!$this->user()->allowsVoter($v)) continue;
+            $k = self::houseRef($v);
+            $houses[$k] ??= ['ref' => $k, 'house' => (string) $v->house_no, 'addr' => (string) ($v->address ?: $v->village_ward), 'members' => []];
+            $vals = [];
+            foreach (self::FIELDS as $f) $vals[$f] = $this->current($v, $f);
+            $vals['consent'] = $v->consent_contact;
+            $houses[$k]['members'][] = ['id' => $v->id, 'sl' => $v->serial_no, 'name' => $v->name, 'local' => $v->name_local, 'rel' => $v->relative_name,
+                'g' => $v->gender, 'age' => $v->age, 'v' => $vals];
+        }
+        $opts = [];
+        foreach (['political_status', 'social_status', 'organisational_status', 'beneficiary'] as $c) $opts[$c] = \App\Support\StatusMasters::options($c);
+        $this->audit()->log('EXPORT', 'VOTER', null, "offline survey download: assembly $a booth $b, " . count($voters) . ' voters');
+        return response()->json([
+            'assembly' => $a, 'booth' => $b, 'at' => now()->toIso8601String(), 'user' => $this->user()->username(),
+            'keepDays' => (int) config('voters.survey.offline_days'), 'fields' => self::FIELDS,
+            'consent' => \App\Services\Privacy\PrivacyService::enabled(),
+            'opts' => $opts, 'castes' => (object) Caste::tree(), 'quick' => (object) \App\Support\StatusMasters::quickLeanings(),
+            'houses' => array_values($houses),
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    /**
+     * Answers recorded on the phone without internet, sent when it is back online.
+     * Body: {changes: [{id, v: {field: new}, base: {field: value when downloaded}}], locations: [{id, lat, lng, acc}]}.
+     * A field someone else changed on the server since the download is kept as it is (counted as a conflict).
+     */
+    public function offlineSync(Request $r)
+    {
+        $changes = array_slice((array) $r->input('changes', []), 0, 2000);
+        $locs = array_slice((array) $r->input('locations', []), 0, 1000);
+        $ids = array_filter(array_map(fn ($c) => (int) ($c['id'] ?? 0), array_merge($changes, $locs)));
+        $voters = Voter::whereIn('id', $ids ?: [0])->get()->keyBy('id');
+        $fv = $this->validator(); $tree = Caste::tree();
+        $saved = 0; $conflicts = 0; $errors = []; $done = []; $located = 0;
+        foreach ($changes as $c) {
+            $m = $voters[(int) ($c['id'] ?? 0)] ?? null;
+            if (!$m || !$this->user()->allowsVoter($m) || !is_array($c['v'] ?? null)) { $done[] = (int) ($c['id'] ?? 0); continue; }
+            $data = [];
+            foreach (array_merge(self::FIELDS, ['consent']) as $f) $data[$f] = $this->current($m, $f);
+            $base = is_array($c['base'] ?? null) ? $c['base'] : [];
+            foreach ($c['v'] as $f => $new) {
+                if (!array_key_exists($f, $data)) continue;
+                $now = (string) $data[$f]; $was = array_key_exists($f, $base) ? (string) $base[$f] : $now;
+                if ($now !== $was && $now !== (string) $new) { $conflicts++; continue; }   // changed by someone else meanwhile: keep theirs
+                $data[$f] = $new;
+            }
+            [$changed, $err] = $this->applyMember($m, $data, $fv, $tree);
+            if ($err) { $errors[] = ['id' => $m->id, 'name' => $m->name, 'error' => $err]; continue; }
+            if ($changed) $saved++;
+            $done[] = $m->id;
+        }
+        foreach ($locs as $l) {
+            $m = $voters[(int) ($l['id'] ?? 0)] ?? null;
+            if ($m && $this->user()->allowsVoter($m) && $this->saveLocation($m, $l['lat'] ?? null, $l['lng'] ?? null, $l['acc'] ?? null)) $located++;
+        }
+        if ($saved || $located) $this->audit()->log('UPDATE', 'VOTER', null, "offline survey sync: $saved voters, $located house locations, $conflicts conflicts");
+        return response()->json(['saved' => $saved, 'located' => $located, 'conflicts' => $conflicts, 'errors' => $errors, 'done' => array_values(array_unique($done))]);
     }
 }
