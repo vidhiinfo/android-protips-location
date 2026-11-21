@@ -121,14 +121,30 @@ class VoterController extends Controller
         if (isset($set['sub_caste']) && $set['sub_caste'] !== null && $tree && isset($set['caste']) && !in_array($set['sub_caste'], $tree[$set['caste']] ?? [], true)) unset($set['sub_caste']);
         $category = isset($set['caste']) ? \App\Models\Caste::where('name', $set['caste'])->value('category') : null;
         $n = 0;
-        foreach (Voter::whereIn('id', $ids)->get() as $v) {
-            if (!$this->user()->allowsVoter($v)) continue;
-            foreach ($set as $f => $val) $v->$f = $val;
-            if (array_key_exists('caste', $set) && $set['caste'] === null) $v->sub_caste = null;
-            if ($category && !$v->category) $v->category = $category;
-            $v->save(); $n++;
-        }
-        $this->audit()->log('UPDATE', 'VOTER', null, "bulk update of $n voters: " . implode(', ', array_map(fn ($f, $val) => "$f=" . ($val ?? '(cleared)'), array_keys($set), $set)));
+        // every voter's previous values are kept, so the whole bulk update can be undone (Voters > Bulk changes)
+        $track = \Illuminate\Support\Facades\Schema::hasTable('bulk_changes');
+        \Illuminate\Support\Facades\DB::transaction(function () use ($ids, $set, $category, $track, &$n, &$changeId) {
+            $changeId = $track ? \Illuminate\Support\Facades\DB::table('bulk_changes')->insertGetId(['created_by' => $this->user()->username(), 'created_at' => now(),
+                'assembly_no' => $this->user()->workAssembly(), 'fields' => json_encode($set, JSON_UNESCAPED_UNICODE), 'voter_count' => 0, 'status' => 'APPLIED']) : null;
+            $rows = [];
+            foreach (Voter::whereIn('id', $ids)->get() as $v) {
+                if (!$this->user()->allowsVoter($v)) continue;
+                $keys = array_keys($set);
+                if (array_key_exists('caste', $set) && $set['caste'] === null) $keys[] = 'sub_caste';
+                if ($category && !$v->category) $keys[] = 'category';
+                $before = []; foreach (array_unique($keys) as $k) $before[$k] = $v->getRawOriginal($k);
+                foreach ($set as $f => $val) $v->$f = $val;
+                if (array_key_exists('caste', $set) && $set['caste'] === null) $v->sub_caste = null;
+                if ($category && !$v->category) $v->category = $category;
+                $v->save(); $n++;
+                $after = []; foreach (array_keys($before) as $k) $after[$k] = $v->getRawOriginal($k);
+                if ($changeId) $rows[] = ['bulk_change_id' => $changeId, 'voter_id' => $v->id, 'before' => json_encode($before, JSON_UNESCAPED_UNICODE), 'after' => json_encode($after, JSON_UNESCAPED_UNICODE)];
+                if (count($rows) >= 500) { \Illuminate\Support\Facades\DB::table('bulk_change_rows')->insert($rows); $rows = []; }
+            }
+            if ($rows) \Illuminate\Support\Facades\DB::table('bulk_change_rows')->insert($rows);
+            if ($changeId) \Illuminate\Support\Facades\DB::table('bulk_changes')->where('id', $changeId)->update(['voter_count' => $n]);
+        });
+        $this->audit()->log('UPDATE', 'VOTER', $changeId, "bulk update of $n voters: " . implode(', ', array_map(fn ($f, $val) => "$f=" . ($val ?? '(cleared)'), array_keys($set), $set)));
         return redirect($back)->with('success', t('bulk.done', $n));
     }
 

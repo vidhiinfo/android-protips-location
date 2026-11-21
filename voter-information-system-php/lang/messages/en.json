@@ -768,7 +768,7 @@
 "bulk.apply": "Apply to selected",
 "bulk.confirm": "Update {0} voters? Only filled-in fields are changed.",
 "bulk.hint": "Only the fields you fill are changed; others stay as they are. Use this only for answers your team has confirmed with the voters.",
-"bulk.done": "Updated {0} voters.",
+"bulk.done": "Updated {0} voters. To undo: Voters > Bulk changes.",
 "bulk.nothing": "Tick some voters and fill at least one field.",
 "admin.ip": "IP address",
 "admin.device": "Device",
@@ -1197,5 +1197,16 @@
 "otp.error.code": "Wrong or expired code. Try again.",
 "otp.error.locked": "Too many wrong codes. Log in again.",
 "otp.error.required": "Two-step login is required for your account and cannot be switched off.",
-"otp.smsText": "{0} is your login code for {1}. Valid for 5 minutes. Do not share it with anyone."
+"otp.smsText": "{0} is your login code for {1}. Valid for 5 minutes. Do not share it with anyone.",
+"bulkUndo.title": "Bulk changes",
+"bulkUndo.intro": "Every bulk update keeps the values it replaced. Undo puts them back; a value someone changed again after the bulk update is kept.",
+"bulkUndo.when": "When",
+"bulkUndo.by": "By",
+"bulkUndo.what": "Changed to",
+"bulkUndo.voters": "Voters",
+"bulkUndo.cleared": "(cleared)",
+"bulkUndo.kept": "{0} values kept (changed since)",
+"bulkUndo.confirm": "Undo this bulk update of {0} voters?",
+"bulkUndo.done": "Undone: {0} voters restored; {1} values kept because they were changed again later.",
+"bulkUndo.none": "No bulk updates yet."
 }

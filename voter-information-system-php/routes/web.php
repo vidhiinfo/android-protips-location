@@ -108,6 +108,10 @@ Route::middleware('login.required')->group(function () {
     });
     Route::post('/voters/bulk', [VoterController::class, 'bulkUpdate'])->middleware('perm:VOTER_EDIT');
     Route::middleware('perm:VOTER_EDIT')->group(function () {
+        Route::get('/voters/bulk-changes', [\App\Http\Controllers\BulkChangeController::class, 'index']);
+        Route::post('/voters/bulk-changes/{id}/undo', [\App\Http\Controllers\BulkChangeController::class, 'undo'])->whereNumber('id');
+    });
+    Route::middleware('perm:VOTER_EDIT')->group(function () {
         Route::get('/survey', [\App\Http\Controllers\FieldSurveyController::class, 'index']);
         Route::get('/survey/house/{voter}', [\App\Http\Controllers\FieldSurveyController::class, 'house'])->whereNumber('voter');
         Route::post('/survey/house/{voter}', [\App\Http\Controllers\FieldSurveyController::class, 'save'])->whereNumber('voter');

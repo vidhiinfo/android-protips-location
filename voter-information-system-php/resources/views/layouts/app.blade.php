@@ -19,6 +19,7 @@
                         @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>@endif
                         @if(can('VOTER_IMPORT'))<li><a class="dropdown-item" href="{{ url('/voters/import') }}">{{ t('nav.import') }}</a></li>@endif
                         @if(can('ROLL_UPDATE'))<li><a class="dropdown-item" href="{{ url('/roll-update') }}">{{ t('nav.rollUpdate') }}</a></li>@endif
+                        @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/bulk-changes') }}">{{ t('bulkUndo.title') }}</a></li>@endif
                     </ul></li>
                 @endif
                 @if(can('MASTER_VIEW'))
