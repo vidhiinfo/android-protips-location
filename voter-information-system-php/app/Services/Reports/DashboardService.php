@@ -37,7 +37,8 @@ class DashboardService
         $groups = [[18, 25], [26, 35], [36, 45], [46, 60], [61, 200]];
         $ag = array_fill(0, 5, ['MALE' => 0, 'FEMALE' => 0, 'OTHER' => 0]);
         foreach ($w(\App\Support\Area::voters()->selectRaw('age, gender, count(*) as c')->where('assembly_no', $a))->whereNotNull('age')->groupBy('age', 'gender')->get() as $x) {
-            foreach ($groups as $i => $g) if ($x->age >= $g[0] && $x->age <= $g[1]) { $ag[$i][$x->gender] += (int) $x->c; break; }
+            $gk = in_array($x->gender, ['MALE', 'FEMALE'], true) ? $x->gender : 'OTHER';   // any other value (third gender, blank) counts as Other
+            foreach ($groups as $i => $g) if ($x->age >= $g[0] && $x->age <= $g[1]) { $ag[$i][$gk] += (int) $x->c; break; }
         }
         $as = [self::series(t('gender.MALE'), 'male', array_column($ag, 'MALE')), self::series(t('gender.FEMALE'), 'female', array_column($ag, 'FEMALE'))];
         if ($otherAll) $as[] = self::series(t('gender.OTHER'), 'other', array_column($ag, 'OTHER'));
