@@ -9,6 +9,8 @@
             @include('partials.global-errors')
             @include('partials.input', ['name' => 'username', 'label' => 'login.username', 'cls' => 'col-md-6', 'value' => $item->username, 'readonly' => $item->exists])
             @include('partials.input', ['name' => 'full_name', 'label' => 'admin.fullName', 'cls' => 'col-md-6', 'value' => $item->full_name, 'local' => true])
+            @include('partials.input', ['name' => 'mobile', 'label' => 'otp.userMobile', 'cls' => 'col-md-6', 'value' => $item->mobile, 'type' => 'tel'])
+            @if($item->exists && $item->otp_method)<div class="col-md-6 d-flex align-items-end"><div class="small"><span class="badge text-bg-success">{{ t('otp.on') }}</span> {{ t('otp.method.' . $item->otp_method) }}</div></div>@endif
             <div class="col-12"><label class="form-label">{{ t('admin.roles') }}</label><div class="row g-2">
                 @foreach($roleList as $r)<div class="col-md-6"><label class="border rounded p-2 d-flex gap-2 h-100">
                     <input type="checkbox" class="form-check-input mt-1" name="roleIds[]" value="{{ $r->id }}" @checked(in_array($r->id, $roleIds))>

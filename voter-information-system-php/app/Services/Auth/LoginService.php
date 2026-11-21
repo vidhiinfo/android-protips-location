@@ -17,7 +17,7 @@ class LoginService
 {
     public function __construct(private CurrentUser $current, private AuditService $audit) {}
 
-    /** @return string|null error code: credentials | assembly; null = logged in */
+    /** @return string|null error code: credentials | assembly; 'otp' / 'otp-setup' = password right, second step next; null = logged in */
     public function attempt(string $username, string $password, $assembly): ?string
     {
         $assembly = $assembly === null || $assembly === '' ? null : (int) $assembly;
@@ -33,7 +33,7 @@ class LoginService
             $this->audit->log('LOGIN_FAILED', 'USER', null, 'AssemblyNotAllowed', $username);
             return 'assembly';
         }
-        $this->current->login([
+        $payload = [
             'username' => $user['username'],
             'full_name' => $user['full_name'],
             'roles' => $user['roles'],
@@ -41,10 +41,29 @@ class LoginService
             'locked_assembly' => $user['assembly_no'],
             'work_assembly' => $assembly,
             'work_assembly_name' => $assembly === null ? null : (Assembly::where('assembly_no', $assembly)->value('name') ?? ''),
-        ]);
-        if (isset($user['id'])) AppUser::whereKey($user['id'])->update(['last_login' => now()]);
-        $this->audit->log('LOGIN', 'USER', null, null, $user['username']);
+        ];
+        // second step (app users only): code from the authenticator app or by SMS / WhatsApp, unless this device is trusted
+        if (isset($user['id']) && \Illuminate\Support\Facades\Schema::hasColumn('app_users', 'otp_method')) {
+            $u = AppUser::find($user['id']);
+            $two = app(TwoStep::class);
+            if ($two->required($u, $user['permissions']) && !($u->otp_method && TwoStep::trusted($u))) {
+                session()->regenerate();
+                session([TwoStep::PENDING => ['user_id' => $u->id, 'payload' => $payload, 'at' => time(), 'tries' => 0]]);
+                $this->audit->log('LOGIN_STEP1', 'USER', $u->id, $u->otp_method ? 'code asked' : 'two-step set-up required', $user['username']);
+                return $u->otp_method ? 'otp' : 'otp-setup';
+            }
+        }
+        $this->finish($payload, $user['id'] ?? null);
         return null;
+    }
+
+    /** Completes a login (after the password, and the second step when there is one). */
+    public function finish(array $payload, ?int $userId, string $how = ''): void
+    {
+        session()->forget(TwoStep::PENDING);
+        $this->current->login($payload);
+        if ($userId) AppUser::whereKey($userId)->update(['last_login' => now()]);
+        $this->audit->log('LOGIN', 'USER', null, $how ?: null, $payload['username']);
     }
 
     private function app(string $username): ?array

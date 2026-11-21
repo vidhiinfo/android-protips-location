@@ -55,13 +55,14 @@ class AdminController extends Controller
         $isNew = !$item->exists;
         $roleIds = array_map('intval', (array) $r->input('roleIds', []));
         $roles = Role::whereIn('id', $roleIds)->get();
-        $data = Validation::clean($r->only(['username', 'full_name', 'assembly_no', 'scope_wards', 'scope_booths', 'scope_serial_from', 'scope_serial_to']), []);
+        $data = Validation::clean($r->only(['username', 'full_name', 'assembly_no', 'scope_wards', 'scope_booths', 'scope_serial_from', 'scope_serial_to', 'mobile']), []);
+        if (isset($data['mobile'])) $data['mobile'] = preg_replace('/^(91|0)(?=\d{10}$)/', '', preg_replace('/\D/', '', (string) $data['mobile'])) ?: null;
         foreach (['scope_wards', 'scope_booths'] as $k) $data[$k] = implode(', ', \App\Support\Area::ints($data[$k] ?? '')) ?: null;   // "101,102" -> "101, 102"
         foreach (['scope_serial_from', 'scope_serial_to'] as $k) $data[$k] = isset($data[$k]) && $data[$k] !== '' ? $data[$k] : null;
         $data['enabled'] = $r->boolean('enabled');
         $pass = (string) $r->input('newPassword');
         $v = validator($data, ['username' => [$isNew ? 'required' : 'nullable', 'regex:/^[A-Za-z0-9._-]{3,50}$/'], 'full_name' => ['required', 'max:100'],
-            'assembly_no' => ['nullable', 'integer', 'min:1'], 'scope_serial_from' => ['nullable', 'integer', 'min:1'], 'scope_serial_to' => ['nullable', 'integer', 'min:1']], Validation::messages());
+            'assembly_no' => ['nullable', 'integer', 'min:1'], 'mobile' => ['nullable', 'regex:/^[6-9][0-9]{9}$/'], 'scope_serial_from' => ['nullable', 'integer', 'min:1'], 'scope_serial_to' => ['nullable', 'integer', 'min:1']], Validation::messages());
         $self = !$isNew && strcasecmp($item->username, $this->user()->username()) === 0;
         $v->after(function ($val) use ($isNew, $data, $pass, $roles, $self) {
             if ($isNew && AppUser::whereRaw('lower(username) = ?', [mb_strtolower((string) $data['username'])])->exists()) $val->errors()->add('username', t('validation.duplicate'));
@@ -89,6 +90,7 @@ class AdminController extends Controller
         $item->full_name = $data['full_name'];
         $item->enabled = $data['enabled'];
         $item->assembly_no = $data['assembly_no'] ?? null;
+        if (\Illuminate\Support\Facades\Schema::hasColumn('app_users', 'mobile')) $item->mobile = $data['mobile'] ?? null;
         foreach (['scope_wards', 'scope_booths', 'scope_serial_from', 'scope_serial_to'] as $k) $item->$k = $data[$k] ?? null;
         if ($pass !== '') $item->password_hash = AppUser::hashPassword($pass);
         $item->save();

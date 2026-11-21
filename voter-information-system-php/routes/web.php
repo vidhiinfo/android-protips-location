@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'show'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/logout', [AuthController::class, 'logout']);
+// second login step (password already checked; see TwoStepController)
+Route::get('/login/otp', [\App\Http\Controllers\TwoStepController::class, 'challenge']);
+Route::post('/login/otp', [\App\Http\Controllers\TwoStepController::class, 'verify'])->middleware('throttle:10,1');
+Route::post('/login/otp/resend', [\App\Http\Controllers\TwoStepController::class, 'resend'])->middleware('throttle:5,1');
+Route::get('/login/otp/setup', [\App\Http\Controllers\TwoStepController::class, 'setup']);
+Route::post('/login/otp/setup', [\App\Http\Controllers\TwoStepController::class, 'setupStart'])->middleware('throttle:10,1');
+Route::post('/login/otp/confirm', [\App\Http\Controllers\TwoStepController::class, 'setupConfirm'])->middleware('throttle:10,1');
 // fresh security token for a page that was left open (phones): see public/js/app.js
 Route::get('/csrf-token', fn () => response()->json(['token' => csrf_token()])->header('Cache-Control', 'no-store'));
 // installable-app manifest with the product name from .env (BRAND_APP_NAME), for a renamed installation
@@ -175,6 +182,7 @@ Route::middleware('login.required')->group(function () {
         Route::get('/admin/users/{id}/edit', [AdminController::class, 'userForm'])->whereNumber('id');
         Route::post('/admin/users', [AdminController::class, 'saveUser']);
         Route::post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser'])->whereNumber('id');
+        Route::post('/admin/users/{id}/otp-reset', [\App\Http\Controllers\TwoStepController::class, 'adminReset'])->whereNumber('id');
         Route::get('/admin/roles', [AdminController::class, 'roles']);
         Route::get('/admin/roles/new', [AdminController::class, 'roleForm']);
         Route::get('/admin/roles/{id}/edit', [AdminController::class, 'roleForm'])->whereNumber('id');
@@ -191,5 +199,11 @@ Route::middleware('login.required')->group(function () {
     });
 
     Route::get('/account/password', [AccountController::class, 'form']);
+    Route::get('/account/security', [\App\Http\Controllers\TwoStepController::class, 'security']);
+    Route::get('/account/security/setup', [\App\Http\Controllers\TwoStepController::class, 'setup']);
+    Route::post('/account/security/setup', [\App\Http\Controllers\TwoStepController::class, 'setupStart'])->middleware('throttle:10,1');
+    Route::post('/account/security/confirm', [\App\Http\Controllers\TwoStepController::class, 'setupConfirm'])->middleware('throttle:10,1');
+    Route::post('/account/security/disable', [\App\Http\Controllers\TwoStepController::class, 'disable'])->middleware('throttle:10,1');
+    Route::post('/account/security/recovery', [\App\Http\Controllers\TwoStepController::class, 'recovery'])->middleware('throttle:10,1');
     Route::post('/account/password', [AccountController::class, 'change']);
 });

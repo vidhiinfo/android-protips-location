@@ -19,14 +19,14 @@ class Defaults
     public function __construct(private AuditService $audit) {}
 
     /** Bump when a release adds database changes, so existing installations re-check once. */
-    private const VERSION = 'vis.defaults.2026-11-state-summary';
+    private const VERSION = 'vis.defaults.2026-11-two-step';
 
     public function ensure(bool $force = false): void
     {
         if (!$force && Cache::get(self::VERSION)) return;
         if (!Schema::hasTable('roles')) return;
         // database created from an older db/schema.sql: add the new columns (no SSH / phpMyAdmin step needed)
-        if (Schema::hasTable('voters') && (!Schema::hasColumn('voters', 'caste') || !Schema::hasColumn('voters', 'ward_no') || !Schema::hasColumn('voters', 'sub_caste') || !Schema::hasTable('castes') || !Schema::hasColumn('audit_log', 'ip_address') || !Schema::hasTable('grievances') || !Schema::hasColumn('voters', 'worker_id') || !Schema::hasTable('political_statuses') || !Schema::hasColumn('app_users', 'scope_booths') || !Schema::hasTable('beneficiaries') || !Schema::hasTable('roll_updates') || !Schema::hasIndex('voters', 'idx_voter_list') || !Schema::hasColumn('voters', 'house_key') || !Schema::hasTable('state_snapshots'))) {
+        if (Schema::hasTable('voters') && (!Schema::hasColumn('voters', 'caste') || !Schema::hasColumn('voters', 'ward_no') || !Schema::hasColumn('voters', 'sub_caste') || !Schema::hasTable('castes') || !Schema::hasColumn('audit_log', 'ip_address') || !Schema::hasTable('grievances') || !Schema::hasColumn('voters', 'worker_id') || !Schema::hasTable('political_statuses') || !Schema::hasColumn('app_users', 'scope_booths') || !Schema::hasTable('beneficiaries') || !Schema::hasTable('roll_updates') || !Schema::hasIndex('voters', 'idx_voter_list') || !Schema::hasColumn('voters', 'house_key') || !Schema::hasTable('state_snapshots') || !Schema::hasColumn('app_users', 'otp_method'))) {
             Artisan::call('migrate', ['--force' => true]);
         }
         DB::transaction(function () {

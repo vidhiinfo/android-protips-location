@@ -18,6 +18,8 @@ class AuthController extends Controller
     public function login(Request $r, LoginService $login)
     {
         $error = $login->attempt((string) $r->input('username'), (string) $r->input('password'), $r->input('assemblyNo'));
+        if ($error === 'otp') return redirect('/login/otp');
+        if ($error === 'otp-setup') return redirect('/login/otp/setup');
         if ($error) return redirect('/login?error=' . $error);
         return redirect($this->user()->landingPage());
     }

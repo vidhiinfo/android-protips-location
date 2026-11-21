@@ -14,8 +14,8 @@ class AppUser extends Model
     protected $table = 'app_users';
     public $timestamps = false;
     protected $guarded = ['id'];
-    protected $hidden = ['password_hash'];
-    protected $casts = ['enabled' => 'boolean', 'assembly_no' => 'integer', 'last_login' => 'datetime', 'created_at' => 'datetime'];
+    protected $hidden = ['password_hash', 'otp_secret', 'otp_recovery'];
+    protected $casts = ['enabled' => 'boolean', 'assembly_no' => 'integer', 'last_login' => 'datetime', 'created_at' => 'datetime', 'otp_since' => 'datetime'];
 
     public function roles() { return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id'); }
 

@@ -422,6 +422,11 @@ CREATE TABLE IF NOT EXISTS app_users (
     scope_booths      VARCHAR(500)          COMMENT 'access area: booth numbers, e.g. "3, 4"',
     scope_serial_from INT                   COMMENT 'access area: serial range inside one booth',
     scope_serial_to   INT,
+    mobile         VARCHAR(15)           COMMENT 'for two-step login codes by SMS / WhatsApp',
+    otp_method     VARCHAR(10)           COMMENT 'two-step login: app, sms, whatsapp; NULL = off',
+    otp_secret     TEXT                  COMMENT 'authenticator secret, encrypted with APP_KEY',
+    otp_recovery   TEXT                  COMMENT 'JSON: bcrypt hashes of unused recovery codes',
+    otp_since      DATETIME,
     last_login     DATETIME(6),
     created_at     DATETIME(6),
     CONSTRAINT uk_user_username UNIQUE (username)

@@ -33,6 +33,9 @@ return [
 
     'security' => [
         'user_source' => env('USER_SOURCE', 'app'),
+        // two-step login: none (each user may switch it on) | admins (users who manage users) | all
+        'otp_required' => env('OTP_REQUIRED', 'none'),
+        'otp_trust_days' => (int) env('OTP_TRUST_DAYS', 30),   // a device can skip the code for this many days
         'external' => [
             // columns: username, password, enabled [, assembly_no] [, full_name]
             'users_query' => env('USERS_QUERY', 'select username, password, enabled, assembly_no, full_name from users where username = ?'),

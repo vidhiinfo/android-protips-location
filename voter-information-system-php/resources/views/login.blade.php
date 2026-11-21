@@ -31,6 +31,7 @@
                 <p class="text-muted mb-4">{{ t('login.subtitle') }}</p>
                 <div class="alert alert-danger py-2 d-none" data-cookie-warning><i class="bi bi-exclamation-octagon"></i> {{ t('login.cookies') }}</div>
                 @if(request('error') === 'expired')<div class="alert alert-warning py-2"><i class="bi bi-clock-history"></i> {{ t('login.error.expired') }}</div>
+                @elseif(request('error') === 'otp')<div class="alert alert-danger py-2"><i class="bi bi-shield-x"></i> {{ t('otp.error.locked') }}</div>
                 @elseif(request('error') === 'assembly')<div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> {{ t('login.error.assembly') }}</div>
                 @elseif(request('error'))<div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> {{ t('login.error') }}</div>@endif
                 @if(request('logout'))<div class="alert alert-success py-2"><i class="bi bi-check-circle"></i> {{ t('login.loggedOut') }}</div>@endif
