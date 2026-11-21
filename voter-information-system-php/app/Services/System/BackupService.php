@@ -45,7 +45,10 @@ class BackupService
     {
         if (!config('voters.backup.on_visit', true) || Cache::get('vis.backup.checked')) return;
         Cache::put('vis.backup.checked', true, 3600);
-        if ($this->due()) { try { $this->run(); } catch (\Throwable $e) { report($e); } }
+        if ($this->due()) {
+            try { $this->run(); } catch (\Throwable $e) { report($e); }
+            try { app(\App\Services\Privacy\PrivacyService::class)->cleanMessages(); } catch (\Throwable $e) { report($e); }   // daily housekeeping
+        }
     }
 
     /** Writes a new backup; returns its file name, or null when another backup is running. */

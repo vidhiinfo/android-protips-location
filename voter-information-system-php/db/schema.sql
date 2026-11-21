@@ -60,6 +60,11 @@ CREATE TABLE IF NOT EXISTS voters (
     created_at          DATETIME(6)  NOT NULL,
     updated_at          DATETIME(6)  NOT NULL,
     worker_id           BIGINT                COMMENT 'party worker responsible for this voter (workers.id)',
+    consent_contact     CHAR(1)               COMMENT 'Y agreed to be contacted, N refused / withdrew, NULL not asked',
+    consent_at          DATETIME,
+    consent_by          VARCHAR(50),
+    consent_source      VARCHAR(20)           COMMENT 'survey, phone, form, request, other',
+    erased_at           DATETIME              COMMENT 'party-collected data erased on request / retention',
     house_key    VARCHAR(50) GENERATED ALWAYS AS (lower(replace(replace(replace(trim(coalesce(house_no, '')), ' ', ''), '-', ''), '.', ''))) VIRTUAL COMMENT 'house no. without spaces / hyphens / dots, for households',
     CONSTRAINT uk_voter_epic UNIQUE (epic_no),
     INDEX idx_voter_worker (worker_id),
@@ -415,6 +420,37 @@ CREATE TABLE IF NOT EXISTS bulk_change_rows (
     `before`       TEXT         NOT NULL COMMENT 'JSON: field => value before the bulk update',
     `after`        TEXT         NOT NULL COMMENT 'JSON: field => value written',
     INDEX idx_bulkrow_change (bulk_change_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Consent history and privacy requests (DPDP Act 2023).
+CREATE TABLE IF NOT EXISTS consent_log (
+    id        BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    voter_id  BIGINT       NOT NULL,
+    value     CHAR(1),
+    source    VARCHAR(20),
+    note      VARCHAR(300),
+    by_user   VARCHAR(50),
+    at        DATETIME     NOT NULL,
+    INDEX idx_consent_voter (voter_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS privacy_requests (
+    id           BIGINT        NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    voter_id     BIGINT,
+    assembly_no  INT,
+    name         VARCHAR(150)  NOT NULL,
+    epic_no      VARCHAR(30),
+    type         VARCHAR(15)   NOT NULL COMMENT 'ACCESS, CORRECTION, ERASURE, WITHDRAW, OTHER',
+    channel      VARCHAR(30),
+    details      VARCHAR(1000),
+    status       VARCHAR(10)   NOT NULL DEFAULT 'OPEN' COMMENT 'OPEN, DONE, REJECTED',
+    outcome      VARCHAR(1000),
+    created_by   VARCHAR(50),
+    requested_at DATETIME      NOT NULL,
+    due_at       DATETIME,
+    done_by      VARCHAR(50),
+    done_at      DATETIME,
+    INDEX idx_privacy_status (status, due_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Role-based access: users (app_users) <- user_roles -> roles <- role_permissions (permission codes).

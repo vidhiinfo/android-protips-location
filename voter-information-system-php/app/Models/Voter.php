@@ -12,7 +12,7 @@ class Voter extends Model
 {
     protected $table = 'voters';
     protected $guarded = ['id', 'created_at', 'updated_at', 'house_key'];   // house_key is computed by the database
-    protected $casts = ['age' => 'integer', 'assembly_no' => 'integer', 'booth_no' => 'integer', 'serial_no' => 'integer', 'ward_no' => 'integer',
+    protected $casts = ['consent_at' => 'datetime', 'erased_at' => 'datetime', 'age' => 'integer', 'assembly_no' => 'integer', 'booth_no' => 'integer', 'serial_no' => 'integer', 'ward_no' => 'integer',
         'dob' => 'date:Y-m-d', 'anniversary' => 'date:Y-m-d', 'deleted' => 'boolean'];
     protected $attributes = ['deleted' => false];
 

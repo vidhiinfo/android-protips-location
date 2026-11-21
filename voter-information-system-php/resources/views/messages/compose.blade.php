@@ -20,8 +20,8 @@
     </form>
     @if($preview)
     <div class="row g-2 mb-3">
-        @foreach(['voters' => 'msg.p.voters', 'recipients' => 'msg.p.recipients', 'noMobile' => 'msg.p.noMobile', 'optedOut' => 'msg.p.optedOut', 'duplicates' => 'msg.p.duplicates'] as $k => $label)
-        <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t($label) }}</div><div class="num {{ $k === 'recipients' ? 'text-primary' : '' }}">{{ $preview[$k] }}</div></div></div>
+        @foreach(['voters' => 'msg.p.voters', 'recipients' => 'msg.p.recipients', 'noMobile' => 'msg.p.noMobile', 'optedOut' => 'msg.p.optedOut', 'noConsent' => 'msg.p.noConsent', 'duplicates' => 'msg.p.duplicates'] as $k => $label)
+        <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t($label) }}</div><div class="num {{ $k === 'recipients' ? 'text-primary' : '' }}">{{ $preview[$k] ?? 0 }}</div></div></div>
         @endforeach
         @if($channel === 'SMS')<div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t('msg.p.segments') }}</div><div class="num">{{ $preview['maxSegments'] }}</div></div></div>@endif
     </div>

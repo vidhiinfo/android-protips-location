@@ -25,7 +25,7 @@
                 <button class="btn btn-primary flex-fill"><i class="bi bi-funnel"></i> {{ t('common.search') }}</button>
                 <a href="{{ url('/voters') }}" class="btn btn-outline-secondary" title="{{ t('common.reset') }}"><i class="bi bi-x-lg"></i></a></div>
         </div>
-        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','subCaste','politicalStatus','socialStatus','orgStatus','sentiment','beneficiary','membershipNo','deleted','workerId','voted'])->contains(fn($k) => $f->get($k) !== null))
+        @php($adv = collect(['name','relativeName','epicNo','mobile','gender','ageMin','ageMax','district','villageWard','houseNo','hasMobile','caste','subCaste','politicalStatus','socialStatus','orgStatus','sentiment','beneficiary','membershipNo','deleted','workerId','voted','consent'])->contains(fn($k) => $f->get($k) !== null))
         <a class="small d-inline-block mt-2" data-bs-toggle="collapse" href="#adv">{{ t('list.advanced') }} <i class="bi bi-chevron-down"></i></a>
         <div id="adv" class="collapse {{ $adv ? 'show' : '' }}"><div class="row g-2 mt-1">
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.name') }}</label><input name="name" value="{{ $f->get('name') }}" class="form-control" dir="auto"></div>
@@ -75,6 +75,9 @@
             <div class="col-6 col-md-2"><label class="form-label">{{ t('poll.votedFilter') }}</label>
                 <select name="voted" class="form-select"><option value="">{{ t('common.all') }}</option>
                     @foreach(['yes', 'no'] as $vt)<option value="{{ $vt }}" @selected($vt === $f->get('voted'))>{{ t('poll.voted.'.$vt) }}</option>@endforeach</select></div>
+            @if(\App\Services\Privacy\PrivacyService::enabled())<div class="col-6 col-md-2"><label class="form-label">{{ t('privacy.consentLabel') }}</label>
+                <select name="consent" class="form-select"><option value="">{{ t('common.all') }}</option>
+                    @foreach(['Y', 'N', 'U'] as $c)<option value="{{ $c }}" @selected($c === $f->get('consent'))>{{ t('privacy.consent.' . $c) }}</option>@endforeach</select></div>@endif
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.deleted') }}</label>
                 <select name="deleted" class="form-select"><option value="">{{ t('common.all') }}</option>
                     @foreach(['exclude', 'only'] as $d)<option value="{{ $d }}" @selected($d === $f->get('deleted'))>{{ t('filter.deleted.'.$d) }}</option>@endforeach</select></div>

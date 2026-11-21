@@ -47,6 +47,7 @@
             <dt class="col-sm-3 no-print">{{ t('view.updated') }}</dt><dd class="col-sm-9 no-print">{{ $v->updated_at?->format('d-m-Y H:i') }}</dd>
         </dl>
     </div></div>
+    @include('voters._privacy', ['v' => $v])
     @php($profile = array_filter(array_map(fn ($f) => $v->profileValue($f), array_combine(array_keys(\App\Models\Voter::PROFILE), array_keys(\App\Models\Voter::PROFILE))), fn ($x) => $x !== null))
     @unset($profile['deleted'])
     @if($profile)

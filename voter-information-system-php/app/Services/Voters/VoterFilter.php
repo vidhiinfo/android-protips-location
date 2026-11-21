@@ -15,7 +15,7 @@ class VoterFilter
         'gender' => 'gender', 'age' => 'age', 'assemblyNo' => 'assembly_no', 'boothNo' => 'booth_no', 'serialNo' => 'serial_no',
         'villageWard' => 'village_ward', 'wardNo' => 'ward_no', 'district' => 'district', 'mobile' => 'mobile', 'updatedAt' => 'updated_at'];
     public const FIELDS = ['q', 'name', 'relativeName', 'epicNo', 'mobile', 'assemblyNo', 'wardNo', 'boothNo', 'gender', 'ageMin', 'ageMax',
-        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'socialStatus', 'orgStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment', 'workerId', 'voted'];
+        'district', 'villageWard', 'houseNo', 'hasMobile', 'caste', 'subCaste', 'politicalStatus', 'socialStatus', 'orgStatus', 'beneficiary', 'membershipNo', 'deleted', 'sentiment', 'workerId', 'voted', 'consent'];
 
     public array $v = [];
     public string $sort = 'assemblyNo';
@@ -123,6 +123,8 @@ class VoterFilter
         }
         if ($s = $this->get('sentiment')) $q->whereRaw(\App\Services\Reports\AnalyticsService::SENTIMENT_SQL . ' = ?', [$s]);   // support / neutral / opposition (Analytics)
         if ($this->get('hasMobile') === 'true') $q->whereNotNull('mobile')->where('mobile', '<>', '');
+        if (in_array($c = $this->get('consent'), ['Y', 'N'], true)) $q->where('consent_contact', $c);
+        elseif ($c === 'U') $q->whereNull('consent_contact');
         if ($this->get('deleted') === 'exclude') $q->where(fn ($w) => $w->where('deleted', false)->orWhereNull('deleted'));
         if ($this->get('deleted') === 'only') $q->where('deleted', true);
         if ($this->get('hasMobile') === 'false') $q->where(fn ($w) => $w->whereNull('mobile')->orWhere('mobile', ''));

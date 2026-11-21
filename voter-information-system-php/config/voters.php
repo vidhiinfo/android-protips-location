@@ -77,6 +77,13 @@ return [
         'refresh_seconds' => (int) env('STATE_REFRESH_SECONDS', 180),
     ],
 
+    // consent and privacy (DPDP Act 2023)
+    'privacy' => [
+        'consent_required' => (bool) env('PRIVACY_CONSENT_REQUIRED', false),   // true: messages only to voters who agreed to be contacted
+        'request_due_days' => (int) env('PRIVACY_REQUEST_DAYS', 30),         // target time to complete a privacy request
+        'message_retention_days' => (int) env('MESSAGE_RETENTION_DAYS', 365), // message texts and numbers removed from the outbox after this
+    ],
+
     // false hides Ward No everywhere (lists, forms, filters, exports, access areas), e.g. where the rolls have no wards
     'show_ward_no' => (bool) env('SHOW_WARD_NO', true),
 

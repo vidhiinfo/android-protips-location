@@ -59,6 +59,10 @@
                     <input name="m[{{ $m->id }}][mobile]" value="{{ $val('mobile') }}" class="form-control" type="tel" inputmode="tel" maxlength="14" autocomplete="off"></div>
                 <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('col.altMobile') }}</label>
                     <input name="m[{{ $m->id }}][alt_mobile]" value="{{ $val('alt_mobile') }}" class="form-control" type="tel" inputmode="tel" maxlength="14" autocomplete="off"></div>
+                @if(\App\Services\Privacy\PrivacyService::enabled())
+                <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t('privacy.consentShort') }}</label>
+                    <select name="m[{{ $m->id }}][consent]" class="form-select">@foreach(['', 'Y', 'N'] as $c)<option value="{{ $c }}" @selected(($m->consent_contact ?? '') === $c)>{{ t('privacy.consent.' . ($c ?: 'U')) }}</option>@endforeach</select></div>
+                @endif
                 @foreach(['political_status' => 'col.politicalStatus', 'social_status' => 'col.socialStatus'] as $sf => $sl)
                 <div class="col-6 col-md-3"><label class="form-label small mb-0">{{ t($sl) }}</label>
                     @if($statusOpts[$sf])

@@ -62,9 +62,13 @@ class MessagingService
         $seen = []; $out = [];
         $f = clone $f;
         $f->set('deleted', 'exclude');   // never message voters deleted from the roll
-        $c = ['voters' => 0, 'noMobile' => 0, 'optedOut' => 0, 'duplicates' => 0];
+        $c = ['voters' => 0, 'noMobile' => 0, 'optedOut' => 0, 'duplicates' => 0, 'noConsent' => 0];
+        $consent = \App\Services\Privacy\PrivacyService::enabled();
+        $onlyAgreed = $consent && config('voters.privacy.consent_required');
         foreach ($this->voters->searchLazy($f) as $v) {
             $c['voters']++;
+            // consent (DPDP): never voters who refused or withdrew; with PRIVACY_CONSENT_REQUIRED=true only those who agreed
+            if ($consent && ($v->consent_contact === 'N' || ($onlyAgreed && $v->consent_contact !== 'Y'))) { $c['noConsent']++; continue; }
             $e = $this->e164($v->mobile);
             if (!$e) { $c['noMobile']++; continue; }
             if (isset($blocked[substr($e, -10)])) { $c['optedOut']++; continue; }

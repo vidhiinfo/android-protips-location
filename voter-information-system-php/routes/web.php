@@ -107,6 +107,16 @@ Route::middleware('login.required')->group(function () {
         Route::post('/grievances/{id}/status', [$g, 'status'])->whereNumber('id');
     });
     Route::post('/voters/bulk', [VoterController::class, 'bulkUpdate'])->middleware('perm:VOTER_EDIT');
+    Route::post('/voters/{id}/consent', [\App\Http\Controllers\PrivacyController::class, 'consent'])->whereNumber('id')->middleware('perm:VOTER_EDIT');
+    Route::middleware('perm:PRIVACY_ADMIN')->group(function () {
+        $pc = \App\Http\Controllers\PrivacyController::class;
+        Route::get('/voters/{id}/privacy/export', [$pc, 'export'])->whereNumber('id');
+        Route::post('/voters/{id}/privacy/erase', [$pc, 'erase'])->whereNumber('id');
+        Route::get('/admin/privacy', [$pc, 'index']);
+        Route::post('/admin/privacy', [$pc, 'store']);
+        Route::post('/admin/privacy/{id}/close', [$pc, 'close'])->whereNumber('id');
+        Route::post('/admin/privacy/retention', [$pc, 'retention']);
+    });
     Route::middleware('perm:VOTER_EDIT')->group(function () {
         Route::get('/voters/bulk-changes', [\App\Http\Controllers\BulkChangeController::class, 'index']);
         Route::post('/voters/bulk-changes/{id}/undo', [\App\Http\Controllers\BulkChangeController::class, 'undo'])->whereNumber('id');

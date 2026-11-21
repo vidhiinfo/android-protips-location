@@ -112,6 +112,14 @@ class FieldSurveyController extends Controller
             }
             if ($row['caste'] && !$m->category && ($cat = Caste::where('name', $row['caste'])->value('category'))) $m->category = $cat;
             if ($changed) { $m->save(); $n++; }
+            // consent asked at the door: recorded with its history (DPDP)
+            if (array_key_exists('consent', $data) && \App\Services\Privacy\PrivacyService::enabled()) {
+                $cv = in_array($data['consent'], ['Y', 'N'], true) ? $data['consent'] : null;
+                if ($cv !== $m->consent_contact && ($cv !== null || $m->consent_contact !== null)) {
+                    app(\App\Services\Privacy\PrivacyService::class)->setConsent($m, $cv, 'survey', null, $this->user()->username());
+                    if (!$changed) $n++;
+                }
+            }
         }
         $this->audit()->log('UPDATE', 'VOTER', $v->id, "field survey: $n voters of house {$v->house_no}, booth {$v->booth_no}");
         $to = $r->input('go') === 'next' && $r->input('next') ? '/survey/house/' . (int) $r->input('next') : '/survey/house/' . $v->id;
