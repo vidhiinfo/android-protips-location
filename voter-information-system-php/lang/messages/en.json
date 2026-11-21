@@ -941,7 +941,7 @@
 "app.install.ios1": "Open this site in Safari.",
 "app.install.ios2": "Tap the Share button {0} at the bottom.",
 "app.install.ios3": "Choose \"Add to Home Screen\", then tap Add. The app icon appears on your home screen.",
-"app.install.privacy": "Voter data is not stored on the phone: the app shows the same secure site, with the same login and permissions.",
+"app.install.privacy": "The app shows the same secure site, with the same login and permissions. Voter data stays on the server; only a booth a worker downloads for the offline survey is kept on the phone, for a few days, and removed at logout.",
 "app.install.link": "Install mobile app",
 "login.error.expired": "Your session had expired, so nothing was saved. Please log in again.",
 "session.expired": "The page had expired. Please check the form and save again.",
