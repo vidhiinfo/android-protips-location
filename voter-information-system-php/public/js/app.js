@@ -356,3 +356,11 @@ document.addEventListener('submit', function (e) {
     if (!b) return;
     setTimeout(function () { b.disabled = true; b.innerHTML = '<span class="spinner-border spinner-border-sm"></span> ' + b.getAttribute('data-busy'); }, 0);
 });
+
+// two-step login set-up: draw the authenticator QR code (vendor/qrcode/qrcode.js, no inline script because of the CSP)
+(function () {
+    var el = document.getElementById('otp-qr');
+    if (!el || typeof qrcode === 'undefined') return;
+    var qr = qrcode(0, 'M'); qr.addData(el.getAttribute('data-uri')); qr.make();
+    el.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2 });
+})();

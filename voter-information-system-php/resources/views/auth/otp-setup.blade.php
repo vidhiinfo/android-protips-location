@@ -33,14 +33,6 @@
 @endif
 @unless($pending)</div></div></div>@endunless
 @endsection
-@push('scripts')
+@push('head')
 <script src="{{ asset('vendor/qrcode/qrcode.js') }}"></script>
-<script>
-(function () {
-    var el = document.getElementById('otp-qr');
-    if (!el || typeof qrcode === 'undefined') return;
-    var qr = qrcode(0, 'M'); qr.addData(el.getAttribute('data-uri')); qr.make();
-    el.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2 });
-})();
-</script>
 @endpush
