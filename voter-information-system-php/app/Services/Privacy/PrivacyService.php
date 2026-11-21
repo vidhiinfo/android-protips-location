@@ -63,9 +63,14 @@ class PrivacyService
                 + ['consent_contact' => 'N', 'consent_at' => now(), 'consent_by' => $by, 'consent_source' => 'request', 'erased_at' => now(), 'updated_at' => now()]);
             DB::table('message_outbox')->where('voter_id', $v->id)->update(['mobile' => '', 'body' => '[erased]', 'param_values' => null]);
             if (Schema::hasTable('grievances')) DB::table('grievances')->where('voter_id', $v->id)->update(['mobile' => null]);
-            foreach (['call_logs' => ['note' => null], 'house_locations' => null] as $tbl => $upd) {
-                if (!Schema::hasTable($tbl) || $upd === null) continue;
-                DB::table($tbl)->where('voter_id', $v->id)->update($upd);
+            // phone-bank notes and inbox messages of this voter
+            if (Schema::hasTable('call_logs')) DB::table('call_logs')->where('voter_id', $v->id)->update(['notes' => null, 'leaning' => null]);
+            if (Schema::hasTable('conversations')) {
+                $conv = DB::table('conversations')->where('voter_id', $v->id)->pluck('id')->all();
+                if ($conv) {
+                    DB::table('conversation_messages')->whereIn('conversation_id', $conv)->update(['body' => '[erased]', 'media_type' => null]);
+                    DB::table('conversations')->whereIn('id', $conv)->update(['name' => null, 'status' => 'CLOSED']);
+                }
             }
             DB::table('consent_log')->insert(['voter_id' => $v->id, 'value' => 'N', 'source' => 'request', 'note' => 'data erased (' . $why . ')', 'by_user' => $by, 'at' => now()]);
         });

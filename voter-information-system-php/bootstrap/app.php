@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [\App\Http\Middleware\SetLocale::class, \App\Http\Middleware\SecurityHeaders::class, \App\Http\Middleware\BackupOnVisit::class]);
         $middleware->encryptCookies(except: ['vis-lang']);
+        $middleware->validateCsrfTokens(except: ['hooks/*']);   // provider callbacks (checked by WEBHOOK_TOKEN instead)
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'login.required' => \App\Http\Middleware\RequireLogin::class,

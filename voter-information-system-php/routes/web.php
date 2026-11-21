@@ -31,6 +31,15 @@ Route::get('/site.webmanifest', function () {
     return response()->json($m, 200, ['Content-Type' => 'application/manifest+json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 });
 // state summary feed for the state server (token, totals only; see StateController)
+Route::middleware('throttle:300,1')->prefix('hooks/{token}')->group(function () {
+    $wh = \App\Http\Controllers\WebhookController::class;
+    Route::post('/twilio/status', [$wh, 'twilioStatus']);
+    Route::post('/twilio/inbound', [$wh, 'twilioInbound']);
+    Route::get('/meta', [$wh, 'metaVerify']);
+    Route::post('/meta', [$wh, 'meta']);
+    Route::match(['get', 'post'], '/sms/status', [$wh, 'smsStatus']);
+    Route::match(['get', 'post'], '/sms/inbound', [$wh, 'smsInbound']);
+});
 Route::get('/state-feed', [\App\Http\Controllers\StateController::class, 'feed'])->middleware('throttle:30,1');
 // Mobile app: how to install on Android / iPhone (no login needed, so it can be shared as a link or QR code)
 Route::get('/mobile-app', fn () => view('app-install', [
@@ -100,6 +109,11 @@ Route::middleware('login.required')->group(function () {
     Route::post('/my/tasks/{id}', [\App\Http\Controllers\TaskController::class, 'report'])->whereNumber('id');
     Route::get('/my/attendance', [\App\Http\Controllers\TaskController::class, 'myAttendance']);
     Route::post('/my/attendance', [\App\Http\Controllers\TaskController::class, 'punch'])->middleware('throttle:10,1');
+    Route::middleware('perm:PHONE_BANK')->group(function () {
+        Route::get('/phonebank', [\App\Http\Controllers\PhoneBankController::class, 'index']);
+        Route::post('/phonebank/{id}', [\App\Http\Controllers\PhoneBankController::class, 'save'])->whereNumber('id')->middleware('throttle:60,1');
+        Route::post('/phonebank/{id}/skip', [\App\Http\Controllers\PhoneBankController::class, 'skip'])->whereNumber('id');
+    });
     Route::middleware('perm:POLL_DAY')->group(function () {
         $p = \App\Http\Controllers\PollDayController::class;
         Route::get('/pollday', [$p, 'index']);
@@ -198,6 +212,11 @@ Route::middleware('login.required')->group(function () {
         Route::get('/messages/campaigns/{id}', [MessagingController::class, 'campaign'])->whereNumber('id');
         Route::post('/messages/campaigns/{id}/cancel', [MessagingController::class, 'cancel'])->whereNumber('id');
         Route::post('/messages/optouts', [MessagingController::class, 'addOptOut']);
+        $oc = \App\Http\Controllers\OutreachController::class;
+        Route::get('/messages/inbox', [$oc, 'inbox']);
+        Route::get('/messages/inbox/{id}', [$oc, 'inbox'])->whereNumber('id');
+        Route::post('/messages/inbox/{id}/reply', [$oc, 'reply'])->whereNumber('id')->middleware('throttle:30,1');
+        Route::post('/messages/inbox/{id}/status', [$oc, 'convStatus'])->whereNumber('id');
     });
     Route::middleware('perm:MESSAGE_ADMIN')->group(function () {
         Route::get('/messages/templates', [MessagingController::class, 'templates']);
@@ -209,6 +228,9 @@ Route::middleware('login.required')->group(function () {
         Route::post('/messages/optouts/{id}/delete', [MessagingController::class, 'deleteOptOut'])->whereNumber('id');
         Route::get('/messages/settings', [MessagingController::class, 'settings']);
         Route::post('/messages/settings/test', [MessagingController::class, 'test']);
+        Route::get('/messages/greetings', [\App\Http\Controllers\OutreachController::class, 'greetings']);
+        Route::post('/messages/greetings', [\App\Http\Controllers\OutreachController::class, 'saveGreeting']);
+        Route::post('/messages/greetings/{id}', [\App\Http\Controllers\OutreachController::class, 'toggleGreeting'])->whereNumber('id');
     });
 
     // ---- admin

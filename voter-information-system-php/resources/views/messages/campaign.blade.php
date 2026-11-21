@@ -17,6 +17,15 @@
         <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t($l) }}</div><div class="num {{ $cls }}">{{ $n }}</div></div></div>
         @endforeach
     </div>
+    @if($delivery !== null && $c->sent)
+    @php($dl = ($delivery['DELIVERED'] ?? 0) + ($delivery['READ'] ?? 0))
+    <div class="row g-2 mb-3">
+        <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t('dlv.delivered') }}</div><div class="num text-success">{{ $dl }} <span class="small text-muted">({{ round(100 * $dl / max(1, $c->sent)) }}%)</span></div></div></div>
+        @if($c->channel === 'WHATSAPP')<div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t('dlv.read') }}</div><div class="num text-primary">{{ $delivery['READ'] ?? 0 }}</div></div></div>@endif
+        <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t('dlv.undelivered') }}</div><div class="num text-danger">{{ $delivery['UNDELIVERED'] ?? 0 }}</div></div></div>
+        <div class="col-6 col-md-2"><div class="stat"><div class="small text-muted">{{ t('dlv.noReceipt') }}</div><div class="num">{{ max(0, $c->sent - $dl - ($delivery['UNDELIVERED'] ?? 0)) }}</div></div></div>
+    </div>
+    @endif
     <div class="card mb-3"><div class="card-body small" dir="auto" style="white-space:pre-wrap">{{ $c->template?->body }}</div></div>
     <div class="d-flex flex-wrap gap-1 mb-2">
         <a class="btn btn-sm {{ $status ? 'btn-outline-secondary' : 'btn-primary' }}" href="{{ url('/messages/campaigns/'.$c->id) }}">{{ t('common.all') }}</a>
@@ -26,7 +35,7 @@
         <thead class="table-light"><tr><th>{{ t('col.name') }}</th><th>{{ t('col.mobile') }}</th><th>{{ t('admin.status') }}</th><th>{{ t('msg.attempts') }}</th><th>{{ t('msg.providerId') }}</th><th>{{ t('admin.details') }}</th><th>{{ t('admin.time') }}</th></tr></thead>
         <tbody>@forelse($page as $o)
             <tr><td>@if($o->voter_id)<a href="{{ url('/voters/'.$o->voter_id) }}">{{ $o->voter_name }}</a>@endif</td><td class="text-nowrap">{{ $o->maskedMobile() }}</td>
-                <td><span class="badge {{ $o->status === 'SENT' ? 'text-bg-success' : ($o->status === 'FAILED' ? 'text-bg-danger' : 'text-bg-light border') }}">{{ t('msg.s.'.$o->status) }}</span></td>
+                <td><span class="badge {{ $o->status === 'SENT' ? 'text-bg-success' : ($o->status === 'FAILED' ? 'text-bg-danger' : 'text-bg-light border') }}">{{ t('msg.s.'.$o->status) }}</span>@if($o->delivery ?? null) <span class="badge {{ $o->delivery === 'UNDELIVERED' ? 'text-bg-danger' : ($o->delivery === 'READ' ? 'text-bg-primary' : 'text-bg-success') }}">{{ t('dlv.' . strtolower($o->delivery)) }}</span>@endif</td>
                 <td>{{ $o->attempts }}</td><td class="small">{{ $o->provider_id }}</td><td class="small text-danger">{{ $o->error }}</td><td class="small text-nowrap">{{ $o->sent_at?->format('d-m H:i:s') }}</td></tr>
         @empty <tr><td colspan="7" class="text-center text-muted py-3">{{ t('common.noRecords') }}</td></tr> @endforelse</tbody></table></div>
     <div class="mt-3">{{ $page->links() }}</div>

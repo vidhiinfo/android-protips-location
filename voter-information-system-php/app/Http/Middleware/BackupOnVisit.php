@@ -17,5 +17,6 @@ class BackupOnVisit
     {
         app(\App\Services\System\BackupService::class)->runIfDue();
         try { app(\App\Services\Workers\TaskService::class)->remind(); } catch (\Throwable $e) { report($e); }
+        try { app(\App\Services\Messaging\GreetingService::class)->run(); } catch (\Throwable $e) { report($e); }
     }
 }

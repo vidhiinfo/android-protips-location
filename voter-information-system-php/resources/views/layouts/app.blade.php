@@ -19,6 +19,7 @@
                         @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/workers/tasks') }}"><i class="bi bi-list-check"></i> {{ t('task.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/workers/attendance') }}"><i class="bi bi-calendar-check"></i> {{ t('att.title') }}</a></li>@endif
+                        @if(can('PHONE_BANK'))<li><a class="dropdown-item" href="{{ url('/phonebank') }}"><i class="bi bi-telephone"></i> {{ t('pb.title') }}</a></li>@endif
                         @if(can('VOTER_IMPORT'))<li><a class="dropdown-item" href="{{ url('/voters/import') }}">{{ t('nav.import') }}</a></li>@endif
                         @if(can('ROLL_UPDATE'))<li><a class="dropdown-item" href="{{ url('/roll-update') }}">{{ t('nav.rollUpdate') }}</a></li>@endif
                         @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/bulk-changes') }}">{{ t('bulkUndo.title') }}</a></li>@endif
@@ -80,9 +81,11 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url('/messages/campaigns') }}">{{ t('msg.campaigns') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/messages/compose') }}">{{ t('msg.new') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/messages/inbox') }}"><i class="bi bi-inbox"></i> {{ t('inbox.title') }}</a></li>
                         @if(can('MESSAGE_ADMIN'))
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{{ url('/messages/templates') }}">{{ t('msg.templates') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/messages/greetings') }}"><i class="bi bi-gift"></i> {{ t('greet.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/messages/optouts') }}">{{ t('msg.optouts') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/messages/settings') }}">{{ t('msg.settings') }}</a></li>
                         @endif

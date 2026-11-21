@@ -24,6 +24,8 @@ class TwilioSender implements Sender
         $f = [];
         if ($channel === 'WHATSAPP') { $f['To'] = 'whatsapp:' . $e164; $f['From'] = 'whatsapp:' . $c['whatsapp_from']; }
         else { $f['To'] = $e164; if (str_starts_with($c['sms_from'], 'MG')) $f['MessagingServiceSid'] = $c['sms_from']; else $f['From'] = $c['sms_from']; }
+        // delivery / read receipts come back to /hooks/<token>/twilio/status
+        if (strlen((string) config('voters.messaging.webhook_token')) >= 16) $f['StatusCallback'] = url('/hooks/' . config('voters.messaging.webhook_token') . '/twilio/status');
         $sid = $t?->provider_template_id;
         if ($channel === 'WHATSAPP' && $sid && str_starts_with($sid, 'HX')) {
             $f['ContentSid'] = $sid;

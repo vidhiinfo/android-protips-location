@@ -125,6 +125,8 @@ return [
         'time_zone' => env('MSG_TIME_ZONE', 'Asia/Kolkata'),
         'enforce_silence_period' => (bool) env('MSG_SILENCE_PERIOD', true),
         'max_attempts' => (int) env('MSG_MAX_ATTEMPTS', 3),
+        // secret part of the provider callback URLs (delivery receipts, replies): /hooks/<WEBHOOK_TOKEN>/... (at least 16 characters; empty = off)
+        'webhook_token' => env('WEBHOOK_TOKEN', ''),
         // seconds one cron run may spend sending (cron runs every minute)
         'run_seconds' => (int) env('MSG_RUN_SECONDS', 50),
         'twilio' => [
@@ -139,6 +141,8 @@ return [
             'access_token' => env('WHATSAPP_ACCESS_TOKEN', ''),
             'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
             'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
+            'verify_token' => env('WHATSAPP_VERIFY_TOKEN', ''),   // typed in Meta's webhook settings
+            'app_secret' => env('WHATSAPP_APP_SECRET', ''),       // checks the signature of Meta's calls
         ],
         'http' => [
             'method' => env('SMS_HTTP_METHOD', 'GET'),

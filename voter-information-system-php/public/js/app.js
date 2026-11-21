@@ -425,3 +425,6 @@ document.addEventListener('change', function (e) {
     if (!e.target.matches('[data-dup-keep]')) return;
     e.target.form.querySelectorAll('[data-dup-drop]').forEach(function (c) { c.checked = c.value !== e.target.value; });
 });
+
+// inbox: show the newest message
+document.querySelectorAll('[data-scroll-end]').forEach(function (el) { el.scrollTop = el.scrollHeight; });

@@ -59,7 +59,9 @@ class MessagingController extends Controller
         $c = Campaign::with('template')->findOrFail($id);
         $status = in_array($r->query('status'), OutboxMessage::STATUSES, true) ? $r->query('status') : null;
         $page = OutboxMessage::where('campaign_id', $id)->when($status, fn ($q) => $q->where('status', $status))->orderBy('id')->paginate(50)->withQueryString();
-        return view('messages.campaign', $this->common() + ['c' => $c, 'status' => $status, 'statuses' => OutboxMessage::STATUSES, 'page' => $page,
+        $delivery = \Illuminate\Support\Facades\Schema::hasColumn('message_outbox', 'delivery')
+            ? OutboxMessage::where('campaign_id', $id)->whereNotNull('delivery')->selectRaw('delivery, count(*) as n')->groupBy('delivery')->pluck('n', 'delivery')->all() : null;
+        return view('messages.campaign', $this->common() + ['c' => $c, 'status' => $status, 'statuses' => OutboxMessage::STATUSES, 'page' => $page, 'delivery' => $delivery,
             'windowOpen' => $this->service->insideSendWindow(), 'sendFrom' => config('voters.messaging.send_from'), 'sendUntil' => config('voters.messaging.send_until')]);
     }
 

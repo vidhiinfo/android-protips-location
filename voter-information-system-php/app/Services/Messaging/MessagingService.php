@@ -58,14 +58,20 @@ class MessagingService
 
     private function recipients(VoterFilter $f, string $channel, array &$c): array
     {
-        $blocked = $this->blocked($channel);
-        $seen = []; $out = [];
         $f = clone $f;
         $f->set('deleted', 'exclude');   // never message voters deleted from the roll
+        return $this->eligible($this->voters->searchLazy($f), $channel, $c);
+    }
+
+    /** Voters that may be messaged: consent, valid mobile, not opted out, one message per number. Returns [[voter, +91...], ...]. */
+    public function eligible(iterable $voters, string $channel, ?array &$c = null): array
+    {
+        $blocked = $this->blocked($channel);
+        $seen = []; $out = [];
         $c = ['voters' => 0, 'noMobile' => 0, 'optedOut' => 0, 'duplicates' => 0, 'noConsent' => 0];
         $consent = \App\Services\Privacy\PrivacyService::enabled();
         $onlyAgreed = $consent && config('voters.privacy.consent_required');
-        foreach ($this->voters->searchLazy($f) as $v) {
+        foreach ($voters as $v) {
             $c['voters']++;
             // consent (DPDP): never voters who refused or withdrew; with PRIVACY_CONSENT_REQUIRED=true only those who agreed
             if ($consent && ($v->consent_contact === 'N' || ($onlyAgreed && $v->consent_contact !== 'Y'))) { $c['noConsent']++; continue; }
@@ -100,9 +106,15 @@ class MessagingService
         $c = [];
         $list = $this->recipients($f, $t->channel, $c);
         if (!$list) throw new \RuntimeException('msg.error.noRecipients');
-        return DB::transaction(function () use ($name, $t, $f, $summary, $scheduledAt, $user, $list, $c) {
+        return $this->queue($name, $t, $list, $c, $f->queryWithSort(), $summary, $scheduledAt, $user);
+    }
+
+    /** Creates a campaign for an already checked list of [voter, +91...] (see eligible()). */
+    public function queue(?string $name, MessageTemplate $t, array $list, array $c, ?string $query, ?string $summary, ?string $scheduledAt, string $user): Campaign
+    {
+        return DB::transaction(function () use ($name, $t, $query, $summary, $scheduledAt, $user, $list, $c) {
             $camp = Campaign::create(['name' => trim((string) $name) ?: $t->name, 'channel' => $t->channel, 'template_id' => $t->id,
-                'filter_query' => $f->queryWithSort(), 'filter_summary' => $summary, 'status' => 'QUEUED',
+                'filter_query' => $query, 'filter_summary' => $summary, 'status' => 'QUEUED',
                 'scheduled_at' => $scheduledAt ? Carbon::parse($scheduledAt, config('voters.messaging.time_zone')) : null,
                 'created_by' => $user, 'created_at' => now(), 'total' => count($list)]);
             $now = now();

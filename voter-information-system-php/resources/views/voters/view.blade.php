@@ -47,6 +47,10 @@
             <dt class="col-sm-3 no-print">{{ t('view.updated') }}</dt><dd class="col-sm-9 no-print">{{ $v->updated_at?->format('d-m-Y H:i') }}</dd>
         </dl>
     </div></div>
+    @if(can('PHONE_BANK') && \Illuminate\Support\Facades\Schema::hasTable('call_logs') && ($calls = \App\Http\Controllers\PhoneBankController::history($v->id))->count())
+    <h6 class="mt-3"><i class="bi bi-telephone"></i> {{ t('pb.history') }}</h6>
+    @include('phonebank._history', ['calls' => $calls])
+    @endif
     @include('voters._privacy', ['v' => $v])
     @php($profile = array_filter(array_map(fn ($f) => $v->profileValue($f), array_combine(array_keys(\App\Models\Voter::PROFILE), array_keys(\App\Models\Voter::PROFILE))), fn ($x) => $x !== null))
     @unset($profile['deleted'])
