@@ -121,6 +121,9 @@ return [
     ],
 
     'messaging' => [
+        // false hides SMS / WhatsApp everywhere (menu, buttons, greetings, inbox, OTP by SMS, reminders) and sends nothing.
+        // Nothing is deleted: set it back to true and everything reappears as it was.
+        'enabled' => (bool) env('MESSAGING_ENABLED', true),
         'sms_provider' => env('SMS_PROVIDER', 'log'),          // log | twilio | http
         'whatsapp_provider' => env('WHATSAPP_PROVIDER', 'log'), // log | twilio | meta
         'country_code' => env('MSG_COUNTRY_CODE', '+91'),

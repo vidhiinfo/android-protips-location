@@ -71,7 +71,7 @@ class TaskService
     public function remind(bool $force = false): int
     {
         $channel = strtolower((string) config('voters.tasks.reminder_channel'));
-        if (!in_array($channel, ['sms', 'whatsapp'], true) || !self::enabled()) return 0;
+        if (!in_array($channel, ['sms', 'whatsapp'], true) || !self::enabled() || !\App\Support\Permission::messagingOn()) return 0;
         $tz = config('voters.messaging.time_zone', 'Asia/Kolkata');
         $now = now($tz);
         if (!$force && $now->format('H:i') < (string) config('voters.tasks.reminder_from', '08:00')) return 0;

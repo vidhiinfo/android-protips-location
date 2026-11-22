@@ -82,7 +82,7 @@ class GrievanceService
     private function alert(string $username, Grievance $g, int $level): void
     {
         $channel = strtolower((string) config('voters.grievance.alert_channel'));
-        if (!in_array($channel, ['sms', 'whatsapp'], true)) return;
+        if (!in_array($channel, ['sms', 'whatsapp'], true) || !\App\Support\Permission::messagingOn()) return;
         $mobile = Schema::hasColumn('app_users', 'mobile') ? DB::table('app_users')->where('username', $username)->value('mobile') : null;
         $e164 = $this->msg->e164($mobile);
         if (!$e164) return;

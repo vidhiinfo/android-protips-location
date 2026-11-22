@@ -119,7 +119,7 @@ class AdminController extends Controller
     public function roleForm(?int $id = null)
     {
         $item = $id ? Role::findOrFail($id) : new Role();
-        return view('admin.role-form', ['item' => $item, 'perms' => $item->exists ? $item->permissions() : [], 'groups' => Permission::groups()]);
+        return view('admin.role-form', ['item' => $item, 'perms' => $item->exists ? $item->permissions() : [], 'groups' => Permission::visibleGroups()]);
     }
 
     public function saveRole(Request $r)
@@ -127,6 +127,8 @@ class AdminController extends Controller
         $item = $r->input('id') ? Role::findOrFail($r->input('id')) : new Role();
         $isNew = !$item->exists;
         $perms = array_values(array_intersect((array) $r->input('perms', []), Permission::codes()));
+        // messaging permissions are hidden while messaging is off: keep what the role already had
+        if (!Permission::messagingOn() && $item->exists) $perms = array_values(array_unique(array_merge(array_diff($perms, Permission::MESSAGING), array_intersect($item->permissions(), Permission::MESSAGING))));
         $data = Validation::clean($r->only(['code', 'name', 'description']), []);
         $data['code'] = strtoupper((string) ($data['code'] ?? ''));
         $v = validator($data, ['code' => ['required', 'regex:/^[A-Za-z0-9_]{2,40}$/'], 'name' => ['required', 'max:100'], 'description' => ['nullable', 'max:300']], Validation::messages());
@@ -135,7 +137,7 @@ class AdminController extends Controller
             if (!$isNew && $item->system_role && $item->code !== $data['code']) $val->errors()->add('code', t('admin.error.systemRole'));
             if (!$isNew && $item->code === 'ADMIN' && !in_array('USER_ADMIN', $perms, true)) $val->errors()->add('global', t('admin.error.adminRole'));
         });
-        if ($v->fails()) { $item->fill($data); return response()->view('admin.role-form', ['item' => $item, 'perms' => $perms, 'groups' => Permission::groups(), 'errors' => $v->errors()]); }
+        if ($v->fails()) { $item->fill($data); return response()->view('admin.role-form', ['item' => $item, 'perms' => $perms, 'groups' => Permission::visibleGroups(), 'errors' => $v->errors()]); }
         $item->fill($data)->save();
         $item->setPermissions($perms);
         $this->audit()->log($isNew ? 'CREATE' : 'UPDATE', 'ROLE', $item->id, $item->code . ': ' . implode(',', $perms));

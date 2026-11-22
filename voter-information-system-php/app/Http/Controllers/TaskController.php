@@ -45,7 +45,7 @@ class TaskController extends Controller
         return view('workers.tasks', ['assemblies' => $this->voters->assemblies(), 'assemblyNo' => $a, 'tasks' => $list, 'progress' => $this->tasks->progress($list),
             'workers' => $workers, 'workerNames' => $workers->pluck('name', 'id'), 'status' => $status, 'workerId' => $wid, 'edit' => $edit,
             'booths' => $a ? $this->voters->booths($a) : [], 'today' => now()->toDateString(),
-            'reminders' => config('voters.tasks.reminder_channel') !== 'none']);
+            'reminders' => config('voters.tasks.reminder_channel') !== 'none' && \App\Support\Permission::messagingOn()]);
     }
 
     public function save(Request $r, ?int $id = null)

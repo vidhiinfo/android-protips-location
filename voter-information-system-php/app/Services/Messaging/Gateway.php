@@ -21,10 +21,11 @@ class Gateway
     }
 
     public function dryRun(string $channel): bool { return strtolower($this->provider($channel)) === 'log'; }
-    public function ready(string $channel): bool { return (bool) $this->sender($channel)?->configured($channel); }
+    public function ready(string $channel): bool { return \App\Support\Permission::messagingOn() && (bool) $this->sender($channel)?->configured($channel); }
 
     public function send(string $channel, string $e164, string $body, ?MessageTemplate $t, array $params): SendResult
     {
+        if (!\App\Support\Permission::messagingOn()) return SendResult::fail('SMS / WhatsApp is switched off (MESSAGING_ENABLED=false)', false);
         $s = $this->sender($channel);
         if (!$s) return SendResult::fail("No provider '{$this->provider($channel)}' for $channel", false);
         if (!$s->configured($channel)) return SendResult::fail("Provider '{$s->id()}' is not configured for $channel", false);

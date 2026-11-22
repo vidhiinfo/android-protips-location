@@ -22,7 +22,22 @@ class Permission
     public const ADDED = ['ADMIN' => ['WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE', 'ROLL_UPDATE', 'STATE_VIEW', 'PRIVACY_ADMIN', 'PHONE_BANK'], 'OPERATOR' => ['WORKER_MANAGE', 'POLL_DAY', 'GRIEVANCE', 'PHONE_BANK']];
     public const VIEWER = ['DASHBOARD_VIEW', 'VOTER_VIEW', 'VOTER_EXPORT', 'MASTER_VIEW', 'RESULT_VIEW', 'REPORT_VIEW'];
 
+    /** Permissions that belong to SMS / WhatsApp messaging (hidden while MESSAGING_ENABLED=false). */
+    public const MESSAGING = ['MESSAGE_SEND', 'MESSAGE_ADMIN'];
+
+    public static function messagingOn(): bool { return (bool) config('voters.messaging.enabled', true); }
+
     public static function codes(): array { return array_keys(self::ALL); }
+
+    /** Permissions shown in the role editor: messaging ones only while messaging is switched on. */
+    public static function visibleGroups(): array
+    {
+        $g = self::groups();
+        if (!self::messagingOn()) {
+            foreach ($g as $k => $ps) { $g[$k] = array_values(array_diff($ps, self::MESSAGING)); if (!$g[$k]) unset($g[$k]); }
+        }
+        return $g;
+    }
 
     public static function groups(): array
     {

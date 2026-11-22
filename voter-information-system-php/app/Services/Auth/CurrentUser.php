@@ -15,7 +15,12 @@ class CurrentUser
     public function username(): ?string { return $this->data()['username'] ?? null; }
     public function fullName(): ?string { return $this->data()['full_name'] ?? null; }
     public function permissions(): array { return $this->data()['permissions'] ?? []; }
-    public function can(string $p): bool { return in_array($p, $this->permissions(), true); }
+    public function can(string $p): bool
+    {
+        // SMS / WhatsApp switched off for this installation: nobody gets the messaging screens (permissions stay saved)
+        if (in_array($p, \App\Support\Permission::MESSAGING, true) && !\App\Support\Permission::messagingOn()) return false;
+        return in_array($p, $this->permissions(), true);
+    }
 
     /** Assembly chosen at login: every screen is limited to it. null = all assemblies. */
     public function workAssembly(): ?int { return $this->data()['work_assembly'] ?? null; }

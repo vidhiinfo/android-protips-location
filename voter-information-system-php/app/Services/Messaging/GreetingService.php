@@ -51,7 +51,7 @@ class GreetingService
      */
     public function run(bool $force = false): array
     {
-        if (!self::enabled()) return [];
+        if (!self::enabled() || !\App\Support\Permission::messagingOn()) return [];
         $now = $this->msg->now();
         $today = $now->toDateString();
         if (!$force) {

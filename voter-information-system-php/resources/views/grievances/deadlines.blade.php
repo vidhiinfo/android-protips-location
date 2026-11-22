@@ -8,7 +8,7 @@
         <h4 class="mb-0"><i class="bi bi-alarm"></i> {{ t('grv.deadlines') }}</h4>
     </div>
     <p class="small text-muted">{{ t('grv.deadlinesIntro') }}</p>
-    @unless($alerts)<div class="alert alert-info small py-2">{{ t('grv.alertsOff') }}</div>@endunless
+    @if(!$alerts && $messaging)<div class="alert alert-info small py-2">{{ t('grv.alertsOff') }}</div>@endif
     <form method="post" action="{{ url('/grievances/deadlines') }}">@csrf
         <div class="table-responsive bg-white border rounded mb-3"><table class="table table-sm align-middle mb-0">
             <thead class="table-light"><tr><th>{{ t('gr.category') }}</th><th style="width:8rem">{{ t('grv.days') }}</th><th>{{ t('grv.escalate1') }}</th><th>{{ t('grv.escalate2') }}</th></tr></thead>

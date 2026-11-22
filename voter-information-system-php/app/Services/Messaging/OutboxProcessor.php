@@ -22,6 +22,7 @@ class OutboxProcessor
 
     public function run(bool $ignoreWindow = false, ?int $maxSeconds = null): int
     {
+        if (!\App\Support\Permission::messagingOn()) return 0;   // switched off: queued messages wait
         if (!$ignoreWindow && !$this->service->insideSendWindow()) return 0;
         if ($this->service->silencePeriod()) return 0;
         // one run at a time: cron starts a run every minute, an earlier slow run may still be busy

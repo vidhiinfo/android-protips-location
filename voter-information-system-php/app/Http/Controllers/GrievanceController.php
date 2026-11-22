@@ -197,7 +197,7 @@ class GrievanceController extends Controller
     {
         $users = DB::table('app_users')->where('enabled', true)->orderBy('username')->pluck('username');
         return view('grievances.deadlines', ['sla' => GrievanceService::sla(), 'users' => $users,
-            'alerts' => in_array(config('voters.grievance.alert_channel'), ['sms', 'whatsapp'], true)]);
+            'alerts' => in_array(config('voters.grievance.alert_channel'), ['sms', 'whatsapp'], true), 'messaging' => \App\Support\Permission::messagingOn()]);
     }
 
     public function saveDeadlines(Request $r)
