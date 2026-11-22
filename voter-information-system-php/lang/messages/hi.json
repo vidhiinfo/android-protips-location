@@ -1549,5 +1549,17 @@
 "tr.added": "{0} अनुरोध जोड़े गए।",
 "tr.already": "पहले से अनुरोध है।",
 "tr.saved": "सेव किया गया।",
-"tr.request": "परिवहन"
+"tr.request": "परिवहन",
+"settings.title": "सेटिंग्स",
+"settings.intro": "इस इंस्टॉलेशन के लिए सुविधाएँ चालू या बंद करें। बंद करने पर कुछ भी मिटाया नहीं जाता।",
+"settings.msgTitle": "SMS / WhatsApp संदेश",
+"settings.msgHelp": "बंद: संदेश मेनू, SMS / WhatsApp बटन, इनबॉक्स, शुभकामनाएँ और SMS से OTP छिप जाते हैं और कुछ नहीं भेजा जाता। टेम्पलेट, अभियान और अनुमतियाँ सुरक्षित रहती हैं और चालू करने पर वापस आ जाती हैं।",
+"settings.on": "चालू",
+"settings.off": "बंद",
+"settings.turnOn": "चालू करें",
+"settings.turnOff": "बंद करें",
+"settings.changed": "{0} ने {1} को बदला",
+"settings.fromEnv": "सर्वर सेटिंग (.env) से डिफ़ॉल्ट: {0}",
+"settings.msgOnDone": "SMS / WhatsApp चालू किया गया।",
+"settings.msgOffDone": "SMS / WhatsApp बंद किया गया।"
 }

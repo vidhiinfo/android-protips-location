@@ -1549,5 +1549,17 @@
 "tr.added": "{0} request(s) added.",
 "tr.already": "Already requested.",
 "tr.saved": "Saved.",
-"tr.request": "Transport"
+"tr.request": "Transport",
+"settings.title": "Settings",
+"settings.intro": "Features you can switch on or off for this installation. Nothing is deleted when a feature is switched off.",
+"settings.msgTitle": "SMS / WhatsApp messaging",
+"settings.msgHelp": "Off: the Messages menu, SMS / WhatsApp buttons, inbox, greetings and OTP by SMS are hidden and nothing is sent. Templates, campaigns and permissions are kept and come back when switched on.",
+"settings.on": "On",
+"settings.off": "Off",
+"settings.turnOn": "Switch on",
+"settings.turnOff": "Switch off",
+"settings.changed": "Last changed by {0} on {1}",
+"settings.fromEnv": "Default from the server settings (.env): {0}",
+"settings.msgOnDone": "SMS / WhatsApp switched on.",
+"settings.msgOffDone": "SMS / WhatsApp switched off."
 }

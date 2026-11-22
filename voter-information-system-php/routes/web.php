@@ -265,6 +265,10 @@ Route::middleware('login.required')->group(function () {
     Route::get('/admin/audit', [AdminController::class, 'auditLog'])->middleware('perm:AUDIT_VIEW');
     Route::get('/admin/system', [AdminController::class, 'system'])->middleware('perm:SYSTEM_VIEW');
     Route::middleware('perm:USER_ADMIN')->group(function () {
+        Route::get('/admin/settings', [\App\Http\Controllers\SettingsController::class, 'index']);
+        Route::post('/admin/settings', [\App\Http\Controllers\SettingsController::class, 'save']);
+    });
+    Route::middleware('perm:USER_ADMIN')->group(function () {
         $bk = \App\Http\Controllers\BackupController::class;
         Route::get('/admin/backups', [$bk, 'index']);
         Route::post('/admin/backups', [$bk, 'run']);

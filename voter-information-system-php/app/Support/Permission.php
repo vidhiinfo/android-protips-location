@@ -25,7 +25,12 @@ class Permission
     /** Permissions that belong to SMS / WhatsApp messaging (hidden while MESSAGING_ENABLED=false). */
     public const MESSAGING = ['MESSAGE_SEND', 'MESSAGE_ADMIN'];
 
-    public static function messagingOn(): bool { return (bool) config('voters.messaging.enabled', true); }
+    /** SMS / WhatsApp on or off: the administrator's choice (Admin > Settings), else MESSAGING_ENABLED in .env. */
+    public static function messagingOn(): bool
+    {
+        $v = Settings::get('messaging_enabled');
+        return $v === null ? (bool) config('voters.messaging.enabled', true) : $v === '1';
+    }
 
     public static function codes(): array { return array_keys(self::ALL); }
 

@@ -791,3 +791,11 @@ CREATE TABLE IF NOT EXISTS transport_requests (
     CONSTRAINT uk_transport_voter UNIQUE (voter_id, election_id),
     INDEX idx_transport_booth (assembly_no, booth_no, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------- settings changed on screen (Admin > Settings)
+CREATE TABLE IF NOT EXISTS app_settings (
+    name        VARCHAR(64)   NOT NULL PRIMARY KEY,
+    value       VARCHAR(1000),
+    updated_by  VARCHAR(50),
+    updated_at  DATETIME
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

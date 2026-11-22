@@ -40,4 +40,25 @@ class MessagingSwitchTest extends TestCase
         $this->get('/voters?assemblyNo=45')->assertSee('/messages/compose', false);
         $this->get('/messages/campaigns')->assertOk();
     }
+
+    public function test_admin_switches_messaging_from_the_settings_page(): void
+    {
+        $this->post('/login', ['username' => 'admin', 'password' => 'admin@123']);
+        $this->get('/admin/settings')->assertOk()->assertSee('SMS / WhatsApp');
+        $this->post('/admin/settings', ['messaging' => '0'])->assertRedirect()->assertSessionHas('success');
+        \App\Support\Settings::flush();
+        $this->assertFalse(\App\Support\Permission::messagingOn());
+        $this->get('/voters?assemblyNo=45')->assertDontSee('/messages/compose', false);
+        $this->get('/messages/campaigns')->assertForbidden();
+        // the screen setting wins over .env
+        config(['voters.messaging.enabled' => true]);
+        $this->get('/messages/campaigns')->assertForbidden();
+        $this->post('/admin/settings', ['messaging' => '1'])->assertRedirect();
+        $this->get('/messages/campaigns')->assertOk();
+        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('audit_log')->where('details', 'like', '%switched OFF%')->count());
+        // only administrators
+        $this->post('/logout');
+        $this->post('/login', ['username' => 'viewer', 'password' => 'viewer@123']);
+        $this->get('/admin/settings')->assertForbidden();
+    }
 }

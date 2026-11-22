@@ -1136,5 +1136,17 @@
 "state.total": "ਕੁੱਲ",
 "state.privacy": "ਡਿਵੀਜ਼ਨਾਂ ਤੋਂ ਸਿਰਫ਼ ਕੁੱਲ ਅੰਕੜੇ ਲਏ ਜਾਂਦੇ ਹਨ: ਕੋਈ ਨਾਮ, EPIC ਨੰ. ਜਾਂ ਮੋਬਾਈਲ ਨੰ. ਡਿਵੀਜ਼ਨ ਸਾਈਟ ਤੋਂ ਬਾਹਰ ਨਹੀਂ ਜਾਂਦਾ।",
 "perm.STATE_VIEW": "ਰਾਜ ਸਾਰ",
-"perm.STATE_VIEW.desc": "ਸਾਰੀਆਂ ਡਿਵੀਜ਼ਨ ਸਾਈਟਾਂ ਦੇ ਕੁੱਲ ਅੰਕੜੇ ਇੱਕ ਸਕ੍ਰੀਨ ਉੱਤੇ ਵੇਖੋ"
+"perm.STATE_VIEW.desc": "ਸਾਰੀਆਂ ਡਿਵੀਜ਼ਨ ਸਾਈਟਾਂ ਦੇ ਕੁੱਲ ਅੰਕੜੇ ਇੱਕ ਸਕ੍ਰੀਨ ਉੱਤੇ ਵੇਖੋ",
+"settings.title": "ਸੈਟਿੰਗਾਂ",
+"settings.intro": "ਇਸ ਇੰਸਟਾਲੇਸ਼ਨ ਲਈ ਸੁਵਿਧਾਵਾਂ ਚਾਲੂ ਜਾਂ ਬੰਦ ਕਰੋ। ਬੰਦ ਕਰਨ ਤੇ ਕੁਝ ਵੀ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾਂਦਾ।",
+"settings.msgTitle": "SMS / WhatsApp ਸੁਨੇਹੇ",
+"settings.msgHelp": "ਬੰਦ: ਸੁਨੇਹੇ ਮੀਨੂ, SMS / WhatsApp ਬਟਨ, ਇਨਬਾਕਸ, ਵਧਾਈਆਂ ਅਤੇ SMS ਨਾਲ OTP ਲੁਕ ਜਾਂਦੇ ਹਨ ਅਤੇ ਕੁਝ ਨਹੀਂ ਭੇਜਿਆ ਜਾਂਦਾ। ਟੈਂਪਲੇਟ, ਮੁਹਿੰਮਾਂ ਅਤੇ ਅਧਿਕਾਰ ਸੁਰੱਖਿਅਤ ਰਹਿੰਦੇ ਹਨ ਅਤੇ ਚਾਲੂ ਕਰਨ ਤੇ ਵਾਪਸ ਆ ਜਾਂਦੇ ਹਨ।",
+"settings.on": "ਚਾਲੂ",
+"settings.off": "ਬੰਦ",
+"settings.turnOn": "ਚਾਲੂ ਕਰੋ",
+"settings.turnOff": "ਬੰਦ ਕਰੋ",
+"settings.changed": "{0} ਨੇ {1} ਨੂੰ ਬਦਲਿਆ",
+"settings.fromEnv": "ਸਰਵਰ ਸੈਟਿੰਗ (.env) ਤੋਂ ਡਿਫ਼ਾਲਟ: {0}",
+"settings.msgOnDone": "SMS / WhatsApp ਚਾਲੂ ਕੀਤਾ ਗਿਆ।",
+"settings.msgOffDone": "SMS / WhatsApp ਬੰਦ ਕੀਤਾ ਗਿਆ।"
 }
