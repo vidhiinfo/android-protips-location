@@ -104,6 +104,13 @@ return [
         'field_max_booths' => (int) env('FIELD_MAX_BOOTHS', 5),
     ],
 
+    'planner' => [
+        // Votes-to-win planner (Results > Votes-to-win planner); all three can be changed in Admin > Settings
+        'our_party' => env('PLANNER_OUR_PARTY', ''),            // party short name as in the results, e.g. INC; empty = last winner
+        'safety_margin' => (int) env('PLANNER_SAFETY_MARGIN', 3), // points above the best rival's last share
+        'supporter_turnout' => (int) env('PLANNER_SUPPORTER_TURNOUT', 80), // % of survey supporters expected to vote
+    ],
+
     'tasks' => [
         // daily reminder to workers (SMS / WhatsApp through the messaging gateway) for tasks due today or overdue: none | sms | whatsapp
         'reminder_channel' => env('TASK_REMINDER_CHANNEL', 'none'),

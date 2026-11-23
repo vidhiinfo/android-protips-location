@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 /** Admin > Settings: everything the administrator may change for this installation, without touching .env. */
 class SettingsController extends Controller
 {
-    public const GROUPS = ['offline', 'login', 'display', 'messaging'];
+    public const GROUPS = ['offline', 'login', 'display', 'planner', 'messaging'];
 
     public function index()
     {

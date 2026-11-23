@@ -208,11 +208,15 @@ Route::middleware('login.required')->group(function () {
     Route::middleware('perm:RESULT_ENTRY')->group(function () {
         Route::get('/results/entry', [ResultController::class, 'entry']);
         Route::post('/results/entry', [ResultController::class, 'saveEntry']);
+        Route::post('/planner/form20', [\App\Http\Controllers\PlannerController::class, 'import']);
     });
     Route::middleware('perm:RESULT_VIEW')->group(function () {
         Route::get('/results', [ResultController::class, 'overview']);
         Route::get('/results/contest', [ResultController::class, 'contest']);
         Route::get('/results/contest/export/{format}', [ResultController::class, 'exportContest']);
+        Route::get('/planner', [\App\Http\Controllers\PlannerController::class, 'index']);
+        Route::get('/planner/export/{format}', [\App\Http\Controllers\PlannerController::class, 'export'])->whereIn('format', ['xlsx', 'pdf']);
+        Route::get('/planner/form20-template', [\App\Http\Controllers\PlannerController::class, 'template']);
     });
 
     // ---- reports

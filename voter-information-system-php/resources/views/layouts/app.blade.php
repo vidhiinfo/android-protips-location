@@ -50,6 +50,7 @@
                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-trophy"></i> {{ t('nav.results') }}</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url('/results') }}">{{ t('result.overview') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/planner') }}"><i class="bi bi-bullseye"></i> {{ t('plan.title') }}</a></li>
                         @if(can('RESULT_ENTRY'))<li><a class="dropdown-item" href="{{ url('/results/entry') }}">{{ t('result.entry') }}</a></li>@endif
                     </ul></li>
                 @endif
