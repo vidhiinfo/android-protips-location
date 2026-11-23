@@ -19,6 +19,7 @@
                         @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/workers/tasks') }}"><i class="bi bi-list-check"></i> {{ t('task.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/workers/attendance') }}"><i class="bi bi-calendar-check"></i> {{ t('att.title') }}</a></li>@endif
+                        <li><a class="dropdown-item" href="{{ url('/field') }}"><i class="bi bi-cloud-slash"></i> {{ t('field.title') }}</a></li>
                         @if(can('PHONE_BANK'))<li><a class="dropdown-item" href="{{ url('/phonebank') }}"><i class="bi bi-telephone"></i> {{ t('pb.title') }}</a></li>@endif
                         @if(can('VOTER_IMPORT'))<li><a class="dropdown-item" href="{{ url('/voters/import') }}">{{ t('nav.import') }}</a></li>@endif
                         @if(can('ROLL_UPDATE'))<li><a class="dropdown-item" href="{{ url('/roll-update') }}">{{ t('nav.rollUpdate') }}</a></li>@endif
@@ -73,6 +74,7 @@
                         <li><a class="dropdown-item" href="{{ url('/pollday') }}">{{ t('poll.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/pollday/grid') }}">{{ t('poll.grid') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/pollday/live') }}"><i class="bi bi-broadcast text-danger"></i> {{ t('poll.live') }}</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/field') }}"><i class="bi bi-cloud-slash"></i> {{ t('field.pollOffline') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/transport') }}"><i class="bi bi-truck"></i> {{ t('tr.title') }}</a></li>
                     </ul></li>
                 @endif
@@ -105,6 +107,7 @@
                     </ul></li>
                 @endif
             </ul>
+            <a href="{{ url('/field') }}" id="offlineBadge" class="badge text-bg-warning text-decoration-none me-2 mb-2 mb-xl-0 d-none" data-l-off="{{ t('field.offline') }}" data-l-wait="{{ t('field.waiting') }}"></a>
             <span class="badge text-bg-light me-2 mb-2 mb-xl-0" title="{{ t('login.assembly') }}"><i class="bi bi-geo-alt"></i>
                 {{ $me->scoped() ? $me->workAssembly() . ' - ' . $me->workAssemblyName() : t('login.allAssemblies') }}@if($areaLabel = \App\Support\Area::label(\App\Support\Area::current())) · {{ $areaLabel }}@endif</span>
             @include('partials.lang', ['cls' => 'w-auto me-2 mb-2 mb-xl-0'])

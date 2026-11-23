@@ -21,6 +21,7 @@ class GrievanceTransportTest extends TestCase
         config(['voters.admin.username' => 'admin', 'voters.admin.password' => 'admin@123']);
         (new DemoSeeder())->run(25);
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        config(['voters.security.office_session_minutes' => 0]);   // these tests jump days ahead while logged in
     }
 
     private function login(string $u = 'admin', string $p = 'admin@123') { return $this->post('/login', ['username' => $u, 'password' => $p]); }

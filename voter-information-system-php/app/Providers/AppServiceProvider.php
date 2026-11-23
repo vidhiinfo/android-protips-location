@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+        // sessions last as long as the longest allowed login (field workers); RequireLogin applies the shorter limit to administrators
+        $days = max(0, (int) config('voters.security.field_session_days'));
+        if ($days > 0) config(['session.lifetime' => max((int) config('session.lifetime'), $days * 1440)]);
         if (str_starts_with((string) config('app.url'), 'https://')) \Illuminate\Support\Facades\URL::forceScheme('https');
         View::composer('*', function ($view) {
             $user = app(CurrentUser::class);

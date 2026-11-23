@@ -28,16 +28,18 @@
     </div>
     <div class="table-responsive bg-white border rounded"><table class="table table-sm table-hover align-middle mb-0">
         <thead class="table-light"><tr><th>{{ t('col.boothNo') }}</th><th>{{ t('col.boothName') }}</th><th class="text-end">{{ t('dash.voters') }}</th><th class="text-end">{{ t('poll.votedCol') }}</th>
-            <th style="min-width:150px">{{ t('poll.turnout') }}</th><th class="text-end">{{ t('an.support') }}</th><th class="text-end">{{ t('poll.supportVoted') }}</th><th class="text-end">{{ t('poll.pendingSupporters') }}</th><th>{{ t('poll.lastMark') }}</th></tr></thead>
+            <th style="min-width:150px">{{ t('poll.turnout') }}</th><th class="text-end">{{ t('an.support') }}</th><th class="text-end">{{ t('poll.supportVoted') }}</th><th class="text-end">{{ t('poll.pendingSupporters') }}</th><th>{{ t('poll.lastMark') }}</th><th>{{ t('field.lastSync') }}</th></tr></thead>
         <tbody>@foreach($rows as $x) @php($p = $x['n'] ? round(100 * $x['voted'] / $x['n']) : 0)
             <tr><td>{{ $x['b'] }}</td><td class="small">{{ $x['name'] }}</td><td class="text-end">{{ $x['n'] }}</td><td class="text-end">{{ $x['voted'] }}</td>
                 <td><div class="d-flex align-items-center gap-2"><div class="progress flex-fill" style="height:8px"><div class="progress-bar" style="width:{{ $p }}%"></div></div><span class="small">{{ $p }}%</span></div></td>
                 <td class="text-end">{{ $x['support'] }}</td><td class="text-end">{{ $x['supportVoted'] }}</td>
                 <td class="text-end">@if($x['support'] - $x['supportVoted'] > 0)<a class="text-danger fw-semibold" href="{{ url('/voters') }}?{{ http_build_query(['assemblyNo' => $assemblyNo, 'boothNo' => $x['b'], 'sentiment' => 'S', 'voted' => 'no', 'deleted' => 'exclude']) }}">{{ $x['support'] - $x['supportVoted'] }}</a>@else 0 @endif</td>
-                <td class="small text-muted">{{ $x['last'] ? substr((string) $x['last'], 11, 5) : '-' }}</td></tr>
+                <td class="small text-muted">{{ $x['last'] ? substr((string) $x['last'], 11, 5) : '-' }}</td>
+                @php($ago = $x['synced'] ? (int) floor((time() - strtotime((string) $x['synced'])) / 60) : null)
+                <td class="small {{ $ago !== null && $ago > 30 ? 'text-danger fw-semibold' : 'text-muted' }}">{{ $x['synced'] ? substr((string) $x['synced'], 11, 5) . ($ago > 30 ? ' (' . t('field.minAgo', $ago) . ')' : '') : '-' }}</td></tr>
         @endforeach</tbody>
         <tfoot class="table-light fw-semibold"><tr><td colspan="2">{{ t('report.total') }}</td><td class="text-end">{{ $tot['n'] }}</td><td class="text-end">{{ $tot['voted'] }}</td><td>{{ $tot['n'] ? round(100 * $tot['voted'] / $tot['n'], 1) : 0 }}%</td>
-            <td class="text-end">{{ $tot['support'] }}</td><td class="text-end">{{ $tot['supportVoted'] }}</td><td class="text-end">{{ $tot['support'] - $tot['supportVoted'] }}</td><td></td></tr></tfoot>
+            <td class="text-end">{{ $tot['support'] }}</td><td class="text-end">{{ $tot['supportVoted'] }}</td><td class="text-end">{{ $tot['support'] - $tot['supportVoted'] }}</td><td></td><td></td></tr></tfoot>
     </table></div>
     @endif
 </div>

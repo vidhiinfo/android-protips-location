@@ -36,6 +36,10 @@ return [
         // two-step login: none (each user may switch it on) | admins (users who manage users) | all
         'otp_required' => env('OTP_REQUIRED', 'none'),
         'otp_trust_days' => (int) env('OTP_TRUST_DAYS', 30),   // a device can skip the code for this many days
+        // field workers (logins without user administration) stay logged in this many days, so they can work offline;
+        // administrators are logged out after SESSION_LIFETIME minutes without activity, as before
+        'field_session_days' => (int) env('FIELD_SESSION_DAYS', 3),
+        'office_session_minutes' => (int) env('SESSION_LIFETIME', 120),
         'external' => [
             // columns: username, password, enabled [, assembly_no] [, full_name]
             'users_query' => env('USERS_QUERY', 'select username, password, enabled, assembly_no, full_name from users where username = ?'),
@@ -96,6 +100,8 @@ return [
     'survey' => [
         // offline survey: days a downloaded booth may stay on the phone before it must be downloaded again
         'offline_days' => (int) env('OFFLINE_KEEP_DAYS', 3),
+        // offline field app: most booths one phone may download at a time
+        'field_max_booths' => (int) env('FIELD_MAX_BOOTHS', 5),
     ],
 
     'tasks' => [

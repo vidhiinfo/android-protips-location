@@ -400,25 +400,55 @@ document.addEventListener('click', function (e) {
     }, function () { out.textContent = b.getAttribute('data-l-failed'); }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 });
 });
 
-// logout: remove an offline booth from the phone (warn when answers have not been sent yet)
+// offline data on this phone: [database, store of unsent items] (offline survey, offline field app)
+var OFFLINE_DBS = [['vis-offline', 'queue'], ['vis-field', 'outbox']];
+
+/** Calls back with the number of unsent offline items on this phone (0 when nothing was ever downloaded). */
+function offlinePending(cb) {
+    if (!window.indexedDB) { cb(0); return; }
+    var total = 0, left = OFFLINE_DBS.length;
+    var fin = function () { if (--left === 0) cb(total); };
+    OFFLINE_DBS.forEach(function (x) {
+        var r = indexedDB.open(x[0]);
+        r.onupgradeneeded = function () { r.transaction.abort(); };   // never used on this phone: do not create it
+        r.onerror = fin;
+        r.onsuccess = function () {
+            var d = r.result;
+            if (!d.objectStoreNames.contains(x[1])) { d.close(); fin(); return; }
+            var q = d.transaction(x[1]).objectStore(x[1]).count();
+            q.onsuccess = function () { total += q.result; d.close(); fin(); };
+            q.onerror = function () { d.close(); fin(); };
+        };
+    });
+}
+
+// logout: remove offline booths from the phone (warn when something has not been sent yet)
 document.addEventListener('submit', function (e) {
     if (!e.target.matches('[data-logout]') || !window.indexedDB || e.target.dataset.cleared) return;
     e.preventDefault();
     var form = e.target, done = function () { form.dataset.cleared = '1'; form.submit(); };
-    var r = indexedDB.open('vis-offline', 1);
-    r.onupgradeneeded = function () { r.transaction.abort(); };   // never used on this phone
-    r.onerror = done;
-    r.onsuccess = function () {
-        var d = r.result, q = d.transaction('queue').objectStore('queue').count();
-        q.onsuccess = function () {
-            if (q.result > 0 && !confirm(form.getAttribute('data-l-unsent') || 'Unsent offline survey answers will be lost. Log out?')) { d.close(); return; }
-            d.close();
-            var del = indexedDB.deleteDatabase('vis-offline');
-            del.onsuccess = del.onerror = del.onblocked = done;
-        };
-        q.onerror = function () { d.close(); done(); };
-    };
+    offlinePending(function (n) {
+        if (n > 0 && !confirm(form.getAttribute('data-l-unsent') || 'Unsent offline answers will be lost. Log out?')) return;
+        var left = OFFLINE_DBS.length;
+        OFFLINE_DBS.forEach(function (x) { var del = indexedDB.deleteDatabase(x[0]); del.onsuccess = del.onerror = del.onblocked = function () { if (--left === 0) done(); }; });
+    });
 });
+
+// status badge in the menu bar on every page: offline, or items still waiting to be sent
+(function () {
+    var badge = document.getElementById('offlineBadge');
+    if (!badge) return;
+    var show = function () {
+        offlinePending(function (n) {
+            var off = !navigator.onLine;
+            badge.classList.toggle('d-none', !off && !n);
+            badge.className = badge.className.replace(/text-bg-\w+/, off ? 'text-bg-danger' : 'text-bg-warning');
+            badge.innerHTML = '<i class="bi bi-' + (off ? 'wifi-off' : 'cloud-upload') + '"></i> ' + (off ? badge.getAttribute('data-l-off') : '') + (n ? ' ' + badge.getAttribute('data-l-wait').replace('{0}', n) : '');
+        });
+    };
+    window.addEventListener('online', show); window.addEventListener('offline', show);
+    show(); setInterval(show, 20000);
+})();
 
 // duplicates: the voter chosen to keep is never also ticked for merging
 document.addEventListener('change', function (e) {

@@ -109,6 +109,11 @@ Route::middleware('login.required')->group(function () {
     Route::post('/my/tasks/{id}', [\App\Http\Controllers\TaskController::class, 'report'])->whereNumber('id');
     Route::get('/my/attendance', [\App\Http\Controllers\TaskController::class, 'myAttendance']);
     Route::post('/my/attendance', [\App\Http\Controllers\TaskController::class, 'punch'])->middleware('throttle:10,1');
+    Route::middleware('perm:VOTER_VIEW')->group(function () {
+        Route::get('/field', [\App\Http\Controllers\FieldController::class, 'page']);
+        Route::get('/field/pack', [\App\Http\Controllers\FieldController::class, 'pack'])->middleware('throttle:20,1');
+        Route::post('/field/sync', [\App\Http\Controllers\FieldController::class, 'sync'])->middleware('throttle:120,1');
+    });
     Route::middleware('perm:PHONE_BANK')->group(function () {
         Route::get('/phonebank', [\App\Http\Controllers\PhoneBankController::class, 'index']);
         Route::post('/phonebank/{id}', [\App\Http\Controllers\PhoneBankController::class, 'save'])->whereNumber('id')->middleware('throttle:60,1');

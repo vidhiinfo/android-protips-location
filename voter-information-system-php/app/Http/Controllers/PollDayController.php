@@ -123,9 +123,12 @@ class PollDayController extends Controller
                 ->groupBy('booth_no')->orderBy('booth_no')->get();
             $last = PollMark::where('election_id', $e->id)->where('assembly_no', $a)->groupBy('booth_no')->selectRaw('booth_no, max(marked_at) as t')->pluck('t', 'booth_no');
             $names = Booth::where('assembly_no', $a)->pluck('name', 'booth_no');
+            // offline field app: when each booth's phones last reached the server (silent booths stand out)
+            $synced = \Illuminate\Support\Facades\Schema::hasTable('field_syncs')
+                ? DB::table('field_syncs')->where('assembly_no', $a)->groupBy('booth_no')->selectRaw('booth_no, max(synced_at) as t')->pluck('t', 'booth_no') : collect();
             foreach ($q as $x) {
                 $row = ['b' => (int) $x->booth_no, 'name' => $names[$x->booth_no] ?? '', 'n' => (int) $x->n, 'voted' => (int) $x->v, 'support' => (int) $x->s,
-                    'supportVoted' => (int) $x->sv, 'last' => $last[$x->booth_no] ?? null];
+                    'supportVoted' => (int) $x->sv, 'last' => $last[$x->booth_no] ?? null, 'synced' => $synced[$x->booth_no] ?? null];
                 $rows[] = $row; foreach ($tot as $k => $_) $tot[$k] += $row[$k];
             }
             foreach (PollMark::where('election_id', $e->id)->where('assembly_no', $a)->get(['marked_at', 'booth_no']) as $m) {
