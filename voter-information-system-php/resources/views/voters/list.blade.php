@@ -14,7 +14,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-6"><label class="form-label">{{ t('list.quickSearch') }}</label>
                 <div class="input-group"><span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input name="q" value="{{ $f->get('q') }}" class="form-control" dir="auto" placeholder="{{ t('list.quickSearchHint') }}"></div></div>
+                    <input name="q" value="{{ $f->get('q') }}" class="form-control" dir="auto" placeholder="{{ t('list.quickSearchHint') }}" data-scan="submit" data-voice></div></div>
             <div class="col-6 col-md-2"><label class="form-label">{{ t('col.assemblyNo') }}</label>
                 <select name="assemblyNo" class="form-select" @disabled($me->scoped())>
                     <option value="">{{ t('common.all') }}</option>

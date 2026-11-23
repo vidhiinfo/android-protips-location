@@ -124,3 +124,11 @@ a.house-link:hover { border-bottom-style: solid; }
 
 .survey .autofilled { background-color: #fff8db; }
 .map-dot{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #aaa;vertical-align:-1px}
+
+/* smart tools: camera scanner and messages (js/smart-tools.js) */
+.vt-scanner { position: fixed; inset: 0; z-index: 2000; background: rgba(10, 20, 40, .92); display: flex; align-items: center; justify-content: center; padding: 12px; color: #fff; }
+.vt-scanner .vt-inner { width: 100%; max-width: 560px; }
+.vt-scanner .vt-view { position: relative; background: #000; border-radius: .5rem; overflow: hidden; aspect-ratio: 4 / 3; }
+.vt-scanner video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vt-scanner .vt-guide { position: absolute; left: 8%; right: 8%; top: 33%; bottom: 33%; border: 3px solid #ffc107; border-radius: .4rem; box-shadow: 0 0 0 999px rgba(0, 0, 0, .35); }
+.vt-toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 2100; max-width: 90vw; }

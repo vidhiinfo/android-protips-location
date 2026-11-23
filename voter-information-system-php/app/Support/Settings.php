@@ -30,6 +30,8 @@ class Settings
         'app_name_local'          => ['display', 'voters.branding.app_name_local', 'text', 100],
         'short_name'              => ['display', 'voters.branding.short_name', 'text', 20],
         'owner'                   => ['display', 'voters.branding.owner', 'text', 100],
+        'scan_enabled'            => ['smart', 'voters.tools.scan', 'bool', null],
+        'voice_enabled'           => ['smart', 'voters.tools.voice', 'bool', null],
         'planner_enabled'         => ['planner', 'voters.planner.enabled', 'bool', null],
         'planner_our_party'       => ['planner', 'voters.planner.our_party', 'text', 20],
         'planner_safety_margin'   => ['planner', 'voters.planner.safety_margin', 'int', [0, 30]],

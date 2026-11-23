@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', t('settings.title'))
 @section('content')
-@php($icons = ['offline' => 'cloud-slash', 'login' => 'shield-lock', 'display' => 'display', 'planner' => 'bullseye', 'messaging' => 'chat-dots'])
+@php($icons = ['offline' => 'cloud-slash', 'login' => 'shield-lock', 'display' => 'display', 'smart' => 'magic', 'planner' => 'bullseye', 'messaging' => 'chat-dots'])
 <div class="container px-3" style="max-width:900px">
     @include('partials.flash')
     <h4 class="mb-1"><i class="bi bi-toggles"></i> {{ t('settings.title') }}</h4>

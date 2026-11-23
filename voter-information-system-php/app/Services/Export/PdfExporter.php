@@ -118,6 +118,7 @@ class PdfExporter
         foreach (\App\Models\Booth::all() as $b) $booths[$b->assembly_no . '/' . $b->booth_no] = $b;
         $date = $e?->poll_date ? \Illuminate\Support\Carbon::parse($e->poll_date)->format('d-m-Y') : '';
         $note = (string) config('voters.slip_note');
+        $scan = (bool) config('voters.tools.scan');
         $cells = [];
         foreach ($voters as $v) {
             $b = $booths[$v->assembly_no . '/' . $v->booth_no] ?? null;
@@ -128,6 +129,8 @@ class PdfExporter
                 . '<div>' . self::e($v->relationDisplay()) . '</div>'
                 . '<div><span class="lbl">' . $L('col.epicNo') . ':</span> <b>' . self::e($v->epic_no) . '</b> &nbsp; ' . self::e($v->genderLabel()) . ($v->age ? ', ' . (int) $v->age : '') . '</div>'
                 . '<div><span class="lbl">' . $L('col.houseNo') . ':</span> ' . self::e($v->house_no) . '</div>'
+                // Admin > Settings > Smart tools > scan: the EPIC as a barcode, so poll-day agents can scan the slip
+                . ($scan && $v->epic_no && preg_match('/^[A-Za-z0-9\/]{6,20}$/', $v->epic_no) ? '<div style="margin-top:.6mm"><barcode code="' . self::e(strtoupper($v->epic_no)) . '" type="C128B" size="0.9" height="0.8" /></div>' : '')
                 . '</td><td style="vertical-align:top;text-align:center;width:24mm;border-left:1px solid #ccc">'
                 . '<div class="lbl">' . $L('slip.part') . '</div><div class="sn">' . (int) $v->booth_no . '</div>'
                 . '<div class="lbl">' . $L('slip.serial') . '</div><div class="sn">' . (int) $v->serial_no . '</div></td></tr></table>'

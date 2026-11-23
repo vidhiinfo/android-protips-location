@@ -29,7 +29,7 @@
             </dl></div></div></div>
         <div class="col-md-5"><form method="post" action="{{ url('/grievances/'.$g->id.'/status') }}" class="card card-body h-100">@csrf
             <div class="fw-semibold mb-2">{{ t('gr.update') }}</div>
-            <textarea name="resolution" class="form-control mb-2" rows="3" maxlength="1000" placeholder="{{ t('gr.resolutionHint') }}"></textarea>
+            <textarea name="resolution" class="form-control mb-2" rows="3" maxlength="1000" placeholder="{{ t('gr.resolutionHint') }}" data-voice></textarea>
             <div class="d-flex flex-wrap gap-2">
                 @foreach(\App\Models\Grievance::STATUSES as $s) @if($s !== $g->status)
                 <button name="status" value="{{ $s }}" class="btn btn-sm {{ $s === 'RESOLVED' ? 'btn-success' : 'btn-outline-secondary' }}">{{ t('gr.status.'.$s) }}</button>

@@ -4,7 +4,7 @@
  * CSS / JS / fonts / icons are cached, plus the empty "Offline survey" page so it opens without internet.
  * Voter data is kept on the phone only when a worker downloads a booth there (IndexedDB, removed after a few days / on logout).
  */
-const VERSION = 'vis-app-2026-12-05';
+const VERSION = 'vis-app-2026-12-06';
 const SHELL = ['offline.html', 'js/offline.js', 'js/offline-survey.js', 'js/field-offline.js', 'images/app/icon-192.png', 'manifest.webmanifest'];
 const SURVEY_PAGE = 'survey-offline-page';
 const pageKey = (url) => (/\/field$/.test(url.pathname) ? 'field-offline-page' : SURVEY_PAGE);

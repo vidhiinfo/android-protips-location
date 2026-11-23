@@ -40,7 +40,7 @@
         @if($canPoll)<li class="nav-item"><a class="nav-link" href="#" data-f-tab="poll"><i class="bi bi-check2-square"></i> {{ t('field.tabPoll') }}</a></li>@endif
     </ul>
     <div id="fSearch" class="d-none">
-        <input type="search" id="fQ" class="form-control mb-2" placeholder="{{ t('field.searchPh') }}" autocomplete="off">
+        <input type="search" id="fQ" class="form-control mb-2" placeholder="{{ t('field.searchPh') }}" autocomplete="off" data-scan="input" data-voice>
         <div id="fResults"></div>
     </div>
     <div id="fPoll" class="d-none"></div>

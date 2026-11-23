@@ -132,7 +132,7 @@
       + '<div class="row g-2 mb-2"><div class="col-6"><div class="stat"><div class="small text-muted">' + esc(L.turnout) + '</div><div class="num">' + voted + ' / ' + n
       + ' <span class="small text-muted">(' + (n ? Math.round(100 * voted / n) : 0) + '%)</span></div></div></div>'
       + '<div class="col-6"><div class="stat"><div class="small text-muted">' + esc(L.supportersLeft) + '</div><div class="num text-primary">' + (sup - supV) + ' / ' + sup + '</div></div></div></div>'
-      + '<form class="d-flex gap-2 mb-2" data-f-markform><input class="form-control" inputmode="numeric" name="sl" placeholder="' + esc(L.serialPh) + '" autocomplete="off">'
+      + '<form class="d-flex gap-2 mb-2" data-f-markform><input class="form-control" inputmode="numeric" name="sl" placeholder="' + esc(L.serialPh) + '" autocomplete="off" data-scan="submit">'
       + '<button class="btn btn-success text-nowrap"><i class="bi bi-check2"></i> ' + esc(L.markBtn) + '</button></form>'
       + '<div class="form-check small mb-2"><input class="form-check-input" type="checkbox" id="fOnlySup" data-f-onlysup' + (onlySup ? ' checked' : '') + '><label class="form-check-label" for="fOnlySup">'
       + esc(L.onlySupporters) + '</label></div><div class="d-flex flex-wrap gap-1">';
@@ -248,7 +248,12 @@
     if (e.target.id === 'fDownload') { e.preventDefault(); download(e.target); return; }
     if (e.target.matches('[data-f-markform]')) {
       e.preventDefault();
-      var sl = e.target.sl.value.trim(), p = packs[pollBooth], v = p && p.voters.find(function (x) { return String(x.sl) === sl; });
+      var sl = e.target.sl.value.trim(), p = packs[pollBooth], up = sl.toUpperCase();
+      // a serial number, or an EPIC number (typed or scanned from the voter slip / card)
+      var v = p && p.voters.find(function (x) { return String(x.sl) === sl || (x.epic && String(x.epic).toUpperCase() === up); });
+      if (!v && /[A-Z]/.test(up)) {   // scanned card from another downloaded booth: switch to it
+        Object.keys(packs).some(function (k) { var w = packs[k].voters.find(function (x) { return x.epic && String(x.epic).toUpperCase() === up; }); if (w) { pollBooth = k; p = packs[k]; v = w; return true; } return false; });
+      }
       if (!v) { note(fmt(L.notFound, sl), 'warning'); return; }
       if (v.v) { note(fmt(L.alreadyMarked, v.sl, v.n), 'warning'); return; }
       setVote(p, v, true).then(function () { note(fmt(L.markOk, v.sl, v.n), 'success'); var i = $('fPoll').querySelector('[name=sl]'); if (i) i.focus(); });
