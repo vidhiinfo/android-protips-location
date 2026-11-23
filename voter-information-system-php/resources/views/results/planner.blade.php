@@ -77,6 +77,9 @@
             @if($plan['past']) {{ t('plan.swingText', sprintf('%+.1f', $plan['swing'])) }}@endif</div>
     </div>
 
+    @if($plan['surveyed_pct'] < \App\Services\Results\PlannerService::MIN_SURVEY)
+    <div class="alert alert-info py-2 small"><i class="bi bi-info-circle"></i> {{ t('plan.lowSurvey', number_format($plan['surveyed_pct'], 0)) }}</div>
+    @endif
     <div class="row g-2 mb-3">
         <div class="col-6 col-md-3"><div class="stat h-100"><div class="text-muted small">{{ t('plan.winNumber') }}</div><div class="num fs-4">{{ $n($s['target']) }}</div>
             <div class="small text-muted">{{ number_format($plan['target_share'], 1) }}% {{ t('plan.ofExpected', $n($s['expected'])) }}</div></div></div>

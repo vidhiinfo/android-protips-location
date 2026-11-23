@@ -27,6 +27,8 @@ class PlannerService
     /** Target share when there is no past result and none is typed in. */
     public const DEFAULT_TARGET = 40.0;
     private const MAX_TURNOUT = 95.0;
+    /** Below this survey coverage (%) a booth's numbers rest mainly on last election's pattern. */
+    public const MIN_SURVEY = 20.0;
 
     public function __construct(private ResultService $results, private AnalyticsService $analytics) {}
 

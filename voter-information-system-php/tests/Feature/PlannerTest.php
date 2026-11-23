@@ -127,7 +127,8 @@ class PlannerTest extends TestCase
         $c = Candidate::with('party')->where('election_id', $e->id)->orderBy('ballot_no')->get();
         $this->assertSame(['Asha Rani', 'Vikram', 'NOTA'], $c->pluck('name')->all());
         $this->assertSame('AAA', $c[0]->party->short_name);      // existing party linked
-        $this->assertNull($c[1]->party_id);                       // BBB is not a party yet: kept as the name only
+        $this->assertSame('BBB', $c[1]->party->short_name);       // BBB was not a party yet: added
+        $this->assertContains($c[2]->party?->short_name, [null, 'NOTA']);   // NOTA: the NOTA party if there is one
         $this->assertSame(1240, (int) BoothResult::where('candidate_id', $c[0]->id)->where('booth_no', 1)->value('votes'));
         $this->assertSame(6, BoothResult::where('election_id', $e->id)->count());   // the Total row and total columns are not booths / candidates
         // loading again (an Excel file, headings found below a title row) updates instead of adding
@@ -139,6 +140,10 @@ class PlannerTest extends TestCase
             ->assertSessionHas('success');
         $this->assertSame(3, Candidate::where('election_id', $e->id)->count());
         $this->assertSame(1250, (int) BoothResult::where('candidate_id', $c[0]->id)->where('booth_no', 1)->value('votes'));
+        $this->assertSame(9, BoothResult::where('election_id', $e->id)->count());
+        // a file for another seat is refused
+        $other = UploadedFile::fake()->createWithContent('o.csv', "Form 20 - AC 033 Kartarpur\nBooth No,X (AAA)\n1,5\n");
+        $this->post('/planner/form20', ['assemblyNo' => 77, 'electionId' => $e->id, 'file' => $other])->assertSessionHas('error');
         $this->assertSame(9, BoothResult::where('election_id', $e->id)->count());
         // a sheet without a booth column is refused with a reason
         $bad = UploadedFile::fake()->createWithContent('x.csv', "Name,Votes\nA,1\n");

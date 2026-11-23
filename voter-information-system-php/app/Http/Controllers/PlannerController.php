@@ -85,6 +85,7 @@ class PlannerController extends Controller
     /** What to do in this booth, in one line. */
     public static function action(array $b): string
     {
+        if ($b['surveyed_pct'] < PlannerService::MIN_SURVEY) return t('plan.do.survey', $b['U'], $b['projected'], $b['target']);
         return match ($b['status']) {
             'swing' => $b['U'] > 0 ? t('plan.do.swing', $b['gap'], $b['N'], $b['U']) : t('plan.do.swingN', $b['gap'], $b['N']),
             'tough' => t('plan.do.tough', $b['S']),
@@ -109,7 +110,7 @@ class PlannerController extends Controller
         }
         $res = $imp->import($r->file('file')->getRealPath(), $ext, $e, $a, $this->user()->username());
         $back = '/planner?' . http_build_query(['assemblyNo' => $a, 'electionId' => $e->id]);
-        if ($res['errors']) return redirect($back)->with('error', implode(' ', array_map(fn ($k) => t($k), $res['errors'])));
+        if ($res['errors']) return redirect($back)->with('error', implode(' ', array_map(fn ($k) => $k === 'form20.otherSeat' ? t($k, $res['seat'], $a) : t($k), $res['errors'])));
         return redirect($back)->with('success', t('form20.done', $res['booths'], count($res['matched']) + count($res['added']), count($res['added']))
             . ($res['skipped'] ? ' ' . t('form20.skipped', implode(', ', array_slice($res['skipped'], 0, 8))) : ''));
     }

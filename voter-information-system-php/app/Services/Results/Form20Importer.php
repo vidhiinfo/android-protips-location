@@ -44,7 +44,8 @@ class Form20Importer
     private static function split(string $h): array
     {
         $h = trim(preg_replace('/\s+/u', ' ', $h));
-        if (preg_match('/^(.*?)[\s\-]*[\(\[]\s*([^\)\]]+?)\s*[\)\]]\s*$/u', $h, $m) && trim($m[1]) !== '') return [trim($m[1]), strtoupper(trim($m[2]))];
+        // the last bracket, which may itself hold one bracket: "Mela Singh (CPI(M))" -> CPI(M)
+        if (preg_match('/^(.*?)[\s\-]*[\(\[]\s*((?:[^()\[\]]|\([^()]*\))+?)\s*[\)\]]\s*$/u', $h, $m) && trim($m[1]) !== '') return [trim($m[1]), strtoupper(trim($m[2]))];
         if (preg_match('/^(.*?)\s+-\s+(\S+)$/u', $h, $m)) return [trim($m[1]), strtoupper(trim($m[2]))];
         return [$h, null];
     }
@@ -66,12 +67,20 @@ class Form20Importer
     /** @return array{booths:int, votes:int, added:string[], matched:string[], skipped:string[], errors:string[]} */
     public function import(string $path, string $ext, Election $e, int $assemblyNo, string $user): array
     {
-        $out = ['booths' => 0, 'votes' => 0, 'added' => [], 'matched' => [], 'skipped' => [], 'errors' => []];
+        $out = ['booths' => 0, 'votes' => 0, 'added' => [], 'matched' => [], 'skipped' => [], 'errors' => [], 'parties' => []];
         $boothCol = null; $cols = []; $data = []; $line = 0;
         foreach ($this->rows($path, $ext) as $row) {
             $line++;
             if ($boothCol === null) {
                 if ($line > 10) break;
+                // a title naming another seat ("AC 033", "Assembly Constituency : 038") is refused: wrong file for this seat
+                foreach ($row as $cell) {
+                    if (is_string($cell) && preg_match('/(?:\bA\.?C\.?|Assembly\s+Constituency)\s*(?:No\.?)?\s*[:\-]?\s*0*(\d{1,3})\b/i', $cell, $mm)
+                        && (int) $mm[1] > 0 && (int) $mm[1] !== $assemblyNo) {
+                        $out['errors'][] = 'form20.otherSeat'; $out['seat'] = (int) $mm[1];
+                        return $out;
+                    }
+                }
                 foreach ($row as $i => $cell) if (self::isBooth(self::key($cell))) { $boothCol = $i; break; }
                 if ($boothCol === null) continue;
                 foreach ($row as $i => $cell) {
@@ -111,6 +120,12 @@ class Form20Importer
                 if ($c) { $out['matched'][] = $h; $colCand[$i] = $c->id; continue; }
                 // a bare party short name ("INC") as the heading: the party's candidate, named after the party
                 $party = $parties[$short ?? strtoupper($name)] ?? null;
+                // "Name (PARTY)" with a party not entered yet: add the party (independents stay without one)
+                if (!$party && $short !== null && !in_array($short, ['IND', 'INDEPENDENT', 'NOTA'], true) && mb_strlen($short) <= 20) {
+                    $party = Party::create(['name' => $short, 'short_name' => $short]);
+                    $parties[$short] = $party;
+                    $out['parties'][] = $short;
+                }
                 $c = Candidate::create(['election_id' => $e->id, 'assembly_no' => $assemblyNo, 'name' => mb_substr($name, 0, 120),
                     'party_id' => $party?->id, 'ballot_no' => ++$ballot]);
                 $cands->push($c->setRelation('party', $party));
