@@ -1,29 +1,48 @@
 @extends('layouts.app')
 @section('title', t('settings.title'))
 @section('content')
-<div class="container px-3" style="max-width:820px">
+@php($icons = ['offline' => 'cloud-slash', 'login' => 'shield-lock', 'display' => 'display', 'messaging' => 'chat-dots'])
+<div class="container px-3" style="max-width:900px">
     @include('partials.flash')
     <h4 class="mb-1"><i class="bi bi-toggles"></i> {{ t('settings.title') }}</h4>
-    <p class="small text-muted">{{ t('settings.intro') }}</p>
-    <form method="post" action="{{ url('/admin/settings') }}" class="card">@csrf
+    <p class="small text-muted">{{ t('settings.introAll') }}</p>
+    <form method="post" action="{{ url('/admin/settings') }}">@csrf
+    @foreach($groups as $g)
+    <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-{{ $icons[$g] }}"></i> {{ t('settings.group.' . $g) }}</div>
         <div class="card-body">
-            <div class="d-flex align-items-start gap-3">
-                <i class="bi bi-chat-dots fs-3 text-primary"></i>
-                <div class="me-auto">
-                    <div class="fw-semibold">{{ t('settings.msgTitle') }}
-                        <span class="badge {{ $messaging ? 'text-bg-success' : 'text-bg-secondary' }} ms-1">{{ $messaging ? t('settings.on') : t('settings.off') }}</span></div>
-                    <div class="small text-muted">{{ t('settings.msgHelp') }}</div>
-                    <div class="small text-muted mt-1">@if($messagingSet && $changedBy){{ t('settings.changed', $changedBy->updated_by, substr((string) $changedBy->updated_at, 0, 16)) }}@else{{ t('settings.fromEnv', $envDefault ? t('settings.on') : t('settings.off')) }}@endif</div>
+        @foreach($items[$g] as $name => $it)
+            <div class="row g-2 align-items-start mb-3 pb-2 border-bottom">
+                <div class="col-md-6">
+                    <label class="fw-semibold small d-block" for="s-{{ $name }}">{{ t('settings.s.' . $name) }}</label>
+                    <div class="small text-muted">{{ t('settings.h.' . $name) }}</div>
+                </div>
+                <div class="col-md-6">
+                    @if($it['type'] === 'bool')
+                        <input type="hidden" name="s[{{ $name }}]" value="0">
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="s-{{ $name }}" name="s[{{ $name }}]" value="1" @checked($it['value'])>
+                            <label class="form-check-label small" for="s-{{ $name }}">{{ $it['value'] ? t('settings.on') : t('settings.off') }}</label></div>
+                    @elseif($it['type'] === 'int')
+                        <div class="input-group input-group-sm" style="max-width:14rem"><input type="number" class="form-control" id="s-{{ $name }}" name="s[{{ $name }}]" value="{{ $it['value'] }}" min="{{ $it['rule'][0] }}" max="{{ $it['rule'][1] }}">
+                            <span class="input-group-text">{{ t('settings.u.' . $name) }}</span></div>
+                    @elseif($it['type'] === 'enum')
+                        <select class="form-select form-select-sm" style="max-width:14rem" id="s-{{ $name }}" name="s[{{ $name }}]">
+                            @foreach($it['rule'] as $o)<option value="{{ $o }}" @selected((string) $it['value'] === $o)>{{ t('settings.o.' . $o) }}</option>@endforeach</select>
+                    @else
+                        <input class="form-control form-control-sm" id="s-{{ $name }}" name="s[{{ $name }}]" value="{{ $it['value'] }}" maxlength="{{ $it['rule'] }}" dir="auto">
+                    @endif
+                    <div class="small text-muted mt-1">
+                        @if($it['set']){{ t('settings.changed', $it['by'], $it['at']) }} · <button class="btn btn-link btn-sm p-0 align-baseline" name="reset" value="{{ $name }}">{{ t('settings.reset') }}</button>
+                        @else{{ t('settings.default') }}@endif
+                    </div>
                 </div>
             </div>
-            <div class="btn-group mt-3" role="group">
-                <input type="radio" class="btn-check" name="messaging" id="msgOn" value="1" @checked($messaging)>
-                <label class="btn btn-outline-success" for="msgOn"><i class="bi bi-toggle-on"></i> {{ t('settings.turnOn') }}</label>
-                <input type="radio" class="btn-check" name="messaging" id="msgOff" value="0" @checked(!$messaging)>
-                <label class="btn btn-outline-secondary" for="msgOff"><i class="bi bi-toggle-off"></i> {{ t('settings.turnOff') }}</label>
-            </div>
+        @endforeach
         </div>
-        <div class="card-footer text-end"><button class="btn btn-primary">{{ t('common.save') }}</button></div>
+    </div>
+    @endforeach
+    <div class="d-flex gap-2 mb-4"><button class="btn btn-primary"><i class="bi bi-check2"></i> {{ t('common.save') }}</button></div>
     </form>
+    <p class="small text-muted"><i class="bi bi-lock"></i> {{ t('settings.secretsNote') }}</p>
 </div>
 @endsection

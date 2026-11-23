@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+        \App\Support\Settings::applyToConfig();   // Admin > Settings override .env
         // sessions last as long as the longest allowed login (field workers); RequireLogin applies the shorter limit to administrators
         $days = max(0, (int) config('voters.security.field_session_days'));
         if ($days > 0) config(['session.lifetime' => max((int) config('session.lifetime'), $days * 1440)]);

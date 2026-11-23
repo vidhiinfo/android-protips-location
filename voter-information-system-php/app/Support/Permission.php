@@ -26,11 +26,7 @@ class Permission
     public const MESSAGING = ['MESSAGE_SEND', 'MESSAGE_ADMIN'];
 
     /** SMS / WhatsApp on or off: the administrator's choice (Admin > Settings), else MESSAGING_ENABLED in .env. */
-    public static function messagingOn(): bool
-    {
-        $v = Settings::get('messaging_enabled');
-        return $v === null ? (bool) config('voters.messaging.enabled', true) : $v === '1';
-    }
+    public static function messagingOn(): bool { return (bool) config('voters.messaging.enabled', true); }   // Admin > Settings applied at start-up
 
     public static function codes(): array { return array_keys(self::ALL); }
 
