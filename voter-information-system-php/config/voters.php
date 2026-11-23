@@ -105,7 +105,8 @@ return [
     ],
 
     'planner' => [
-        // Votes-to-win planner (Results > Votes-to-win planner); all three can be changed in Admin > Settings
+        // Votes-to-win planner (Results > Votes-to-win planner); all of these can be changed in Admin > Settings
+        'enabled' => filter_var(env('PLANNER_ENABLED', true), FILTER_VALIDATE_BOOL),   // false hides the menu entry and the page
         'our_party' => env('PLANNER_OUR_PARTY', ''),            // party short name as in the results, e.g. INC; empty = last winner
         'safety_margin' => (int) env('PLANNER_SAFETY_MARGIN', 3), // points above the best rival's last share
         'supporter_turnout' => (int) env('PLANNER_SUPPORTER_TURNOUT', 80), // % of survey supporters expected to vote

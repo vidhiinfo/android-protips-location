@@ -16,6 +16,9 @@ class PlannerController extends Controller
 {
     public function __construct(private PlannerService $planner) {}
 
+    /** Admin > Settings can switch the planner off: menu entry hidden and these pages answer "not found". Data is kept. */
+    private static function on(): void { abort_unless((bool) config('voters.planner.enabled', true), 404); }
+
     private static function num(Request $r, string $k): ?float
     {
         $v = trim((string) $r->query($k, ''));
@@ -42,6 +45,7 @@ class PlannerController extends Controller
 
     public function index(Request $r, VoterService $v)
     {
+        self::on();
         [$a, $w, $pasts, $past, $party, $opt] = $this->inputs($r, $v);
         $plan = $a ? $this->planner->plan($a, $past, $party ?: null, $opt, $w) : null;
         $q = array_filter(['assemblyNo' => $a, 'wardNo' => $w, 'electionId' => $r->query('electionId'), 'party' => $r->query('party'),
@@ -55,6 +59,7 @@ class PlannerController extends Controller
 
     public function export(Request $r, string $format, VoterService $v, ExcelExporter $x, PdfExporter $p)
     {
+        self::on();
         [$a, $w, , $past, $party, $opt] = $this->inputs($r, $v);
         abort_if($a === null, 404);
         $plan = $this->planner->plan($a, $past, $party ?: null, $opt, $w);
@@ -96,6 +101,7 @@ class PlannerController extends Controller
 
     public function import(Request $r, Form20Importer $imp)
     {
+        self::on();
         $r->validate(['file' => 'required|file|max:10240', 'assemblyNo' => 'required|integer']);
         $a = (int) $r->input('assemblyNo');
         abort_unless($this->user()->allows($a), 403);
@@ -118,6 +124,7 @@ class PlannerController extends Controller
     /** A blank Form 20 sheet: booth numbers of this seat, one column per candidate already entered (or examples). */
     public function template(Request $r, VoterService $v, ExcelExporter $x)
     {
+        self::on();
         [$a, , , $past] = $this->inputs($r, $v);
         abort_if($a === null, 404);
         $heads = [t('col.boothNo')];

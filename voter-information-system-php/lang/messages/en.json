@@ -1752,5 +1752,7 @@
 "plan.do.swingN": "Win {0} more from the {1} neutral voters.",
 "form20.otherSeat": "This file is for assembly {0}, but you are working in assembly {1}. Log in to assembly {0} to load it.",
 "plan.do.survey": "Survey this booth first ({0} voters left). On last time's pattern: {1} of the {2} votes needed.",
-"plan.lowSurvey": "Only {0}% of voters are surveyed, so 'votes we have now' is mostly last election's pattern carried forward. The plan gets sharper as the house-to-house survey is filled in."
+"plan.lowSurvey": "Only {0}% of voters are surveyed, so 'votes we have now' is mostly last election's pattern carried forward. The plan gets sharper as the house-to-house survey is filled in.",
+"settings.s.planner_enabled": "Show the votes-to-win planner",
+"settings.h.planner_enabled": "Off hides Results > Votes-to-win planner from the menu and the page cannot be opened. Loaded Form 20 results are kept."
 }

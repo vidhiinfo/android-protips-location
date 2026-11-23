@@ -102,6 +102,15 @@ class PlannerTest extends TestCase
         $this->assertEqualsWithDelta(100 * 80 / 232 + 10, $p['target_share'], 0.001);
         $this->assertEquals(90, $p['supporter_turnout']);
         $this->get('/planner?assemblyNo=77')->assertOk()->assertSee('AAA</b> got', false);
+        // switched off in Admin > Settings: menu entry gone, page not found, data kept; back on: all there again
+        $this->post('/admin/settings', ['s' => ['planner_enabled' => '0']])->assertRedirect();
+        $this->get('/dashboard')->assertOk()->assertDontSee(url('/planner'), false);
+        $this->get('/planner?assemblyNo=77')->assertNotFound();
+        $this->get('/planner/export/xlsx?assemblyNo=77')->assertNotFound();
+        $this->assertGreaterThan(0, BoothResult::count());
+        $this->post('/admin/settings', ['s' => ['planner_enabled' => '1']])->assertRedirect();
+        $this->get('/dashboard')->assertOk()->assertSee(url('/planner'), false);
+        $this->get('/planner?assemblyNo=77')->assertOk();
         // viewers may look but not load results
         $this->post('/logout');
         $this->login('viewer', 'viewer@123');
