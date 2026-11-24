@@ -15,6 +15,7 @@ use App\Models\Task;
 use App\Services\DashboardService;
 use App\Services\GreetingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /** Read-mostly endpoints for the President's and state/district mobile apps. */
@@ -46,7 +47,11 @@ class OfficeController extends Controller
     {
         abort_unless($request->user()->canView('greetings'), 403);
 
-        return (new GreetingService($request->user()))->upcoming($request->integer('days', (int) setting('greeting_days_ahead', 7)));
+        return (new GreetingService($request->user()))->upcoming($request->integer('days', (int) setting('greeting_days_ahead', 7)))
+            ->map(fn ($g) => array_merge($g, [
+                // Web photo URLs need a browser session; the app uses the token-authenticated API route.
+                'photo_url' => ($g['photo_url'] ?? null) && ($g['member_id'] ?? null) ? route('api.members.photo', $g['member_id']) : null,
+            ]))->values();
     }
 
     public function circulars(Request $request)
@@ -67,6 +72,14 @@ class OfficeController extends Controller
         $circular->readers()->syncWithoutDetaching([$request->user()->id]);
 
         return response()->noContent();
+    }
+
+    public function circularAttachment(Request $request, Circular $circular)
+    {
+        abort_unless(Circular::visibleTo($request->user())->whereKey($circular->id)->exists(), 403);
+        abort_unless($circular->attachment_path && Storage::disk('local')->exists($circular->attachment_path), 404);
+
+        return Storage::disk('local')->download($circular->attachment_path);
     }
 
     public function tasks(Request $request)

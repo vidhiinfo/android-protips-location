@@ -28,7 +28,7 @@ class GreetingService
             ->whereRaw($md('dob').' IN ('.$dates->keys()->map(fn () => '?')->implode(',').')', $dates->keys()->all())
             ->get();
         foreach ($members as $m) {
-            $items->push($this->item('birthday', $m->name, $m->dob, $m->designation?->title, $m->area(), $m->whatsapp ?: $m->mobile, $m->photo_url, $dates));
+            $items->push($this->item('birthday', $m->name, $m->dob, $m->designation?->title, $m->area(), $m->whatsapp ?: $m->mobile, $m->photo_url, $dates) + ['member_id' => $m->id]);
         }
 
         if ($this->user->canView('contacts')) {

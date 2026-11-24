@@ -38,6 +38,7 @@ Route::prefix('v1')->name('api.')->group(function () {
         Route::get('/schedule', [OfficeController::class, 'schedule'])->name('schedule');
         Route::get('/greetings', [OfficeController::class, 'greetings'])->name('greetings');
         Route::get('/circulars', [OfficeController::class, 'circulars'])->name('circulars');
+        Route::get('/circulars/{circular}/attachment', [OfficeController::class, 'circularAttachment'])->name('circulars.attachment');
         Route::post('/circulars/{circular}/read', [OfficeController::class, 'readCircular'])->name('circulars.read');
         Route::get('/tasks', [OfficeController::class, 'tasks'])->name('tasks');
         Route::patch('/tasks/{task}', [OfficeController::class, 'updateTask'])->name('tasks.update');

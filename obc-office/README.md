@@ -1,12 +1,14 @@
 # OBC Office — National President's Office Management System
 
-A web application (Laravel 13, PHP 8.3+) for the National President's office. It covers the organisation database of
+A web application (Laravel 13, PHP 8.3+) and a mobile app (Flutter, one codebase for Android and iOS) for the
+National President's office. It covers the organisation database of
 office bearers and party workers (national → state → district → mandal), with photos, plus the President's daily
-office work. It also provides a REST API, ready for the Android and iOS apps (phase 2).
+office work. The mobile app uses the web application's REST API.
 
 ```
 obc-office/
-└── web/          Laravel 13 application (web portal + REST API for mobile)
+├── web/          Laravel 13 application (web portal + REST API)
+└── mobile/       Flutter app for Android & iOS (see mobile/README.md)
 ```
 
 ## Features
@@ -123,15 +125,14 @@ Permissions and jurisdiction are identical to the web app.
 | GET | `/petitions` · `/petitions/{id}` · POST `/petitions/{id}/updates` | Petitions and follow-ups |
 | GET | `/programs` · POST `/programs/{id}/reports` (multipart `photos[]`) | Programme reports from the field |
 
-## Roadmap: phase 2 (mobile apps)
+## Mobile app
 
-The API above is complete for the first app release. The plan is one **Flutter** codebase producing both the Android
-and iOS apps:
+`mobile/` is a single Flutter codebase that produces both the Android and the iOS app. It provides the dashboard,
+members (add with camera photo), the biodata register (record by photographing pages), schedule, greetings with
+one-tap WhatsApp, circulars, tasks, petitions and programme reports. The menu follows each user's permissions from
+the server. See [mobile/README.md](mobile/README.md) for building the APK, Play Store and App Store versions.
 
-1. **President's app:** dashboard, today's schedule, greetings with one tap to WhatsApp, approvals, member search with
-   photo, petitions and task assignment.
-2. **State / district app:** add and update bearers using the camera, submit programme reports with geo-tagged photos,
-   receive circulars through push notifications, and an offline mode (cached `/meta` plus queued uploads).
+## Roadmap
 
-Planned additions: push notifications (FCM), WhatsApp Business API for bulk greetings, OTP login, Hindi UI, and an
-India map on the dashboard.
+Push notifications (FCM) for circulars and tasks, offline mode with queued uploads, WhatsApp Business API for bulk
+greetings, OTP login, Hindi UI, and an India map on the dashboard.

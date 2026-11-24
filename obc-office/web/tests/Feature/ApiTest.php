@@ -62,4 +62,20 @@ class ApiTest extends OfficeTestCase
         $this->app['auth']->forgetGuards(); // each real request resolves the user afresh
         $this->get('/api/v1/me', $h)->assertForbidden();
     }
+
+    public function test_greetings_use_token_photo_urls_and_circular_attachment_downloads(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $admin = $this->admin();
+        Member::forceCreate(['name' => 'Bday', 'level' => 'state', 'state_id' => $this->up->id, 'type' => 'bearer', 'status' => 'active',
+            'mobile' => '9876543210', 'dob' => now()->subYears(40)->toDateString(), 'photo_path' => 'photos/members/x.jpg']);
+        \Illuminate\Support\Facades\Storage::disk('local')->put('circulars/c.pdf', '%PDF-1.4 test');
+        $c = \App\Models\Circular::create(['title' => 'With file']);
+        $c->forceFill(['attachment_path' => 'circulars/c.pdf'])->save();
+
+        $h = ['Authorization' => 'Bearer '.$this->token($admin), 'Accept' => 'application/json'];
+        $g = $this->get('/api/v1/greetings?days=0', $h)->assertOk()->json('0');
+        $this->assertStringContainsString('/api/v1/members/', $g['photo_url']);
+        $this->get("/api/v1/circulars/{$c->id}/attachment", $h)->assertOk()->assertDownload();
+    }
 }
