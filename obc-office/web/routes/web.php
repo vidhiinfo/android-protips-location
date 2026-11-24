@@ -1,0 +1,92 @@
+<?php
+
+use App\Http\Controllers\AuditController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CircularController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GreetingController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\LetterController;
+use App\Http\Controllers\MasterController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\PetitionController;
+use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VisitorController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/', DashboardController::class)->name('dashboard');
+
+    // Organisation
+    Route::get('/directory', [MemberController::class, 'directory'])->name('directory');
+    Route::get('/members/import', [ImportController::class, 'form'])->name('import.form');
+    Route::post('/members/import', [ImportController::class, 'import'])->name('import.run');
+    Route::get('/members/import/template', [ImportController::class, 'template'])->name('import.template');
+    Route::get('/members/export', [ImportController::class, 'export'])->name('members.export');
+    Route::get('/members/{member}/photo', [MemberController::class, 'photo'])->name('members.photo');
+    Route::delete('/members/{member}/photo', [MemberController::class, 'removePhoto'])->name('members.photo.remove');
+    Route::post('/members/{member}/approve', [MemberController::class, 'approve'])->name('members.approve');
+    Route::resource('members', MemberController::class);
+    Route::get('/states/{state}/districts', [MemberController::class, 'districts'])->name('states.districts');
+
+    Route::resource('circulars', CircularController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::get('/circulars/{circular}/attachment', [CircularController::class, 'attachment'])->name('circulars.attachment');
+
+    Route::resource('programs', ProgramController::class);
+    Route::post('/programs/{program}/reports', [ProgramController::class, 'storeReport'])->name('programs.reports.store');
+    Route::get('/program-reports/{report}/photos/{index}', [ProgramController::class, 'reportPhoto'])->name('programs.reports.photo');
+
+    // President's office
+    Route::resource('schedule', ScheduleController::class)->parameters(['schedule' => 'id']);
+    Route::resource('visitors', VisitorController::class)->parameters(['visitors' => 'id']);
+    Route::resource('contacts', ContactController::class)->parameters(['contacts' => 'id']);
+    Route::resource('letters', LetterController::class)->parameters(['letters' => 'id']);
+    Route::resource('tasks', TaskController::class)->parameters(['tasks' => 'id']);
+    Route::patch('/tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.status');
+
+    Route::resource('petitions', PetitionController::class);
+    Route::post('/petitions/{petition}/updates', [PetitionController::class, 'addUpdate'])->name('petitions.updates.store');
+    Route::get('/petitions/{petition}/acknowledgement', [PetitionController::class, 'acknowledgement'])->name('petitions.ack');
+    Route::get('/petitions/{petition}/attachment', [PetitionController::class, 'attachment'])->name('petitions.attachment');
+
+    Route::get('/greetings', GreetingController::class)->name('greetings');
+
+    // Administration
+    Route::resource('users', UserController::class)->except(['show']);
+
+    Route::prefix('masters')->name('masters.')->controller(MasterController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/states', 'storeState')->name('states.store');
+        Route::post('/states/{state}/districts', 'storeDistricts')->name('districts.store');
+        Route::put('/districts/{district}', 'updateDistrict')->name('districts.update');
+        Route::delete('/districts/{district}', 'destroyDistrict')->name('districts.destroy');
+        Route::post('/designations', 'storeDesignation')->name('designations.store');
+        Route::put('/designations/{designation}', 'updateDesignation')->name('designations.update');
+        Route::delete('/designations/{designation}', 'destroyDesignation')->name('designations.destroy');
+    });
+
+    Route::prefix('settings')->name('settings.')->controller(SettingsController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/general', 'saveGeneral')->name('general');
+        Route::post('/access', 'saveAccess')->name('access');
+        Route::post('/lookups', 'storeLookup')->name('lookups.store');
+        Route::put('/lookups/{lookup}', 'updateLookup')->name('lookups.update');
+        Route::delete('/lookups/{lookup}', 'destroyLookup')->name('lookups.destroy');
+        Route::post('/fields', 'storeField')->name('fields.store');
+        Route::put('/fields/{field}', 'updateField')->name('fields.update');
+        Route::delete('/fields/{field}', 'destroyField')->name('fields.destroy');
+    });
+
+    Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+});
