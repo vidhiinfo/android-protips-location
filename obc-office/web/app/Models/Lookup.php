@@ -30,6 +30,9 @@ class Lookup extends Model
         'task_status' => 'Task statuses',
         'contact_category' => 'VIP contact categories',
         'letter_status' => 'Letter statuses',
+        'biodata_category' => 'Biodata categories',
+        'biodata_source' => 'Biodata received via',
+        'biodata_status' => 'Biodata statuses',
     ];
 
     protected static function booted(): void

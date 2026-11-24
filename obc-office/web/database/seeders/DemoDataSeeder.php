@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Biodata;
 use App\Models\Circular;
 use App\Models\Contact;
 use App\Models\Designation;
@@ -116,6 +117,25 @@ class DemoDataSeeder extends Seeder
         Letter::create(['direction' => 'inward', 'ref_no' => 'UP/2026/114', 'letter_date' => today()->subDay(), 'party' => 'UP State Unit', 'subject' => 'Proposal for district office bearers', 'status' => 'pending']);
 
         Circular::create(['title' => 'Submit updated office-bearer lists with photos by month end', 'body' => "All state presidents are requested to update their state and district office-bearer data, including photographs, in the portal by the end of this month.\n\nThe national office will review completeness state-wise.", 'created_by' => User::where('role', 'super_admin')->value('id')]);
+
+        // Biodata register (one person received twice, to show duplicate detection)
+        $admin = User::where('role', 'super_admin')->value('id');
+        $bios = [
+            ['Ramesh Prajapati', 'Shiv Prajapati', $up->id, $lko->id, 'UP State President', 'state_office', 'for_post', 'received', '9810001001', 3],
+            ['Sunita Maurya', 'Ram Maurya', $up->id, null, 'Shri Example MLA', 'by_hand', 'recommendation', 'under_consideration', '9810001002', 10],
+            ['Mahendra Gurjar', 'Kalu Ram Gurjar', $raj->id, null, 'Rajasthan State Office', 'email', 'for_post', 'filed', '9810001003', 20],
+            ['Vijay Kushwaha', 'Ramdeen Kushwaha', State::where('name', 'Bihar')->value('id'), null, 'Self', 'whatsapp', 'general', 'received', '9810001004', 1],
+            ['Ramesh Prajapati', 'Shiv Prajapati', $up->id, $lko->id, 'Lucknow District President', 'district_office', 'for_post', 'received', '9810001001', 45],
+        ];
+        foreach ($bios as [$n, $f, $sid, $did, $from, $via, $cat, $st, $mob, $ago]) {
+            $b = new Biodata(['name' => $n, 'father_name' => $f, 'state_id' => $sid, 'district_id' => $did, 'received_from' => $from,
+                'received_via' => $via, 'category' => $cat, 'status' => $st, 'mobile' => $mob, 'received_on' => today()->subDays($ago),
+                'gender' => $n === 'Sunita Maurya' ? 'female' : 'male', 'dob' => now()->subYears(mt_rand(30, 55))->toDateString(),
+                'education' => 'graduate', 'profession' => 'social_worker',
+                'background' => "Active party worker since 2012.\nFormer mandal president; organised Samajik Nyay programmes in the district."]);
+            $b->created_by = $admin;
+            $b->save();
+        }
 
         $prog = Program::create(['name' => 'Samajik Nyay Pakhwada', 'description' => 'Fortnight of outreach programmes in every district.', 'start_date' => today()->subDays(5), 'end_date' => today()->addDays(10)]);
         foreach (District::where('state_id', $up->id)->take(4)->get() as $dist) {

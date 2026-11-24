@@ -5,7 +5,7 @@
 | app (stored in the `settings` table), so normally you never need to edit this file.
 */
 
-$allModules = ['dashboard', 'members', 'directory', 'import', 'schedule', 'visitors', 'petitions', 'tasks',
+$allModules = ['dashboard', 'members', 'biodata', 'directory', 'import', 'schedule', 'visitors', 'petitions', 'tasks',
     'contacts', 'letters', 'greetings', 'circulars', 'programs', 'users', 'masters', 'settings', 'audit'];
 
 $grant = fn (array $map) => array_replace(array_fill_keys($allModules, 'none'), $map);
@@ -19,6 +19,7 @@ return [
     'modules' => [
         'dashboard' => ['label' => 'Dashboard', 'group' => 'Overview', 'icon' => '📊', 'route' => 'dashboard', 'levels' => ['none', 'view']],
         'members' => ['label' => 'Bearers & Workers', 'group' => 'Organisation', 'icon' => '👥', 'route' => 'members.index', 'levels' => ['none', 'view', 'manage']],
+        'biodata' => ['label' => 'Biodata Register', 'group' => "President's Office", 'icon' => '📄', 'route' => 'biodata.index', 'levels' => ['none', 'view', 'manage']],
         'directory' => ['label' => 'Photo Directory', 'group' => 'Organisation', 'icon' => '🪪', 'route' => 'directory', 'levels' => ['none', 'view']],
         'import' => ['label' => 'Import / Export', 'group' => 'Organisation', 'icon' => '📥', 'route' => 'import.form', 'levels' => ['none', 'manage']],
         'programs' => ['label' => 'Programmes & Reports', 'group' => 'Organisation', 'icon' => '📣', 'route' => 'programs.index', 'levels' => ['none', 'view', 'manage']],
@@ -64,6 +65,11 @@ return [
         'photo_max_px' => 600,
         'duplicate_check_mobile' => true,
 
+        // Biodata
+        'biodata_prefix' => 'BIO',
+        'biodata_required_fields' => ['received_from'],
+        'biodata_max_file_mb' => 10,
+
         // Formats
         'date_format' => 'd M Y',
         'datetime_format' => 'd M Y, h:i A',
@@ -75,8 +81,8 @@ return [
         // Role → module → none | view | manage. super_admin always has full access (cannot be locked out).
         'permissions' => [
             'national_staff' => $grant([
-                'dashboard' => 'view', 'members' => 'manage', 'directory' => 'view', 'import' => 'manage',
-                'programs' => 'manage', 'circulars' => 'manage', 'schedule' => 'manage', 'visitors' => 'manage',
+                'dashboard' => 'view', 'members' => 'manage', 'biodata' => 'manage',
+                'directory' => 'view', 'import' => 'manage', 'programs' => 'manage', 'circulars' => 'manage', 'schedule' => 'manage', 'visitors' => 'manage',
                 'petitions' => 'manage', 'tasks' => 'manage', 'contacts' => 'manage', 'letters' => 'manage',
                 'greetings' => 'view', 'masters' => 'manage',
             ]),

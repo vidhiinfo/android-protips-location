@@ -15,6 +15,7 @@ class ConfigurationTest extends OfficeTestCase
             'greeting_days_ahead' => 5, 'petition_prefix' => 'GRV', 'petition_default_due_days' => 10,
             'petition_closed_status' => 'closed', 'photo_max_px' => 500, 'date_format' => 'd/m/Y',
             'datetime_format' => 'd/m/Y H:i', 'per_page' => 20, 'member_required_fields' => ['mobile'],
+            'biodata_prefix' => 'BIO', 'biodata_max_file_mb' => 10, 'biodata_required_fields' => ['mobile'],
         ])->assertRedirect();
 
         $this->assertSame('Test Morcha HQ', setting('org_name'));

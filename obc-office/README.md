@@ -20,6 +20,7 @@ obc-office/
 | **Import / Export** | CSV import with the same validation as the form (Excel → *Save as CSV UTF-8*), using a downloadable template, and a per-row error report. CSV export of any filtered list. Every export is audited. |
 | **Programmes & Reports** | The national office announces a campaign; states and districts submit event reports with attendance and photos. Includes a state-coverage tracker. |
 | **Circulars** | Directives to all states or one state, with attachments and read receipts. |
+| **Biodata Register** | Records every biodata the office receives: date, received from (state, district or person), received via (by hand, post, email, WhatsApp…), category, the person's details and photo, background, remarks and the scanned or PDF biodata files (several per entry, viewable in the browser). Includes search and filters, *Also received earlier* duplicate detection, a status, a printable biodata sheet and CSV export. |
 | **Schedule & Tours** | The President's diary: meetings, tours, events and calls, with local contacts and briefing notes. |
 | **Visitors** | Front-desk visitor register with status (waiting, met, rescheduled). |
 | **Petitions** | Auto tracking number (`PET-2026-00001`), category, forwarding, due dates, a follow-up timeline, a printable acknowledgement slip and a WhatsApp status message. |
@@ -43,9 +44,11 @@ obc-office/
   categories and statuses, priorities, schedule types, visitor and task statuses, contact categories, letter statuses).
   You can rename, recolour, reorder, deactivate or add options. System values are locked against deletion, but you can
   still rename them.
-- **Custom member fields:** add fields such as Voter ID, Assembly constituency or Blood group. Types are text, long
-  text, number, date, dropdown and yes/no. You can mark a field required and show it in the list. Custom fields appear
-  on the form, profile, CSV import/export and the API.
+- **Custom fields** for both *Bearers & Workers* and the *Biodata Register*: add fields such as Voter ID, Assembly
+  constituency or Blood group. Types are text, long text, number, date, dropdown and yes/no. You can mark a field
+  required and show it in the list. Custom fields appear on the form, profile, print, CSV and the API.
+- **Biodata register:** mandatory fields (e.g. require the scanned file, mobile or date of birth), reference-number
+  prefix (`BIO-2026-00001`), maximum file size, and the categories, "received via" options and statuses (Dropdown lists).
 - **Roles & permissions:** a matrix of each role × module with `None` / `View` / `Manage`, plus switches to turn whole
   modules on or off.
 
@@ -111,6 +114,8 @@ Permissions and jurisdiction are identical to the web app.
 | GET | `/members/{id}` · `/members/{id}/photo` | Profile / photo |
 | POST | `/members` (multipart, optional `photo`) | Add a member from the phone camera |
 | POST | `/members/{id}` (multipart) | Partial update (send only changed fields) |
+| GET | `/biodata?q=&state_id=&category=&from=&to=` · `/biodata/{id}` | Biodata register (with file links) |
+| POST | `/biodata` (multipart `photo`, `documents[]`) · `/biodata/{id}/documents` | Record a biodata by photographing its pages, or attach more files |
 | GET | `/schedule?from=&to=` | President's schedule |
 | GET | `/greetings?days=7` | Birthdays and anniversaries with ready-made WhatsApp links |
 | GET | `/circulars` · POST `/circulars/{id}/read` | Circulars with read status / mark as read |

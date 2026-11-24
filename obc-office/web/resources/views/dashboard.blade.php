@@ -74,10 +74,11 @@
                         <li class="px-4 py-6 text-center text-sm text-slate-400">No engagements today.</li>
                     @endforelse
                 </ul>
-                <div class="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 text-center text-xs">
+                <div class="grid grid-cols-2 divide-x divide-y divide-slate-100 border-t border-slate-100 text-center text-xs sm:grid-cols-4 sm:divide-y-0 xl:grid-cols-2 xl:divide-y">
                     @if (! is_null($office['visitors_today']))<a href="{{ route('visitors.index') }}" class="py-2.5"><b class="block text-lg text-slate-900">{{ $office['visitors_today'] }}</b>Visitors today</a>@endif
                     @if (! is_null($office['petitions_open']))<a href="{{ route('petitions.index') }}" class="py-2.5"><b class="block text-lg text-slate-900">{{ $office['petitions_open'] }}</b>Open petitions</a>@endif
-                    @if (! is_null($office['petitions_overdue']))<a href="{{ route('petitions.index', ['overdue' => 1]) }}" class="py-2.5"><b class="block text-lg {{ $office['petitions_overdue'] ? 'text-red-600' : 'text-slate-900' }}">{{ $office['petitions_overdue'] }}</b>Overdue</a>@endif
+                    @if (! is_null($office['petitions_overdue']))<a href="{{ route('petitions.index', ['overdue' => 1]) }}" class="py-2.5"><b class="block text-lg {{ $office['petitions_overdue'] ? 'text-red-600' : 'text-slate-900' }}">{{ $office['petitions_overdue'] }}</b>Overdue petitions</a>@endif
+                    @if (! is_null($office['biodata_month'] ?? null))<a href="{{ route('biodata.index', ['from' => now()->startOfMonth()->toDateString()]) }}" class="py-2.5"><b class="block text-lg text-slate-900">{{ $office['biodata_month'] }}</b>Biodata this month</a>@endif
                 </div>
             </div>
         @endif

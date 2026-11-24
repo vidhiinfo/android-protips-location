@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-    $tabs = ['general' => 'General & branding', 'lists' => 'Dropdown lists', 'fields' => 'Custom member fields', 'access' => 'Roles & permissions'];
+    $tabs = ['general' => 'General & branding', 'lists' => 'Dropdown lists', 'fields' => 'Custom fields', 'access' => 'Roles & permissions'];
     $colors = ['' => 'Default', 'gray' => 'Gray', 'blue' => 'Blue', 'green' => 'Green', 'amber' => 'Amber', 'red' => 'Red'];
 @endphp
 <nav class="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200">
@@ -58,6 +58,25 @@
                 <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="duplicate_check_mobile" value="1" class="mt-0.5" @checked(setting('duplicate_check_mobile'))> <span>Warn on duplicate mobile numbers</span></label>
             </div>
             <div class="w-48"><label class="label">Photo size (px, long side)</label><input type="number" name="photo_max_px" value="{{ setting('photo_max_px') }}" class="input" min="200" max="2000"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-h">Biodata register</div>
+        <div class="card-b space-y-4">
+            <div>
+                <label class="label">Mandatory fields when recording a biodata (name and received-on date are always required)</label>
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                    @foreach ($biodataFields as $k => $l)
+                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="biodata_required_fields[]" value="{{ $k }}" @checked(in_array($k, (array) setting('biodata_required_fields')))> {{ $l }}</label>
+                    @endforeach
+                </div>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-3">
+                <div><label class="label">Reference number prefix</label><input name="biodata_prefix" value="{{ old('biodata_prefix', setting('biodata_prefix')) }}" class="input"><p class="mt-1 text-xs text-slate-500">e.g. {{ setting('biodata_prefix') }}-{{ date('Y') }}-00001</p></div>
+                <div><label class="label">Max size per file (MB)</label><input type="number" name="biodata_max_file_mb" value="{{ setting('biodata_max_file_mb') }}" class="input" min="1" max="50"></div>
+            </div>
+            <p class="text-xs text-slate-500">Categories, "received via" options and statuses are edited under <b>Dropdown lists</b>; extra biodata fields under <b>Custom fields</b>.</p>
         </div>
     </div>
 
@@ -129,9 +148,14 @@
 </div>
 
 @elseif ($tab === 'fields')
+<div class="mb-4 inline-flex rounded-lg bg-white p-1 ring-1 ring-slate-200">
+    @foreach (['member' => 'Bearers & Workers', 'biodata' => 'Biodata Register'] as $k => $l)
+        <a href="{{ route('settings.index', ['tab' => 'fields', 'entity' => $k]) }}" class="rounded-md px-3 py-1.5 text-sm {{ $entity === $k ? 'bg-brand text-white' : 'text-slate-600' }}">{{ $l }}</a>
+    @endforeach
+</div>
 <div class="card">
-    <div class="card-h">Custom fields on member records</div>
-    <p class="px-4 pt-3 text-sm text-slate-600">Add any information your office wants to collect (e.g. Voter ID, Sub-caste, Assembly constituency, Blood group). Fields appear on the web form, mobile app, CSV import/export and profile page.</p>
+    <div class="card-h">Custom fields — {{ $entity === 'biodata' ? 'Biodata Register' : 'Bearers & Workers' }}</div>
+    <p class="px-4 pt-3 text-sm text-slate-600">Add any information your office wants to collect (e.g. Voter ID, Assembly constituency, Blood group). Fields appear on the form, profile, print, CSV and the mobile app.</p>
     <div class="overflow-x-auto">
         <table class="table mt-3">
             <thead><tr><th>Label</th><th>Key</th><th>Type</th><th>Options (one per line)</th><th>Order</th><th>Required</th><th>In list</th><th>Active</th><th></th></tr></thead>
@@ -159,6 +183,7 @@
         </table>
     </div>
     <form method="POST" action="{{ route('settings.fields.store') }}" class="grid grid-cols-2 items-end gap-2 border-t border-slate-100 p-3 lg:grid-cols-6">@csrf
+        <input type="hidden" name="entity" value="{{ $entity }}">
         <div class="lg:col-span-2"><label class="label">Label</label><input name="label" class="input" required placeholder="e.g. Voter ID"></div>
         <div><label class="label">Type</label><select name="type" class="input">@foreach (\App\Models\CustomField::TYPES as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
         <div class="lg:col-span-2"><label class="label">Dropdown options (one per line)</label><textarea name="options" rows="1" class="input"></textarea></div>

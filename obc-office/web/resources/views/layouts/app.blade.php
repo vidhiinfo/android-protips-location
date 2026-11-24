@@ -13,7 +13,7 @@
 @php
     $user = auth()->user();
     $navGroups = collect(config('office.modules'))
-        ->filter(fn ($m, $key) => $user->canView($key))
+        ->filter(fn ($m, $key) => ($m['nav'] ?? true) && $user->canView($key))
         ->groupBy('group', true);
 @endphp
 

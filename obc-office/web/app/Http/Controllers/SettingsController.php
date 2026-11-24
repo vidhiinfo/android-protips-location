@@ -7,6 +7,7 @@ use App\Models\CustomField;
 use App\Models\Lookup;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\BiodataService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -45,7 +46,9 @@ class SettingsController extends Controller implements HasMiddleware
             'groups' => Lookup::GROUPS,
             'group' => $request->query('group', 'petition_category'),
             'lookups' => Lookup::where('group', $request->query('group', 'petition_category'))->orderBy('sort')->orderBy('label')->get(),
-            'customFields' => CustomField::where('entity', 'member')->orderBy('sort')->get(),
+            'entity' => $entity = $request->query('entity') === 'biodata' ? 'biodata' : 'member',
+            'customFields' => CustomField::where('entity', $entity)->orderBy('sort')->get(),
+            'biodataFields' => BiodataService::OPTIONAL_FIELDS,
             'modules' => config('office.modules'),
             'roles' => collect(User::ROLES)->except('super_admin'),
         ]);
@@ -73,7 +76,12 @@ class SettingsController extends Controller implements HasMiddleware
             'datetime_format' => ['required', Rule::in(['d M Y, h:i A', 'd/m/Y H:i', 'd-m-Y h:i A', 'Y-m-d H:i'])],
             'per_page' => 'required|integer|min:10|max:200',
             'logo' => 'nullable|image|max:2048',
+            'biodata_prefix' => 'required|alpha_dash|max:10',
+            'biodata_max_file_mb' => 'required|integer|min:1|max:50',
+            'biodata_required_fields' => 'nullable|array',
+            'biodata_required_fields.*' => Rule::in(array_keys(BiodataService::OPTIONAL_FIELDS)),
         ]);
+        $data['biodata_required_fields'] = array_values($data['biodata_required_fields'] ?? []);
 
         foreach (['require_consent', 'state_entries_need_approval', 'duplicate_check_mobile'] as $flag) {
             Setting::put($flag, $request->boolean($flag));
@@ -168,26 +176,27 @@ class SettingsController extends Controller implements HasMiddleware
     public function storeField(Request $request)
     {
         $data = $this->validateField($request);
+        $entity = $request->input('entity') === 'biodata' ? 'biodata' : 'member';
         $data['key'] = Str::slug($request->input('key') ?: $data['label'], '_');
-        validator($data, ['key' => ['required', 'max:40', Rule::unique('custom_fields')->where('entity', 'member')]])->validate();
-        CustomField::create($data + ['entity' => 'member']);
-        AuditLog::record('settings', null, "custom field {$data['key']} added");
+        validator($data, ['key' => ['required', 'max:40', Rule::unique('custom_fields')->where('entity', $entity)]])->validate();
+        CustomField::create($data + ['entity' => $entity]);
+        AuditLog::record('settings', null, "custom field {$entity}.{$data['key']} added");
 
-        return redirect()->route('settings.index', ['tab' => 'fields'])->with('ok', 'Field added.');
+        return redirect()->route('settings.index', ['tab' => 'fields', 'entity' => $entity])->with('ok', 'Field added.');
     }
 
     public function updateField(Request $request, CustomField $field)
     {
         $field->update($this->validateField($request));
 
-        return redirect()->route('settings.index', ['tab' => 'fields'])->with('ok', 'Field updated.');
+        return redirect()->route('settings.index', ['tab' => 'fields', 'entity' => $field->entity])->with('ok', 'Field updated.');
     }
 
     public function destroyField(CustomField $field)
     {
-        $field->delete(); // existing values stay in members.extra and reappear if the key is re-added
+        $field->delete(); // existing values stay in the record's "extra" data and reappear if the key is re-added
 
-        return redirect()->route('settings.index', ['tab' => 'fields'])->with('ok', 'Field removed.');
+        return redirect()->route('settings.index', ['tab' => 'fields', 'entity' => $field->entity])->with('ok', 'Field removed.');
     }
 
     private function validateField(Request $request): array

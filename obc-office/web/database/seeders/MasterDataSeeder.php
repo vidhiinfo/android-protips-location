@@ -81,6 +81,9 @@ class MasterDataSeeder extends Seeder
             'visitor_status' => [['waiting', 'Waiting', true, 'amber'], ['met', 'Met', false, 'green'], ['rescheduled', 'Rescheduled', false, 'blue'], ['left', 'Left without meeting', false, 'gray']],
             'task_status' => [['open', 'Open', true, 'blue'], ['in_progress', 'In progress', false, 'amber'], ['done', 'Done', true, 'green']],
             'contact_category' => [['mp', 'MP'], ['mla', 'MLA'], ['minister', 'Minister'], ['party_leader', 'Party leader'], ['official', 'Government official'], ['journalist', 'Journalist'], ['community', 'Community leader'], ['business', 'Business'], ['other', 'Other']],
+            'biodata_category' => [['for_post', 'For organisational post'], ['general', 'General / for record'], ['recommendation', 'Recommendation'], ['assistance', 'Request for assistance'], ['other', 'Other']],
+            'biodata_source' => [['by_hand', 'By hand'], ['state_office', 'From state office'], ['district_office', 'From district office'], ['post', 'Post / courier'], ['email', 'Email'], ['whatsapp', 'WhatsApp']],
+            'biodata_status' => [['received', 'Received', false, 'blue'], ['filed', 'Filed', false, 'gray'], ['forwarded', 'Forwarded', false, 'amber'], ['under_consideration', 'Under consideration', false, 'green']],
             'letter_status' => [['pending', 'Pending', true, 'amber'], ['replied', 'Replied', false, 'green'], ['filed', 'Filed', false, 'gray']],
         ];
         foreach ($lists as $group => $items) {

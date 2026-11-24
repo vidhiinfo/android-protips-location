@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Biodata;
 use App\Models\Designation;
 use App\Models\District;
 use App\Models\Member;
@@ -82,7 +83,7 @@ class DashboardService
 
     public function officeToday(): array
     {
-        if (! $this->user->canView('schedule') && ! $this->user->canView('petitions')) {
+        if (! $this->user->canView('schedule') && ! $this->user->canView('petitions') && ! $this->user->canView('biodata')) {
             return [];
         }
         $closed = setting('petition_closed_status', 'closed');
@@ -92,6 +93,8 @@ class DashboardService
                 ? ScheduleItem::whereDate('start_at', today())->orderBy('start_at')->get() : collect(),
             'visitors_today' => $this->user->canView('visitors') ? Visitor::whereDate('visited_at', today())->count() : null,
             'petitions_open' => $this->user->canView('petitions') ? Petition::where('status', '!=', $closed)->count() : null,
+            'biodata_month' => $this->user->canView('biodata')
+                ? $this->user->applyGeoScope(Biodata::query())->where('received_on', '>=', now()->startOfMonth())->count() : null,
             'petitions_overdue' => $this->user->canView('petitions')
                 ? Petition::where('status', '!=', $closed)->whereDate('due_date', '<', today())->count() : null,
         ];

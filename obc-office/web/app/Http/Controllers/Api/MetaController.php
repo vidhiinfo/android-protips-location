@@ -30,6 +30,10 @@ class MetaController extends Controller
                 'required' => $f->required,
             ]),
             'member_required_fields' => setting('member_required_fields'),
+            'biodata_custom_fields' => CustomField::for('biodata')->map(fn ($f) => [
+                'key' => $f->key, 'label' => $f->label, 'type' => $f->type, 'options' => $f->optionList(), 'required' => $f->required,
+            ]),
+            'biodata_required_fields' => setting('biodata_required_fields'),
             'require_consent' => (bool) setting('require_consent'),
         ];
     }

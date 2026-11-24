@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BiodataController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\MetaController;
 use App\Http\Controllers\Api\OfficeController;
@@ -26,6 +27,13 @@ Route::prefix('v1')->name('api.')->group(function () {
         Route::get('/members/{member}', [MemberController::class, 'show'])->name('members.show');
         Route::post('/members/{member}', [MemberController::class, 'update'])->name('members.update'); // POST: multipart with photo
         Route::get('/members/{member}/photo', [MemberController::class, 'photo'])->name('members.photo');
+
+        Route::get('/biodata', [BiodataController::class, 'index'])->name('biodata.index');
+        Route::post('/biodata', [BiodataController::class, 'store'])->name('biodata.store');
+        Route::get('/biodata/{biodatum}', [BiodataController::class, 'show'])->name('biodata.show');
+        Route::post('/biodata/{biodatum}/documents', [BiodataController::class, 'addDocuments'])->name('biodata.documents.store');
+        Route::get('/biodata/{biodatum}/photo', [BiodataController::class, 'photo'])->name('biodata.photo');
+        Route::get('/biodata-documents/{document}', [BiodataController::class, 'document'])->name('biodata.documents.show');
 
         Route::get('/schedule', [OfficeController::class, 'schedule'])->name('schedule');
         Route::get('/greetings', [OfficeController::class, 'greetings'])->name('greetings');

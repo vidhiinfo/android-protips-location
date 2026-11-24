@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BiodataController;
 use App\Http\Controllers\CircularController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
@@ -61,6 +62,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/petitions/{petition}/attachment', [PetitionController::class, 'attachment'])->name('petitions.attachment');
 
     Route::get('/greetings', GreetingController::class)->name('greetings');
+
+    Route::get('/biodata/export', [BiodataController::class, 'export'])->name('biodata.export');
+    Route::resource('biodata', BiodataController::class);
+    Route::patch('/biodata/{biodatum}/status', [BiodataController::class, 'updateStatus'])->name('biodata.status');
+    Route::get('/biodata/{biodatum}/print', [BiodataController::class, 'print'])->name('biodata.print');
+    Route::get('/biodata/{biodatum}/photo', [BiodataController::class, 'photo'])->name('biodata.photo');
+    Route::delete('/biodata/{biodatum}/photo', [BiodataController::class, 'removePhoto'])->name('biodata.photo.remove');
+    Route::post('/biodata/{biodatum}/documents', [BiodataController::class, 'addDocuments'])->name('biodata.documents.store');
+    Route::get('/biodata-documents/{document}', [BiodataController::class, 'document'])->name('biodata.documents.show');
+    Route::delete('/biodata-documents/{document}', [BiodataController::class, 'destroyDocument'])->name('biodata.documents.destroy');
 
     // Administration
     Route::resource('users', UserController::class)->except(['show']);
