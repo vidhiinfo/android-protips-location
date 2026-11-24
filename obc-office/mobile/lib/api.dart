@@ -22,7 +22,7 @@ class Api {
   static final Api instance = Api._();
 
   /// Set at build time: flutter build apk --dart-define=API_BASE_URL=https://office.example.org
-  static const defaultBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+  static const defaultBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://electionsoft.in/obc');
 
   final _storage = const FlutterSecureStorage();
   late Dio _dio;

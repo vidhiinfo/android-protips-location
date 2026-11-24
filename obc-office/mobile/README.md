@@ -28,8 +28,9 @@ flutter pub get
 flutter run                                   # on a connected phone or emulator
 ```
 
-The default server is `http://10.0.2.2:8000`, which is your computer's `php artisan serve` as seen from the Android
-emulator. On a real phone, tap **Server settings** on the login screen and enter the server address.
+The app connects to **https://electionsoft.in/obc** by default. To test against a local server, tap **Server
+settings** on the login screen and enter e.g. `http://10.0.2.2:8000` (the Android emulator's address for your
+computer). Plain http only works in debug builds.
 
 ## Build for release
 

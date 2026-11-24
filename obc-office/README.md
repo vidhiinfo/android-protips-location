@@ -84,6 +84,10 @@ Run the tests with `php artisan test`.
 
 ## Production deployment
 
+The live address is **https://electionsoft.in/obc**. See **[DEPLOY.md](DEPLOY.md)** for step-by-step instructions
+(Nginx, Apache or cPanel, the production `.env`, backups and updates). General notes:
+
+
 - Use MySQL 8 or PostgreSQL. Set `DB_CONNECTION` and related variables in `.env`, then run
   `php artisan migrate --force && php artisan db:seed --force`.
 - Host in India (e.g. AWS Mumbai, Azure Central India or a MeitY-empanelled cloud) for data localisation.
