@@ -59,7 +59,7 @@ class FamilyService
     {
         $s = mb_strtolower((string) Text::nfc($s));
         $s = preg_replace('/[^\p{L}\p{N}\p{M}]+/u', ' ', $s);
-        return array_values(array_filter(explode(' ', $s), fn ($w) => $w !== ''));
+        return array_values(array_filter(explode(' ', $s), fn ($w) => $w !== '' && !in_array($w, ['smt', 'sh', 'shri', 'late', 'mr', 'mrs', 'dr'], true)));
     }
 
     /**
@@ -73,22 +73,43 @@ class FamilyService
         if ($a === $b || implode('', $a) === implode('', $b)) return true;   // "RAJKUMAR" = "RAJ KUMAR"
         [$short, $long] = count($a) <= count($b) ? [$a, $b] : [$b, $a];
         if (!self::sameWord($short[0], $long[0])) return false;
-        if (count($short) === 1 && mb_strlen($short[0]) === 1) return false;   // a lone initial says too little
+        $full = mb_strlen($short[0]) > 1 && mb_strlen($long[0]) > 1;   // at least one whole word must agree: "SURESH" is not "S R VERMA"
         $j = 1;
         for ($i = 1; $i < count($short); $i++) {
             while ($j < count($long) && !self::sameWord($short[$i], $long[$j])) $j++;
             if ($j >= count($long)) return false;
+            if (mb_strlen($short[$i]) > 1 && mb_strlen($long[$j]) > 1) $full = true;
             $j++;
         }
-        return true;
+        return $full;
     }
 
+    /** Short forms the roll uses for the same word. */
+    private const SHORT = ['kr' => 'kumar', 'kmr' => 'kumar', 'pd' => 'prasad', 'pr' => 'prasad', 'md' => 'mohammad', 'mohd' => 'mohammad',
+        'mohammed' => 'mohammad', 'muhammad' => 'mohammad', 'ch' => 'chand', 'chander' => 'chand', 'chandra' => 'chand', 'chandar' => 'chand',
+        'parkash' => 'prakash', 'parshad' => 'prasad', 'parsad' => 'prasad', 'prashad' => 'prasad', 'smt' => '', 'sh' => '', 'late' => ''];
+
+    /**
+     * Same word of a name: equal, an initial (N = NARINDER), a known short form (KR = KUMAR, CHAND = CHANDER = CHANDRA),
+     * one written as the start of the other from 4 letters ("CHAND" / "CHANDER"), or from 5 letters one letter
+     * different or two letters swapped ("ASHWANI" / "ASHWINI", "PARKASH" / "PRAKASH").
+     */
     public static function sameWord(string $x, string $y): bool
     {
         if ($x === $y) return true;
+        $x = self::SHORT[$x] ?? $x; $y = self::SHORT[$y] ?? $y;
+        if ($x === $y) return true;
         $lx = mb_strlen($x); $ly = mb_strlen($y);
+        if ($lx === 0 || $ly === 0) return false;
         if ($lx === 1 || $ly === 1) return mb_substr($x, 0, 1) === mb_substr($y, 0, 1);   // initial
-        return $lx >= 5 && $ly >= 5 && abs($lx - $ly) <= 1 && levenshtein($x, $y) <= 1;
+        if (min($lx, $ly) >= 4 && (str_starts_with($x, $y) || str_starts_with($y, $x))) return true;
+        if ($lx < 5 || $ly < 5 || abs($lx - $ly) > 1) return false;
+        if (levenshtein($x, $y) <= 1) return true;
+        if ($lx === $ly) {   // two neighbouring letters swapped
+            $d = []; for ($i = 0; $i < $lx; $i++) if ($x[$i] !== $y[$i]) $d[] = $i;
+            return count($d) === 2 && $d[1] === $d[0] + 1 && $x[$d[0]] === $y[$d[1]] && $x[$d[1]] === $y[$d[0]];
+        }
+        return false;
     }
 
     private static function isMan($v): int { return strtoupper((string) $v->gender) === 'MALE' ? 1 : 0; }

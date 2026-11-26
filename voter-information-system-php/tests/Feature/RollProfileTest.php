@@ -56,6 +56,17 @@ class RollProfileTest extends TestCase
         $this->assertTrue(FamilyService::sameName(['ashwani', 'dhall'], ['ashwini']));
         $this->assertFalse(FamilyService::sameName(['ajay', 'dhall'], ['ajay', 'kumar']));
         $this->assertFalse(FamilyService::sameName(['n'], ['narinder']), 'a lone initial is not enough');
+        // short forms the roll uses for the same father
+        $bisht = app(FamilyService::class)->split([self::v(3, 'DINESH CHANDER BISHT', 'FATHER', 'PURAN CHANDER BISHT', 'MALE', 65),
+            self::v(4, 'BEENA BISHT', 'HUSBAND', 'DINESH CHANDER BISHT', 'FEMALE', 64), self::v(5, 'PANKAJ BISHT', 'FATHER', 'DINESH CHAND BISHT', 'MALE', 36),
+            self::v(6, 'SHWETA BISHT', 'FATHER', 'DINESH CHANDER BISHT', 'FEMALE', 33)]);
+        $this->assertCount(1, $bisht);
+        $this->assertTrue(FamilyService::sameName(['raj', 'kr', 'sharma'], ['raj', 'kumar', 'sharma']));
+        $this->assertTrue(FamilyService::sameName(['om', 'parkash'], ['om', 'prakash']));
+        $this->assertTrue(FamilyService::sameName(['late', 'ram', 'lal'], ['ram', 'lal']) || FamilyService::sameName(FamilyService::tokens('LATE RAM LAL'), ['ram', 'lal']));
+        $this->assertFalse(FamilyService::sameName(['sunil', 'kumar'], ['anil', 'kumar']));
+        $this->assertFalse(FamilyService::sameName(['s', 'r', 'verma'], ['suresh']), 'initials alone never link');
+        $this->assertTrue(FamilyService::sameName(['n', 'p', 'singh'], ['narinder', 'pal', 'singh']));
     }
 
     public function test_household_view_shows_families_and_caste_can_go_to_one_family(): void
