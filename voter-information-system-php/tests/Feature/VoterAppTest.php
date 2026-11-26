@@ -485,8 +485,9 @@ class VoterAppTest extends TestCase
     public function test_caste_masters_are_filled_and_drive_the_voter_filter(): void
     {
         $this->login();
-        $this->assertSame(84, \App\Models\Caste::count());
-        $this->assertSame(191, \App\Models\SubCaste::count());
+        $this->assertSame(85, \App\Models\Caste::count());
+        $this->assertSame(223, \App\Models\SubCaste::count());
+        $this->assertSame(32, \App\Models\Caste::where('name', 'Muslim')->first()->subCastes()->count());   // Muslim caste with its sub castes
         $html = $this->get('/voters?assemblyNo=45')->assertOk()->getContent();
         $this->assertStringContainsString('Brahmin (ब्राह्मण)', html_entity_decode($html));                     // caste filter lists the master
         $this->assertStringContainsString('data-sub-select="f-subCaste"', $html);
