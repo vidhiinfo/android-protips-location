@@ -1811,5 +1811,13 @@
 "an.focus.senior": "80+ voters: home visits, transport",
 "an.focus.keep": "keep in touch",
 "an.boothShort": "Booth {0}",
-"an.young29Pct": "Aged 18-29 %"
+"an.young29Pct": "Aged 18-29 %",
+"col.firstName": "First name",
+"col.middleName": "Middle name",
+"col.lastName": "Last name",
+"col.relFirstName": "Father/Husband first name",
+"col.relMiddleName": "Father/Husband middle name",
+"col.relLastName": "Father/Husband last name",
+"name.parts": "Name (first / middle / last)",
+"name.relParts": "Father/Husband (first / middle / last)"
 }

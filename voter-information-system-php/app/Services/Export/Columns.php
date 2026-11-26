@@ -10,7 +10,17 @@ class Columns
     public static function all(): array
     {
         $cols = self::columns();
+        if (!\App\Support\NameParts::available()) $cols = array_values(array_filter($cols, fn ($c) => !in_array($c[0], self::COMPUTED, true)));
         return Voter::showWard() ? $cols : array_values(array_filter($cols, fn ($c) => $c[0] !== 'col.wardNo'));
+    }
+
+    /** Name parts are computed by the database from Name / Father-Husband name: shown in exports, not filled in by upload. */
+    public const COMPUTED = ['col.firstName', 'col.middleName', 'col.lastName', 'col.relFirstName', 'col.relMiddleName', 'col.relLastName'];
+
+    /** Columns of the bulk upload template (everything except the computed ones). */
+    public static function importable(): array
+    {
+        return array_values(array_filter(self::all(), fn ($c) => !in_array($c[0], self::COMPUTED, true)));
     }
 
     private static function columns(): array
@@ -27,6 +37,12 @@ class Columns
             ['col.relation', fn (Voter $v) => $v->relation_type ? t('relation.' . $v->relation_type) : null, 0],
             ['col.relativeName', fn (Voter $v) => $v->relative_name, 11],
             ['col.relativeNameLocal', fn (Voter $v) => $v->relative_name_local, 11],
+            ['col.firstName', fn (Voter $v) => $v->first_name, 0],
+            ['col.middleName', fn (Voter $v) => $v->middle_name, 0],
+            ['col.lastName', fn (Voter $v) => $v->last_name, 0],
+            ['col.relFirstName', fn (Voter $v) => $v->relative_first_name, 0],
+            ['col.relMiddleName', fn (Voter $v) => $v->relative_middle_name, 0],
+            ['col.relLastName', fn (Voter $v) => $v->relative_last_name, 0],
             ['col.gender', fn (Voter $v) => $v->gender ? t('gender.' . $v->gender) : null, 5],
             ['col.age', fn (Voter $v) => $v->age, 3],
             ['col.houseNo', fn (Voter $v) => $v->house_no, 4],

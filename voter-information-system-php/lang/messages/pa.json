@@ -1398,5 +1398,13 @@
 "an.focus.senior": "80+ ਵੋਟਰ: ਘਰ ਜਾ ਕੇ ਮਿਲੋ, ਵਾਹਨ",
 "an.focus.keep": "ਸੰਪਰਕ ਬਣਾਈ ਰੱਖੋ",
 "an.boothShort": "ਬੂਥ {0}",
-"an.young29Pct": "18-29 ਉਮਰ %"
+"an.young29Pct": "18-29 ਉਮਰ %",
+"col.firstName": "ਪਹਿਲਾ ਨਾਮ",
+"col.middleName": "ਵਿਚਕਾਰਲਾ ਨਾਮ",
+"col.lastName": "ਆਖ਼ਰੀ ਨਾਮ",
+"col.relFirstName": "ਪਿਤਾ/ਪਤੀ ਦਾ ਪਹਿਲਾ ਨਾਮ",
+"col.relMiddleName": "ਪਿਤਾ/ਪਤੀ ਦਾ ਵਿਚਕਾਰਲਾ ਨਾਮ",
+"col.relLastName": "ਪਿਤਾ/ਪਤੀ ਦਾ ਆਖ਼ਰੀ ਨਾਮ",
+"name.parts": "ਨਾਮ (ਪਹਿਲਾ / ਵਿਚਕਾਰਲਾ / ਆਖ਼ਰੀ)",
+"name.relParts": "ਪਿਤਾ/ਪਤੀ (ਪਹਿਲਾ / ਵਿਚਕਾਰਲਾ / ਆਖ਼ਰੀ)"
 }

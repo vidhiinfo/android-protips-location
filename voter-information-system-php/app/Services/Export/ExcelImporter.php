@@ -32,6 +32,10 @@ class ExcelImporter
      * Membershipno | DOB | Marriage Anniv. | Deleted | Shift1 | Shift2 | Place of Origin | Current Place | Linked With |
      * Social Status | Political Status | Organisational Status | Beneficiary1-3 | Caste | Poling Station
      */
+    /** Translated titles of the export's first / middle / last name columns (read back only to build the full names). */
+    private const NAME_PART_KEYS = ['col.firstName' => '_first', 'col.middleName' => '_middle', 'col.lastName' => '_last',
+        'col.relFirstName' => '_rfirst', 'col.relMiddleName' => '_rmiddle', 'col.relLastName' => '_rlast'];
+
     private const ALIASES = [
         'assembly' => 'assembly_no', 'assemblyno' => 'assembly_no', 'acno' => 'assembly_no', 'ac' => 'assembly_no', 'vidhansabha' => 'assembly_no',
         'ward' => 'ward', 'wardno' => 'ward_no', 'wardnumber' => 'ward_no', 'village' => 'village_ward', 'villageward' => 'village_ward',
@@ -39,6 +43,10 @@ class ExcelImporter
         'vsno' => 'serial_no', 'sno' => 'serial_no', 'slno' => 'serial_no', 'serialno' => 'serial_no', 'voterserialno' => 'serial_no',
         'voterid' => 'epic_no', 'epic' => 'epic_no', 'epicno' => 'epic_no', 'votercardno' => 'epic_no', 'idcardno' => 'epic_no',
         'name' => 'name', 'votername' => 'name', 'electorname' => 'name',
+        // split names (used only to build Name / Father-Husband name when the sheet has no full-name column)
+        'firstname' => '_first', 'middlename' => '_middle', 'lastname' => '_last', 'surname' => '_last',
+        'fatherfirstname' => '_rfirst', 'fathermiddlename' => '_rmiddle', 'fatherlastname' => '_rlast', 'relativefirstname' => '_rfirst',
+        'relativemiddlename' => '_rmiddle', 'relativelastname' => '_rlast',
         'relativesname' => 'relative_name', 'relativename' => 'relative_name', 'fathername' => 'relative_name', 'fathersname' => 'relative_name',
         'fatherhusbandname' => 'relative_name', 'guardianname' => 'relative_name',
         'gender' => 'gender', 'sex' => 'gender', 'age' => 'age', 'houseno' => 'house_no', 'house' => 'house_no', 'address' => 'address',
@@ -143,6 +151,7 @@ class ExcelImporter
         $keys = self::fieldKeys();
         foreach (array_keys(Lang::languages()) as $code) {
             foreach ($keys as $key => $field) $headerMap[self::headerKey(Lang::get($key, [], $code))] = $field;
+            foreach (self::NAME_PART_KEYS as $key => $field) $headerMap[self::headerKey(Lang::get($key, [], $code))] = $field;
             $yes[self::norm(Lang::get('common.yes', [], $code))] = 1;
             $yes[self::norm(Lang::get('col.deleted', [], $code))] = 1;
             foreach (Voter::GENDERS as $g) $genders[self::norm(Lang::get("gender.$g", [], $code))] = $g;
@@ -159,12 +168,12 @@ class ExcelImporter
                 if ($rowNo > 6) break;
                 $m = [];
                 foreach ($row as $i => $cell) if (isset($headerMap[self::headerKey($cell)])) $m[$headerMap[self::headerKey($cell)]] ??= $i;
-                if (isset($m['epic_no'], $m['name'])) $idx = $m;
+                if (isset($m['epic_no']) && (isset($m['name']) || isset($m['_first']))) $idx = $m;
                 continue;
             }
             $r = $rowNo - 1;
             $get = fn ($f) => isset($idx[$f]) ? trim((string) ($row[$idx[$f]] ?? '')) : '';
-            if ($get('epic_no') === '' && $get('name') === '') continue;
+            if ($get('epic_no') === '' && $get('name') === '' && $get('_first') === '') continue;
             $label = $r + 1;
             $data = [];
             foreach ($idx as $field => $i) $data[$field] = $get($field);
@@ -182,6 +191,11 @@ class ExcelImporter
                 $v = Text::asciiDigits($data[$n] ?? '');
                 $data[$n] = is_numeric($v) ? (int) $v : null;
             }
+            // first / middle / last name columns: build the full names when the sheet has none (the split columns themselves are computed by the database)
+            $join = fn (string $p) => trim(preg_replace('/\s+/u', ' ', implode(' ', [$data["_{$p}first"] ?? '', $data["_{$p}middle"] ?? '', $data["_{$p}last"] ?? ''])));
+            if (($data['name'] ?? '') === '' && $join('') !== '') $data['name'] = $join('');
+            if (($data['relative_name'] ?? '') === '' && $join('r') !== '') $data['relative_name'] = $join('r');
+            foreach (['_first', '_middle', '_last', '_rfirst', '_rmiddle', '_rlast'] as $k) unset($data[$k]);
             foreach (['mobile', 'alt_mobile'] as $m) {
                 $d = preg_replace('/[^0-9]/', '', (string) Text::asciiDigits($data[$m] ?? ''));
                 $data[$m] = strlen($d) === 12 && str_starts_with($d, '91') ? substr($d, 2) : ($d ?: null);

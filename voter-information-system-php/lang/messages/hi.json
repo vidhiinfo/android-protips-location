@@ -1811,5 +1811,13 @@
 "an.focus.senior": "80+ मतदाता: घर जाकर मिलें, वाहन",
 "an.focus.keep": "संपर्क बनाए रखें",
 "an.boothShort": "बूथ {0}",
-"an.young29Pct": "18-29 आयु %"
+"an.young29Pct": "18-29 आयु %",
+"col.firstName": "पहला नाम",
+"col.middleName": "मध्य नाम",
+"col.lastName": "अंतिम नाम",
+"col.relFirstName": "पिता/पति का पहला नाम",
+"col.relMiddleName": "पिता/पति का मध्य नाम",
+"col.relLastName": "पिता/पति का अंतिम नाम",
+"name.parts": "नाम (पहला / मध्य / अंतिम)",
+"name.relParts": "पिता/पति (पहला / मध्य / अंतिम)"
 }

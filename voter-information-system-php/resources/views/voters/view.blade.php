@@ -29,6 +29,10 @@
         @if($v->relative_name)<div class="text-muted mb-3">{{ $v->relationDisplay() }}@if($v->relative_name_local)<span dir="auto"> / {{ $v->relative_name_local }}</span>@endif</div>@endif
         <dl class="row detail mb-0">
             <dt class="col-sm-3">{{ t('col.epicNo') }}</dt><dd class="col-sm-9"><code>{{ $v->epic_no }}</code></dd>
+            @if(\App\Support\NameParts::available() && $v->first_name)
+            <dt class="col-sm-3">{{ t('name.parts') }}</dt><dd class="col-sm-9">{{ t('col.firstName') }}: <b>{{ $v->first_name }}</b> &middot; {{ t('col.middleName') }}: <b>{{ $v->middle_name ?: '-' }}</b> &middot; {{ t('col.lastName') }}: <b>{{ $v->last_name ?: '-' }}</b></dd>
+            @if($v->relative_first_name)<dt class="col-sm-3">{{ t('name.relParts') }}</dt><dd class="col-sm-9">{{ t('col.firstName') }}: <b>{{ $v->relative_first_name }}</b> &middot; {{ t('col.middleName') }}: <b>{{ $v->relative_middle_name ?: '-' }}</b> &middot; {{ t('col.lastName') }}: <b>{{ $v->relative_last_name ?: '-' }}</b></dd>@endif
+            @endif
             <dt class="col-sm-3">{{ t('col.gender') }} / {{ t('col.age') }}</dt><dd class="col-sm-9">{{ $v->genderLabel() }}{{ $v->age ? ' / '.$v->age : '' }}</dd>
             <dt class="col-sm-3">{{ t('col.assemblyNo') }}</dt><dd class="col-sm-9">{{ $v->assembly_no }}{{ $v->assembly_name ? ' - '.$v->assembly_name : '' }}</dd>
             @if($v->ward_no && \App\Models\Voter::showWard())<dt class="col-sm-3">{{ t('col.wardNo') }}</dt><dd class="col-sm-9">{{ $v->ward_no }}</dd>@endif

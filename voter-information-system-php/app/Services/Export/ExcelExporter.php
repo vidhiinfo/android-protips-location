@@ -153,7 +153,7 @@ class ExcelExporter
     /** Workbook with the header row and one sample row, for bulk upload. */
     public function template(): string
     {
-        $headers = array_map(fn ($c) => t($c[0]), Columns::all());
+        $headers = array_map(fn ($c) => t($c[0]), Columns::importable());
         $sample = [101, 'Sample Nagar', 5, 12, 345, 'ABC1234567', 'Ramesh Kumar', 'रमेश कुमार', t('relation.FATHER'), 'Suresh Kumar', 'सुरेश कुमार',
             t('gender.MALE'), 42, '12-B', 'Main Road', 'मुख्य मार्ग', 'Ward 5', 'Jaipur', '302001', '9876543210', '', '', 'Govt. School Room 1', '', '',
             'M-1024', '15-08-1982', '20-11-2008', 'Saini', '', 'Influencer', 'Supporter', 'Booth Committee', 'PM Awas', 'Ujjwala', '', 'Jaipur', 'Jaipur', 'Ward 5 President', '', '', ''];
