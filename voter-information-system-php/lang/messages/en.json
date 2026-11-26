@@ -1819,5 +1819,20 @@
 "col.relMiddleName": "Father/Husband middle name",
 "col.relLastName": "Father/Husband last name",
 "name.parts": "Name (first / middle / last)",
-"name.relParts": "Father/Husband (first / middle / last)"
+"name.relParts": "Father/Husband (first / middle / last)",
+"login.level.loksabha": "Lok Sabha",
+"login.level.assembly": "Vidhan Sabha",
+"login.level.segments": "{0} assembly segments",
+"login.banner.titleLs": "Every assembly segment. One view.",
+"login.banner.taglineLs": "Voters, booths, field teams and results across the whole Lok Sabha constituency, in one secure place.",
+"login.segment": "Assembly segment",
+"login.allSegments": "All assembly segments",
+"settings.s.site_level": "Site type",
+"settings.h.site_level": "Lok Sabha gives the login page its own colour, a Lok Sabha badge with the number of assembly segments and its own headline.",
+"settings.s.constituency": "Constituency name",
+"settings.h.constituency": "Shown in the login page badge, e.g. New Delhi (PC 4) or Moti Nagar (AC 25).",
+"settings.s.organisation": "Organisation / representative line",
+"settings.h.organisation": "Shown under the product name on the login page, e.g. the MP or MLA's name.",
+"settings.o.assembly": "Assembly (Vidhan Sabha)",
+"settings.o.loksabha": "Lok Sabha"
 }

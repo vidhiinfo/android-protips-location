@@ -1406,5 +1406,20 @@
 "col.relMiddleName": "ਪਿਤਾ/ਪਤੀ ਦਾ ਵਿਚਕਾਰਲਾ ਨਾਮ",
 "col.relLastName": "ਪਿਤਾ/ਪਤੀ ਦਾ ਆਖ਼ਰੀ ਨਾਮ",
 "name.parts": "ਨਾਮ (ਪਹਿਲਾ / ਵਿਚਕਾਰਲਾ / ਆਖ਼ਰੀ)",
-"name.relParts": "ਪਿਤਾ/ਪਤੀ (ਪਹਿਲਾ / ਵਿਚਕਾਰਲਾ / ਆਖ਼ਰੀ)"
+"name.relParts": "ਪਿਤਾ/ਪਤੀ (ਪਹਿਲਾ / ਵਿਚਕਾਰਲਾ / ਆਖ਼ਰੀ)",
+"login.level.loksabha": "ਲੋਕ ਸਭਾ",
+"login.level.assembly": "ਵਿਧਾਨ ਸਭਾ",
+"login.level.segments": "{0} ਵਿਧਾਨ ਸਭਾ ਹਲਕੇ",
+"login.banner.titleLs": "ਹਰ ਵਿਧਾਨ ਸਭਾ ਹਲਕਾ, ਇੱਕ ਨਜ਼ਰ ਵਿੱਚ।",
+"login.banner.taglineLs": "ਪੂਰੇ ਲੋਕ ਸਭਾ ਹਲਕੇ ਦੇ ਵੋਟਰ, ਬੂਥ, ਫ਼ੀਲਡ ਟੀਮਾਂ ਅਤੇ ਨਤੀਜੇ - ਇੱਕ ਸੁਰੱਖਿਅਤ ਥਾਂ ਤੇ।",
+"login.segment": "ਵਿਧਾਨ ਸਭਾ ਹਲਕਾ",
+"login.allSegments": "ਸਾਰੇ ਵਿਧਾਨ ਸਭਾ ਹਲਕੇ",
+"settings.s.site_level": "ਸਾਈਟ ਦੀ ਕਿਸਮ",
+"settings.h.site_level": "ਲੋਕ ਸਭਾ ਚੁਣਨ ਤੇ ਲੌਗਇਨ ਪੰਨੇ ਦਾ ਰੰਗ, ਲੋਕ ਸਭਾ ਬੈਜ (ਹਲਕਿਆਂ ਦੀ ਗਿਣਤੀ ਨਾਲ) ਅਤੇ ਸਿਰਲੇਖ ਵੱਖਰਾ ਹੋ ਜਾਂਦਾ ਹੈ।",
+"settings.s.constituency": "ਹਲਕੇ ਦਾ ਨਾਮ",
+"settings.h.constituency": "ਲੌਗਇਨ ਪੰਨੇ ਦੇ ਬੈਜ ਵਿੱਚ, ਜਿਵੇਂ ਨਵੀਂ ਦਿੱਲੀ (PC 4)।",
+"settings.s.organisation": "ਸੰਗਠਨ / ਪ੍ਰਤੀਨਿਧੀ ਦੀ ਲਾਈਨ",
+"settings.h.organisation": "ਲੌਗਇਨ ਪੰਨੇ ਤੇ ਉਤਪਾਦ ਦੇ ਨਾਮ ਹੇਠਾਂ, ਜਿਵੇਂ ਸੰਸਦ ਮੈਂਬਰ ਜਾਂ ਵਿਧਾਇਕ ਦਾ ਨਾਮ।",
+"settings.o.assembly": "ਵਿਧਾਨ ਸਭਾ",
+"settings.o.loksabha": "ਲੋਕ ਸਭਾ"
 }

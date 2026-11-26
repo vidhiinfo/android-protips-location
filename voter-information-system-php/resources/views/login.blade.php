@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ $lang }}" dir="{{ $rtl ? 'rtl' : 'ltr' }}">
 <head>@include('layouts.head', ['title' => t('login.title')])</head>
+@php($ls = config('voters.branding.level') === 'loksabha')
 <body class="login-page">
 <div class="container-fluid p-0"><div class="row g-0 min-vh-100">
-    <div class="col-lg-7 login-banner d-flex flex-column">
+    <div class="col-lg-7 login-banner {{ $ls ? 'login-banner-ls' : '' }} d-flex flex-column">
         <div class="login-banner-inner flex-grow-1 d-flex flex-column justify-content-center">
             <div class="d-flex align-items-center gap-2 mb-4 login-brand">
                 <span class="login-brand-mark"><i class="bi bi-person-vcard"></i></span>
@@ -11,8 +12,13 @@
                     @if(config('voters.branding.owner'))<span class="d-block small opacity-75">{{ t('brand.by', config('voters.branding.owner')) }}</span>@endif
                     @if($branding['organisation'])<span class="d-block small opacity-75">{{ $branding['organisation'] }}</span>@endif</span>
             </div>
-            <h1 class="login-title">{{ t('login.banner.title') }}</h1>
-            <p class="login-tagline">{{ t('login.banner.tagline') }}</p>
+            @if($ls || config('voters.branding.constituency'))
+            <div class="login-level mb-3"><span class="login-level-tag"><i class="bi bi-{{ $ls ? 'bank2' : 'building' }}"></i> {{ t($ls ? 'login.level.loksabha' : 'login.level.assembly') }}</span>
+                @if(config('voters.branding.constituency'))<span class="login-level-name">{{ config('voters.branding.constituency') }}</span>@endif
+                @if($ls && count($loginAssemblies))<span class="login-level-count">{{ t('login.level.segments', count($loginAssemblies)) }}</span>@endif</div>
+            @endif
+            <h1 class="login-title">{{ t($ls ? 'login.banner.titleLs' : 'login.banner.title') }}</h1>
+            <p class="login-tagline">{{ t($ls ? 'login.banner.taglineLs' : 'login.banner.tagline') }}</p>
             <img class="login-illustration d-none d-lg-block" src="{{ asset(ltrim($branding['banner_image'], '/')) }}" alt="" aria-hidden="true">
             <ul class="login-points list-unstyled d-none d-lg-block mb-0">
                 <li><i class="bi bi-translate"></i> <span>{{ t('login.banner.point1') }}</span></li>
@@ -42,10 +48,10 @@
                     <div class="mb-3"><label class="form-label fw-medium" for="password">{{ t('login.password') }}</label>
                         <div class="input-group input-group-lg"><span class="input-group-text"><i class="bi bi-lock"></i></span>
                             <input id="password" name="password" type="password" class="form-control" required autocomplete="current-password"></div></div>
-                    <div class="mb-4"><label class="form-label fw-medium" for="assemblyNo">{{ t('login.assembly') }}</label>
+                    <div class="mb-4"><label class="form-label fw-medium" for="assemblyNo">{{ t($ls ? 'login.segment' : 'login.assembly') }}</label>
                         <div class="input-group input-group-lg"><span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
                             <select id="assemblyNo" name="assemblyNo" class="form-select">
-                                <option value="">{{ t('login.allAssemblies') }}</option>
+                                <option value="">{{ t($ls ? 'login.allSegments' : 'login.allAssemblies') }}</option>
                                 @foreach($loginAssemblies as $no => $name)<option value="{{ $no }}">{{ $no }} - {{ $name }}</option>@endforeach
                             </select></div>
                         <div class="form-text">{{ t('login.assemblyHelp') }}</div></div>

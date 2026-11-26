@@ -138,6 +138,10 @@ return [
         'app_name_local' => env('BRAND_APP_NAME_LOCAL', ''),   // shown when the screen language is not English
         'short_name' => env('BRAND_SHORT_NAME', ''),           // under the phone app icon (about 12 letters)
         'owner' => env('BRAND_OWNER', ''),                     // company that owns the solution: "Powered by ..." and the copyright line
+        // assembly = one or more assembly constituencies; loksabha = a Lok Sabha seat with its assembly segments
+        // (own login page colour, "Lok Sabha" badge, headline and "Assembly segment" wording)
+        'level' => env('BRAND_LEVEL', 'assembly'),
+        'constituency' => env('BRAND_CONSTITUENCY', ''),       // e.g. "New Delhi (PC 4)", shown in the login badge
     ],
 
     'messaging' => [

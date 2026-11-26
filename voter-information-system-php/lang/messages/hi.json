@@ -1819,5 +1819,20 @@
 "col.relMiddleName": "पिता/पति का मध्य नाम",
 "col.relLastName": "पिता/पति का अंतिम नाम",
 "name.parts": "नाम (पहला / मध्य / अंतिम)",
-"name.relParts": "पिता/पति (पहला / मध्य / अंतिम)"
+"name.relParts": "पिता/पति (पहला / मध्य / अंतिम)",
+"login.level.loksabha": "लोकसभा",
+"login.level.assembly": "विधानसभा",
+"login.level.segments": "{0} विधानसभा क्षेत्र",
+"login.banner.titleLs": "हर विधानसभा क्षेत्र, एक नज़र में।",
+"login.banner.taglineLs": "पूरे लोकसभा क्षेत्र के मतदाता, बूथ, फ़ील्ड टीम और नतीजे - एक सुरक्षित जगह पर।",
+"login.segment": "विधानसभा क्षेत्र",
+"login.allSegments": "सभी विधानसभा क्षेत्र",
+"settings.s.site_level": "साइट का प्रकार",
+"settings.h.site_level": "लोकसभा चुनने पर लॉगिन पेज का रंग, लोकसभा बैज (विधानसभा क्षेत्रों की संख्या के साथ) और शीर्षक अलग हो जाते हैं।",
+"settings.s.constituency": "निर्वाचन क्षेत्र का नाम",
+"settings.h.constituency": "लॉगिन पेज के बैज में, जैसे नई दिल्ली (PC 4)।",
+"settings.s.organisation": "संगठन / प्रतिनिधि की पंक्ति",
+"settings.h.organisation": "लॉगिन पेज पर उत्पाद के नाम के नीचे, जैसे सांसद या विधायक का नाम।",
+"settings.o.assembly": "विधानसभा",
+"settings.o.loksabha": "लोकसभा"
 }
