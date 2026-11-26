@@ -1421,5 +1421,8 @@
 "settings.s.organisation": "ਸੰਗਠਨ / ਪ੍ਰਤੀਨਿਧੀ ਦੀ ਲਾਈਨ",
 "settings.h.organisation": "ਲੌਗਇਨ ਪੰਨੇ ਤੇ ਉਤਪਾਦ ਦੇ ਨਾਮ ਹੇਠਾਂ, ਜਿਵੇਂ ਸੰਸਦ ਮੈਂਬਰ ਜਾਂ ਵਿਧਾਇਕ ਦਾ ਨਾਮ।",
 "settings.o.assembly": "ਵਿਧਾਨ ਸਭਾ",
-"settings.o.loksabha": "ਲੋਕ ਸਭਾ"
+"settings.o.loksabha": "ਲੋਕ ਸਭਾ",
+"settings.s.rep_photo": "ਪ੍ਰਤੀਨਿਧੀ ਦੀ ਫ਼ੋਟੋ (ਸੰਸਦ ਮੈਂਬਰ / ਵਿਧਾਇਕ)",
+"settings.h.rep_photo": "ਲੌਗਇਨ ਪੰਨੇ ਤੇ ਸੰਗਠਨ ਦੀ ਲਾਈਨ ਨਾਲ ਗੋਲੇ ਵਿੱਚ। JPG, PNG ਜਾਂ WEBP, 5 MB ਤੱਕ; ਚੌਰਸ ਕੱਟੀ ਜਾਂਦੀ ਹੈ। ਫ਼ੋਟੋ ਅਪਲੋਡ ਹੋਣ ਤੱਕ ਗੋਲੇ ਵਿੱਚ ਖਾਲੀ ਚਿੱਤਰ ਦਿਖਦਾ ਹੈ।",
+"settings.photoBad": "ਫ਼ੋਟੋ ਵਰਤੀ ਨਹੀਂ ਜਾ ਸਕੀ: 5 MB ਤੱਕ ਦੀ JPG, PNG ਜਾਂ WEBP ਤਸਵੀਰ ਅਪਲੋਡ ਕਰੋ।"
 }

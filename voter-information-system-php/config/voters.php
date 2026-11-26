@@ -142,6 +142,7 @@ return [
         // (own login page colour, "Lok Sabha" badge, headline and "Assembly segment" wording)
         'level' => env('BRAND_LEVEL', 'assembly'),
         'constituency' => env('BRAND_CONSTITUENCY', ''),       // e.g. "New Delhi (PC 4)", shown in the login badge
+        'rep_photo' => env('BRAND_REP_PHOTO', ''),              // photo of the MP / MLA in a circle on the login page (uploaded in Admin > Settings)
     ],
 
     'messaging' => [

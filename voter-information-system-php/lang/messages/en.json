@@ -1834,5 +1834,8 @@
 "settings.s.organisation": "Organisation / representative line",
 "settings.h.organisation": "Shown under the product name on the login page, e.g. the MP or MLA's name.",
 "settings.o.assembly": "Assembly (Vidhan Sabha)",
-"settings.o.loksabha": "Lok Sabha"
+"settings.o.loksabha": "Lok Sabha",
+"settings.s.rep_photo": "Representative photo (MP / MLA)",
+"settings.h.rep_photo": "Shown in a circle on the login page next to the organisation line. JPG, PNG or WEBP up to 5 MB; cropped to a square. Until a photo is uploaded the circle shows a placeholder.",
+"settings.photoBad": "The photo could not be used: upload a JPG, PNG or WEBP picture up to 5 MB."
 }

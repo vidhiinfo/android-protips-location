@@ -1834,5 +1834,8 @@
 "settings.s.organisation": "संगठन / प्रतिनिधि की पंक्ति",
 "settings.h.organisation": "लॉगिन पेज पर उत्पाद के नाम के नीचे, जैसे सांसद या विधायक का नाम।",
 "settings.o.assembly": "विधानसभा",
-"settings.o.loksabha": "लोकसभा"
+"settings.o.loksabha": "लोकसभा",
+"settings.s.rep_photo": "प्रतिनिधि की फ़ोटो (सांसद / विधायक)",
+"settings.h.rep_photo": "लॉगिन पेज पर संगठन की पंक्ति के साथ गोले में। JPG, PNG या WEBP, 5 MB तक; चौकोर काटी जाती है। फ़ोटो अपलोड होने तक गोले में खाली चित्र दिखता है।",
+"settings.photoBad": "फ़ोटो इस्तेमाल नहीं हो सकी: 5 MB तक की JPG, PNG या WEBP तस्वीर अपलोड करें।"
 }

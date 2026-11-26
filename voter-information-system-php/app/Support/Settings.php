@@ -13,7 +13,7 @@ class Settings
 
     /**
      * Everything an administrator can change on screen: name => [group, config key, type, rule].
-     * type: int (rule = [min, max]), bool, enum (rule = choices), text (rule = max length).
+     * type: int (rule = [min, max]), bool, enum (rule = choices), text (rule = max length), image (uploaded file, path under public/).
      * Secrets (database, API keys, webhook token) stay in .env on purpose.
      */
     public const SPEC = [
@@ -33,6 +33,7 @@ class Settings
         'site_level'              => ['display', 'voters.branding.level', 'enum', ['assembly', 'loksabha']],
         'constituency'            => ['display', 'voters.branding.constituency', 'text', 100],
         'organisation'            => ['display', 'voters.branding.organisation', 'text', 150],
+        'rep_photo'               => ['display', 'voters.branding.rep_photo', 'image', null],
         'scan_enabled'            => ['smart', 'voters.tools.scan', 'bool', null],
         'voice_enabled'           => ['smart', 'voters.tools.voice', 'bool', null],
         'planner_enabled'         => ['planner', 'voters.planner.enabled', 'bool', null],

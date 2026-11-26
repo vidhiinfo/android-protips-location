@@ -10,8 +10,15 @@
                 <span class="login-brand-mark"><i class="bi bi-person-vcard"></i></span>
                 <span><span class="d-block fw-semibold">{{ t('app.name') }}</span>
                     @if(config('voters.branding.owner'))<span class="d-block small opacity-75">{{ t('brand.by', config('voters.branding.owner')) }}</span>@endif
-                    @if($branding['organisation'])<span class="d-block small opacity-75">{{ $branding['organisation'] }}</span>@endif</span>
+</span>
             </div>
+            @if($branding['organisation'] || !empty($branding['rep_photo']))
+            {{-- representative (MP / MLA): photo in a circle, or a placeholder until one is uploaded in Admin > Settings --}}
+            <div class="login-rep mb-4">
+                <span class="login-rep-photo">@if(!empty($branding['rep_photo']))<img src="{{ asset(ltrim($branding['rep_photo'], '/')) }}" alt="{{ $branding['organisation'] }}">@else<i class="bi bi-person-fill" aria-hidden="true"></i>@endif</span>
+                @if($branding['organisation'])<span class="login-rep-name">{{ $branding['organisation'] }}</span>@endif
+            </div>
+            @endif
             @if($ls || config('voters.branding.constituency'))
             <div class="login-level mb-3"><span class="login-level-tag"><i class="bi bi-{{ $ls ? 'bank2' : 'building' }}"></i> {{ t($ls ? 'login.level.loksabha' : 'login.level.assembly') }}</span>
                 @if(config('voters.branding.constituency'))<span class="login-level-name">{{ config('voters.branding.constituency') }}</span>@endif
