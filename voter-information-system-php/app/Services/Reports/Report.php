@@ -25,7 +25,8 @@ class Report
     public function add(array $row, array $links = []): void
     {
         $this->rows[] = $row;
-        if ($links) $this->links[count($this->rows) - 1] = $links;
+        // links are only drawn for the rows shown on screen: none kept beyond that (memory on 50,000-row reports)
+        if ($links && count($this->rows) <= self::DISPLAY_LIMIT) $this->links[count($this->rows) - 1] = $links;
     }
 
     /** Voter list URL for a cell, or null. */

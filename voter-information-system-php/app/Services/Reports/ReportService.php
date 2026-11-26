@@ -295,23 +295,22 @@ class ReportService
     {
         $r = (new Report(t('report.' . $id), $this->h('col.assemblyNo', 'col.boothNo', 'col.houseNo', 'col.address', 'col.villageWard',
             'report.votersInHouse', 'report.withMobile', 'report.members')))->subtitle($this->scope($a, null));
-        $houses = [];
-        foreach ($this->voters->searchAll($this->filter($a, null)) as $v) {
-            if (!$v->house_no) continue;
-            $k = $v->assembly_no . '|' . Text::houseKey($v->house_no) . '|' . mb_strtolower(trim((string) $v->address)) . '|' . mb_strtolower(trim((string) $v->village_ward));
-            $houses[$k][] = $v;
-        }
-        $houses = array_filter($houses, fn ($l) => count($l) >= $min);
-        if ($min > 1) usort($houses, fn ($x, $y) => count($y) <=> count($x));   // biggest first
-        else usort($houses, fn ($x, $y) => [$x[0]->booth_no, $x[0]->serial_no] <=> [$y[0]->booth_no, $y[0]->serial_no]);   // roll order
-        foreach ($houses as $l) {
-            $v = $l[0];
-            // House No opens the voter list of that house
-            $link = ['assemblyNo' => $v->assembly_no, 'houseNo' => $v->house_no, 'villageWard' => $v->village_ward];
-            $r->add([$v->assembly_no, $v->booth_no, $v->house_no, $v->address, $v->village_ward, count($l),
-                count(array_filter($l, fn ($x) => $x->mobile)), implode(', ', array_map(fn ($x) => $x->name . ($x->age ? " ({$x->age})" : ''), $l))],
-                [2 => $link, 5 => $link]);
+        // The database groups the houses (one summary row each): a big assembly (1 lakh+ voters) never has to fit in PHP memory.
+        $mysql = DB::connection()->getDriverName() === 'mysql';
+        if ($mysql) DB::statement('SET SESSION group_concat_max_len = 65535');
+        $member = $mysql ? "group_concat(concat(name, case when age is null then '' else concat(' (', age, ')') end) order by booth_no, serial_no separator ', ')"
+                         : "group_concat(name || case when age is null then '' else ' (' || age || ')' end, ', ')";
+        $q = $this->filter($a, null)->apply(Voter::query())->whereNotNull('house_no')->where('house_no', '<>', '')->toBase()
+            ->selectRaw("assembly_no, min(booth_no) as b, min(serial_no) as sr, max(house_no) as house, max(address) as address, max(village_ward) as ward,
+                count(*) as n, sum(case when mobile is not null and mobile <> '' then 1 else 0 end) as m, $member as members")
+            ->groupBy('assembly_no', DB::raw(Text::HOUSE_KEY_SQL), DB::raw("lower(trim(coalesce(address, '')))"), DB::raw("lower(trim(coalesce(village_ward, '')))"))
+            ->when($min > 1, fn ($x) => $x->havingRaw('count(*) >= ?', [$min]))
+            ->when($min > 1, fn ($x) => $x->orderByDesc('n'))->orderBy('b')->orderBy('sr')->limit(Report::MAX_ROWS + 1);
+        foreach ($q->cursor() as $h) {
             if (count($r->rows) >= Report::MAX_ROWS) { $r->capped = true; break; }
+            // House No opens the voter list of that house
+            $link = ['assemblyNo' => (int) $h->assembly_no, 'houseNo' => $h->house, 'villageWard' => $h->ward];
+            $r->add([(int) $h->assembly_no, (int) $h->b, $h->house, $h->address, $h->ward, (int) $h->n, (int) $h->m, (string) $h->members], [2 => $link, 5 => $link]);
         }
         $r->subtitle .= ' | ' . t('report.count', count($r->rows));
         return $r;
