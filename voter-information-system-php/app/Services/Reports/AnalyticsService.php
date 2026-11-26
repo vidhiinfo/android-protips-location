@@ -16,8 +16,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AnalyticsService
 {
+    use RollProfile;
+
     public const IDS = ['booth-scorecard', 'voter-sentiment', 'survey-coverage', 'caste-booth', 'beneficiaries', 'worker-coverage',
-        'household-insights', 'origin', 'turnout-profile', 'campaign-reach', 'grievances', 'team-activity'];
+        'household-insights', 'origin', 'turnout-profile', 'campaign-reach', 'grievances', 'team-activity', 'demographic-profile', 'outreach-priority'];
     public const SENSITIVE = ['caste-booth', 'team-activity'];
     /** Booth grade thresholds (support index = support % - opposition % of surveyed voters). */
     public const STRONG = 20, WEAK = -20, MIN_SURVEYED_PCT = 10, VOTERS_PER_WORKER = 100;
@@ -42,6 +44,8 @@ class AnalyticsService
             'campaign-reach' => $this->campaigns($a),
             'grievances' => $this->grievances($a),
             'team-activity' => $this->team(),
+            'demographic-profile' => $this->profile($a),
+            'outreach-priority' => $this->outreach($a),
         };
         if ($r->note === '' && t('an.note.' . $id) !== 'an.note.' . $id) $r->note = t('an.note.' . $id);
         return $r;

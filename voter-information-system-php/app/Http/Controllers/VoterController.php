@@ -84,8 +84,11 @@ class VoterController extends Controller
         $tree = \App\Models\Caste::tree();
         if ($tree && $sub !== null && !in_array($sub, $tree[$caste] ?? [], true) && $sub !== $v->sub_caste) $sub = null;   // sub caste must belong to the caste
         $category = \App\Models\Caste::where('name', $caste)->value('category');
-        $n = 0;
-        foreach ($this->voters->household($v) as $h) {
+        $n = 0; $members = $this->voters->household($v);
+        if ($r->input('scope') === 'family') {   // only the family of this voter inside the house
+            $members = collect(app(\App\Services\Voters\FamilyService::class)->split($members))->first(fn ($f) => collect($f)->contains('id', $v->id)) ?? [$v];
+        }
+        foreach ($members as $h) {
             if (!$this->user()->allowsVoter($h)) continue;
             $h->caste = $caste; $h->sub_caste = $sub;
             if (!$h->category && $category) $h->category = $category;

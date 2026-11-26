@@ -20,7 +20,12 @@
             @else
             <input name="sub_caste" class="form-control form-control-sm" value="{{ $voter->sub_caste }}" dir="auto">
             @endif</div>
-        <div class="col-sm-4"><button class="btn btn-sm btn-primary w-100"><i class="bi bi-check2-all"></i> {{ t('household.applyCaste', count($household)) }}</button></div>
+        <div class="col-sm-4"><button class="btn btn-sm btn-primary w-100"><i class="bi bi-check2-all"></i> {{ t('household.applyCasteBtn') }}</button></div>
+    </div>
+    @php($myFamily = collect(app(\App\Services\Voters\FamilyService::class)->split($household))->first(fn ($f) => collect($f)->contains('id', $voter->id)) ?? [])
+    <div class="small mt-2">
+        <label class="me-3"><input type="radio" name="scope" value="house" checked> {{ t('household.applyCaste', count($household)) }}</label>
+        @if(count($myFamily) && count($myFamily) < count($household))<label><input type="radio" name="scope" value="family"> {{ t('family.applyCaste', count($myFamily)) }}</label>@endif
     </div>
 </form>
 @endif
