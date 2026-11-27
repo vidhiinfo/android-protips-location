@@ -68,7 +68,7 @@ class WorkerController extends Controller
     {
         $a = $this->user()->restrict($r->query('assemblyNo')) ?? array_key_first($this->voters->assemblies());
         $b = $r->query('boothNo') ? (int) $r->query('boothNo') : null;
-        $role = in_array($r->query('role'), Worker::ROLES, true) ? $r->query('role') : null;
+        $role = in_array($r->query('role'), \App\Support\WorkerRoles::codes(), true) ? $r->query('role') : null;
         $ab = \App\Support\Area::current()['booths'] ?? [];
         $workers = Worker::where('assembly_no', $a)->when($ab, fn ($q) => $q->whereIn('booth_no', $ab))->when($b, fn ($q) => $q->where('booth_no', $b))->when($role, fn ($q) => $q->where('role', $role))
             ->orderByDesc('active')->orderBy('booth_no')->orderBy('name')->get();
@@ -110,7 +110,7 @@ class WorkerController extends Controller
     public function form(Request $r, ?int $id = null)
     {
         $w = $id ? $this->find($id) : new Worker(['assembly_no' => $this->user()->restrict($r->query('assemblyNo')) ?? array_key_first($this->voters->assemblies()),
-            'booth_no' => $r->query('boothNo'), 'role' => in_array($r->query('role'), Worker::ROLES, true) ? $r->query('role') : 'VOLUNTEER', 'active' => true,
+            'booth_no' => $r->query('boothNo'), 'role' => in_array($r->query('role'), \App\Support\WorkerRoles::codes(true), true) ? $r->query('role') : \App\Support\WorkerRoles::defaultCode(), 'active' => true,
             'mandal_id' => $r->query('mandal') ? (int) $r->query('mandal') : null]);
         // "Make worker" on a voter's page: everything filled in from the voter list
         $linked = $w->exists && $w->voter_id ? Voter::find($w->voter_id) : null;
@@ -135,22 +135,22 @@ class WorkerController extends Controller
         if ($voter) {
             $r->merge(['name' => $voter->name, 'mobile' => trim((string) $r->input('mobile')) ?: self::cleanMobile($voter->mobile),
                 'booth_no' => $r->input('booth_no') ?: $voter->booth_no]);
-            if ($r->input('role') !== 'LS_INCHARGE') $r->merge(['assembly_no' => $voter->assembly_no]);
+            if (\App\Support\WorkerRoles::base($r->input('role')) !== 'LS_INCHARGE') $r->merge(['assembly_no' => $voter->assembly_no]);
         }
         $data = $r->validate([
             'name' => ['required', 'max:120'], 'mobile' => ['nullable', 'regex:/^[6-9][0-9]{9}$/'], 'assembly_no' => ['required', 'integer', 'min:1'],
-            'booth_no' => ['nullable', 'integer', 'min:1'], 'role' => ['required', 'in:' . implode(',', Worker::ROLES)], 'username' => ['nullable', 'max:50'],
+            'booth_no' => ['nullable', 'integer', 'min:1'], 'role' => ['required', 'in:' . implode(',', \App\Support\WorkerRoles::codes(true, $id ? Worker::find($id)?->role : null))], 'username' => ['nullable', 'max:50'],
             'notes' => ['nullable', 'max:300'], 'mandal_id' => ['nullable', 'integer'],
         ], ['mobile.regex' => t('validation.mobile'), 'required' => t('validation.required')]);
         $data['assembly_no'] = $this->user()->restrict($data['assembly_no']);
         // organisation chain: a Lok Sabha in-charge covers every assembly; a mandal in-charge belongs to a mandal of the assembly
-        if ($data['role'] === 'LS_INCHARGE') {
+        if (\App\Support\WorkerRoles::base($data['role']) === 'LS_INCHARGE') {
             abort_if($this->user()->scoped(), 403);
             $data['assembly_no'] = Worker::ALL_ASSEMBLIES; $data['booth_no'] = null;
         }
         if (\Illuminate\Support\Facades\Schema::hasColumn('workers', 'mandal_id')) {
-            $m = $data['role'] === 'MANDAL_INCHARGE' && !empty($data['mandal_id']) ? \App\Models\Mandal::where('assembly_no', $data['assembly_no'])->find($data['mandal_id']) : null;
-            if ($data['role'] === 'MANDAL_INCHARGE' && !$m) return back()->withInput()->with('error', 'org.pickMandal');
+            $m = \App\Support\WorkerRoles::base($data['role']) === 'MANDAL_INCHARGE' && !empty($data['mandal_id']) ? \App\Models\Mandal::where('assembly_no', $data['assembly_no'])->find($data['mandal_id']) : null;
+            if (\App\Support\WorkerRoles::base($data['role']) === 'MANDAL_INCHARGE' && !$m) return back()->withInput()->with('error', 'org.pickMandal');
             $data['mandal_id'] = $m?->id;
         } else unset($data['mandal_id']);
         $data['active'] = $r->boolean('active');
@@ -205,7 +205,7 @@ class WorkerController extends Controller
     {
         $a = $this->user()->restrict($r->input('assemblyNo'));
         $b = (int) $r->input('boothNo');
-        $workers = Worker::where('assembly_no', $a)->where('booth_no', $b)->where('role', 'PANNA_PRAMUKH')->where('active', true)->orderBy('id')->get();
+        $workers = Worker::where('assembly_no', $a)->where('booth_no', $b)->whereIn('role', \App\Support\WorkerRoles::like('PANNA_PRAMUKH'))->where('active', true)->orderBy('id')->get();
         $back = '/workers?' . http_build_query(['assemblyNo' => $a, 'boothNo' => $b]);
         if (!$a || !$b || $workers->isEmpty()) return redirect($back)->with('error', 'worker.noPanna');
         $vs = Voter::where('assembly_no', $a)->where('booth_no', $b)->when(!$r->boolean('replace'), fn ($q) => $q->whereNull('worker_id'))

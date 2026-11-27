@@ -13,7 +13,7 @@
             <div><label class="form-label small mb-0">{{ t('col.boothNo') }}</label><select name="boothNo" class="form-select form-select-sm" data-autosubmit><option value="">{{ t('common.all') }}</option>
                 @foreach($booths as $b)<option value="{{ $b }}" @selected($b == $boothNo)>{{ $b }}</option>@endforeach</select></div>
             <div><label class="form-label small mb-0">{{ t('worker.role') }}</label><select name="role" class="form-select form-select-sm" data-autosubmit><option value="">{{ t('common.all') }}</option>
-                @foreach(\App\Models\Worker::ROLES as $ro)<option value="{{ $ro }}" @selected($ro === $role)>{{ t('worker.role.'.$ro) }}</option>@endforeach</select></div>
+                @foreach(\App\Support\WorkerRoles::codes() as $ro)<option value="{{ $ro }}" @selected($ro === $role)>{{ role_label($ro) }}</option>@endforeach</select></div>
         </form>
         <a class="btn btn-sm btn-primary" href="{{ url('/workers/new') }}?{{ http_build_query(['assemblyNo' => $assemblyNo, 'boothNo' => $boothNo]) }}"><i class="bi bi-plus-lg"></i> {{ t('worker.add') }}</a>
     </div>
@@ -42,7 +42,7 @@
         <tr class="{{ $w->active ? '' : 'text-muted' }}">
             <td>{{ $i + 1 }}@if($i < 3 && $s['n'] && $w->active) <i class="bi bi-award-fill text-warning"></i>@endif</td>
             <td><a href="{{ url('/workers/'.$w->id) }}" class="fw-semibold">{{ $w->name }}</a>@unless($w->active) <span class="badge text-bg-secondary">{{ t('worker.inactive') }}</span>@endunless</td>
-            <td><span class="badge text-bg-light border">{{ t('worker.role.'.$w->role) }}</span></td><td>{{ $w->booth_no }}</td>
+            <td><span class="badge text-bg-light border">{{ role_label($w->role) }}</span></td><td>{{ $w->booth_no }}</td>
             <td>@if($w->mobile)<a href="tel:{{ $w->mobile }}">{{ $w->mobile }}</a>@endif</td>
             <td class="text-end">@if($s['n'])<a href="{{ url('/voters') }}?workerId={{ $w->id }}">{{ $s['n'] }}</a>@else 0 @endif</td>
             <td class="text-end">{{ $s['houses'] ?? 0 }}</td>

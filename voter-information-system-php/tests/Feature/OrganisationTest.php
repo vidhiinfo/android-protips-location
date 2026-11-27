@@ -141,7 +141,7 @@ class OrganisationTest extends TestCase
         // "+ Add" on a booth without a president opens the form with role and booth chosen and returns to the page
         $this->get('/organisation/45')->assertSee('role=BOOTH_PRESIDENT&boothNo=', false);
         $this->get('/workers/new?assemblyNo=45&role=BOOTH_PRESIDENT&boothNo=' . $v->booth_no, ['referer' => url('/organisation/45')])
-            ->assertOk()->assertSee('value="BOOTH_PRESIDENT" selected', false)->assertSee('name="return_to" value="/organisation/45"', false);
+            ->assertOk()->assertSee('value="BOOTH_PRESIDENT" data-base="BOOTH_PRESIDENT" selected', false)->assertSee('name="return_to" value="/organisation/45"', false);
         // a typed name never overrides the roll name once a voter is picked
         $this->post('/workers', ['epic_no' => $v->epic_no, 'name' => 'Misspelt Name', 'assembly_no' => 45, 'booth_no' => $v->booth_no, 'role' => 'BOOTH_PRESIDENT',
             'active' => 1, 'return_to' => '/organisation/45'])->assertRedirect(url('/organisation/45'));

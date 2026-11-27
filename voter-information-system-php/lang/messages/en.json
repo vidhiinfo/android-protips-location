@@ -1942,5 +1942,20 @@
 "settings.o.pa-IN": "Punjabi (Gurmukhi)",
 "app.changeSite": "Change site",
 "settings.s.app_icon": "App icon (home screen)",
-"settings.h.app_icon": "Icon shown on the phone when the site is added to the home screen from the browser (\"Install app\" / \"Add to Home screen\"). Square PNG or JPG, at least 512 x 512. Together with \"Short name\" it tells your sites apart. Phones that added the site before need to add it again to show a new icon. The downloadable Android app has its own name and icon (one app per site)."
+"settings.h.app_icon": "Icon shown on the phone when the site is added to the home screen from the browser (\"Install app\" / \"Add to Home screen\"). Square PNG or JPG, at least 512 x 512. Together with \"Short name\" it tells your sites apart. Phones that added the site before need to add it again to show a new icon. The downloadable Android app has its own name and icon (one app per site).",
+"wrole.title": "Worker roles",
+"wrole.intro": "The roles in the Role drop-down of workers. Rename them, hide the ones you do not use, change the order, or add your own.",
+"wrole.order": "Order",
+"wrole.nameEn": "Name (English)",
+"wrole.nameHi": "Name (Hindi)",
+"wrole.namePa": "Name (Punjabi)",
+"wrole.worksLike": "Works like",
+"wrole.show": "Show",
+"wrole.builtin": "built-in",
+"wrole.itself": "(itself)",
+"wrole.add": "Add a role",
+"wrole.help": "Leave a name empty to use the standard name (shown in grey). A hidden role is left out of the drop-down; workers who already have it keep it. Built-in roles cannot be deleted; an own role can be deleted when no worker has it.",
+"wrole.worksLikeHelp": "\"Works like\" puts the role in the organisation chain: e.g. a \"Shakti Kendra Pramukh\" that works like Mandal in-charge looks after a mandal, appears as its head and gets tasks for the team under it; a \"Social media\" role that works like Volunteer is an ordinary worker.",
+"wrole.added": "Role \"{0}\" added.",
+"wrole.inUse": "\"{0}\" is given to workers: give them another role first, or hide it instead."
 }

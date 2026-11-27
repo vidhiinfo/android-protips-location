@@ -1,6 +1,6 @@
 // Confirmation for destructive actions (kept out of inline handlers for the CSP)
 document.addEventListener('submit', function (e) {
-  var msg = e.target.getAttribute('data-confirm');
+  var msg = e.target.getAttribute('data-confirm') || (e.submitter && e.submitter.getAttribute('data-confirm'));   // on the form or on the button pressed
   if (msg && !window.confirm(msg)) e.preventDefault();
 });
 // Print buttons

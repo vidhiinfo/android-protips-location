@@ -49,7 +49,7 @@ class StateFeedService
         foreach ($a as $no => &$x) $x['name'] = $names[$no] ?? DB::table('voters')->where('assembly_no', $no)->value('assembly_name');
         unset($x);
         if (Schema::hasTable('workers')) {
-            foreach (DB::table('workers')->where('active', true)->selectRaw("assembly_no, count(*) as n, sum(case when role = 'PANNA_PRAMUKH' then 1 else 0 end) as p")
+            foreach (DB::table('workers')->where('active', true)->selectRaw('assembly_no, count(*) as n, sum(case when role in (' . \App\Support\WorkerRoles::sqlList('PANNA_PRAMUKH') . ') then 1 else 0 end) as p')
                          ->groupBy('assembly_no')->get() as $r) {
                 if (isset($a[$r->assembly_no])) { $a[$r->assembly_no]['workers'] = (int) $r->n; $a[$r->assembly_no]['panna'] = (int) $r->p; }
             }

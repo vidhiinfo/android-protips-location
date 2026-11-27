@@ -9,13 +9,13 @@
     </div>
     @unless($me->scoped())
     <div class="card mb-3"><div class="card-body py-2">
-        <span class="fw-semibold"><i class="bi bi-bank2"></i> {{ t('worker.role.LS_INCHARGE') }}:</span>
+        <span class="fw-semibold"><i class="bi bi-bank2"></i> {{ role_label('LS_INCHARGE') }}:</span>
         @forelse($heads as $h)<a href="{{ url('/workers/' . $h->id) }}" class="ms-1">{{ $h->name }}</a>@if($h->mobile) <span class="small text-muted">{{ $h->mobile }}</span>@endif{{ !$loop->last ? ',' : '' }}
         @empty<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?role=LS_INCHARGE"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse
     </div></div>
     @endunless
     <div class="card"><div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0">
-        <thead class="table-light"><tr><th>{{ t('col.assemblyNo') }}</th><th>{{ t('worker.role.AC_INCHARGE') }}</th><th class="text-end">{{ t('ls.mandals') }}</th>
+        <thead class="table-light"><tr><th>{{ t('col.assemblyNo') }}</th><th>{{ role_label('AC_INCHARGE') }}</th><th class="text-end">{{ t('ls.mandals') }}</th>
             <th class="text-end">{{ t('ls.booths') }}</th><th class="text-end">{{ t('org.withPresident') }}</th><th class="text-end">{{ t('org.withPanna') }}</th>
             <th class="text-end">{{ t('ls.panna') }}</th><th class="text-end">{{ t('ls.workers') }}</th><th>{{ t('org.gaps') }}</th><th class="text-end">{{ t('org.tasksDone') }}</th></tr></thead>
         <tbody>@foreach($assemblies as $no => $name) @php($s = $summary[$no])

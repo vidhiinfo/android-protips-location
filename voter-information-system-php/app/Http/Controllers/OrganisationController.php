@@ -94,8 +94,8 @@ class OrganisationController extends Controller
         $w = Worker::findOrFail((int) $r->input('leader_id'));
         abort_unless($w->assembly_no === Worker::ALL_ASSEMBLIES ? !$this->user()->scoped() : $this->user()->allows($w->assembly_no), 404);
         $d = $r->validate(['title' => 'required|string|max:200', 'kind' => 'required|in:' . implode(',', TaskService::KINDS),
-            'due_date' => 'nullable|date_format:Y-m-d', 'target' => 'nullable|integer|min:1|max:100000', 'roles' => 'nullable|array', 'roles.*' => 'in:' . implode(',', Worker::ROLES)]);
-        $team = $this->org->under($w)->filter(fn ($x) => empty($d['roles']) || in_array($x->role, $d['roles'], true))
+            'due_date' => 'nullable|date_format:Y-m-d', 'target' => 'nullable|integer|min:1|max:100000', 'roles' => 'nullable|array', 'roles.*' => 'in:' . implode(',', \App\Support\WorkerRoles::codes())]);
+        $team = $this->org->under($w)->filter(fn ($x) => empty($d['roles']) || in_array($x->role, $d['roles'], true) || in_array($x->base(), $d['roles'], true))
             ->filter(fn ($x) => $x->assembly_no !== Worker::ALL_ASSEMBLIES && $this->user()->allows($x->assembly_no));
         $now = now(); $rows = [];
         foreach ($team as $x) $rows[] = ['title' => trim($d['title']), 'kind' => $d['kind'], 'worker_id' => $x->id, 'username' => $x->username, 'assembly_no' => $x->assembly_no,

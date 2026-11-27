@@ -13,7 +13,7 @@
     </div>
 
     <div class="card mb-3"><div class="card-body py-2">
-        <span class="fw-semibold">{{ t('worker.role.AC_INCHARGE') }}:</span>
+        <span class="fw-semibold">{{ role_label('AC_INCHARGE') }}:</span>
         @forelse($data['incharge'] as $h)<a href="{{ url('/workers/' . $h->id) }}" class="ms-1">{{ $h->name }}</a>@if($h->mobile) <span class="small text-muted">{{ $h->mobile }}</span>@endif{!! $accessBtn($h) !!}{{ !$loop->last ? ',' : '' }}
         @empty<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=AC_INCHARGE"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse
     </div></div>
@@ -22,7 +22,7 @@
     <div class="card mb-3">
         <div class="card-header fw-semibold"><i class="bi bi-collection"></i> {{ t('ls.mandals') }} <span class="badge text-bg-primary">{{ count($data['mandals']) }}</span></div>
         <div class="table-responsive"><table class="table table-sm align-middle mb-0">
-            <thead class="table-light"><tr><th>{{ t('org.mandal') }}</th><th>{{ t('worker.role.MANDAL_INCHARGE') }}</th><th>{{ t('ls.booths') }}</th><th class="text-end">{{ t('dash.voters') }}</th>
+            <thead class="table-light"><tr><th>{{ t('org.mandal') }}</th><th>{{ role_label('MANDAL_INCHARGE') }}</th><th>{{ t('ls.booths') }}</th><th class="text-end">{{ t('dash.voters') }}</th>
                 <th class="text-end">{{ t('org.noPresident') }}</th><th class="text-end">{{ t('org.tasksDone') }}</th><th></th></tr></thead>
             <tbody>@forelse($data['mandals'] as $m)
                 <tr>
@@ -58,14 +58,14 @@
     <div class="card mb-3"><div class="card-header fw-semibold"><i class="bi bi-list-check"></i> {{ t('org.teamTask') }}</div><div class="card-body">
         <form method="post" action="{{ url('/organisation/team-task') }}" class="row g-2 align-items-end">@csrf
             <div class="col-md-3"><label class="form-label small mb-0">{{ t('org.leader') }}</label><select name="leader_id" class="form-select form-select-sm" required><option value="">--</option>
-                @foreach($leaders as $l)<option value="{{ $l->id }}">{{ $l->name }} ({{ t('worker.role.' . $l->role) }}{{ $l->booth_no ? ', ' . t('col.boothNo') . ' ' . $l->booth_no : '' }})</option>@endforeach</select></div>
+                @foreach($leaders as $l)<option value="{{ $l->id }}">{{ $l->name }} ({{ role_label($l->role) }}{{ $l->booth_no ? ', ' . t('col.boothNo') . ' ' . $l->booth_no : '' }})</option>@endforeach</select></div>
             <div class="col-md-3"><label class="form-label small mb-0">{{ t('org.taskTitle') }}</label><input name="title" class="form-control form-control-sm" required maxlength="200"></div>
             <div class="col-md-2"><label class="form-label small mb-0">{{ t('task.kind') }}</label><select name="kind" class="form-select form-select-sm">@foreach($kinds as $k)<option value="{{ $k }}">{{ t('task.kind.' . $k) }}</option>@endforeach</select></div>
             <div class="col-md-2"><label class="form-label small mb-0">{{ t('task.due') }}</label><input type="date" name="due_date" class="form-control form-control-sm"></div>
             <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">{{ t('org.giveTask') }}</button></div>
             <div class="col-12 small">{{ t('org.onlyRoles') }}
-                @foreach(['MANDAL_INCHARGE', 'BOOTH_PRESIDENT', 'BOOTH_AGENT', 'PANNA_PRAMUKH', 'VOLUNTEER'] as $ro)
-                <label class="ms-2"><input type="checkbox" name="roles[]" value="{{ $ro }}"> {{ t('worker.role.' . $ro) }}</label>@endforeach</div>
+                @foreach(array_filter(\App\Support\WorkerRoles::codes(true), fn ($c) => !in_array(\App\Support\WorkerRoles::base($c), ['LS_INCHARGE', 'AC_INCHARGE'], true)) as $ro)
+                <label class="ms-2"><input type="checkbox" name="roles[]" value="{{ $ro }}"> {{ role_label($ro) }}</label>@endforeach</div>
         </form>
     </div></div>
     @endif
@@ -74,14 +74,14 @@
     <div class="card mb-3">
         <div class="card-header fw-semibold"><i class="bi bi-geo-alt"></i> {{ t('ls.booths') }} <span class="badge text-bg-primary">{{ count($data['booths']) }}</span></div>
         <div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>{{ t('col.boothNo') }}</th><th>{{ t('org.mandal') }}</th><th>{{ t('worker.role.BOOTH_PRESIDENT') }}</th><th class="text-end">{{ t('org.agents') }}</th>
+            <thead class="table-light"><tr><th>{{ t('col.boothNo') }}</th><th>{{ t('org.mandal') }}</th><th>{{ role_label('BOOTH_PRESIDENT') }}</th><th class="text-end">{{ t('org.agents') }}</th>
                 <th class="text-end">{{ t('org.pannaCount') }}</th><th class="text-end">{{ t('dash.voters') }}</th><th class="text-end">{{ t('ls.panna') }}</th></tr></thead>
             <tbody>@foreach($data['booths'] as $b)
                 <tr>
                     <td><a href="{{ url('/workers') }}?assemblyNo={{ $a }}&boothNo={{ $b['booth'] }}">{{ $b['booth'] }}</a></td>
                     <td class="small">{{ $b['mandal']?->name ?? '-' }}</td>
                     <td>@forelse($b['president'] as $p)<a href="{{ url('/workers/' . $p->id) }}">{{ $p->name }}</a>{!! $accessBtn($p) !!}{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=BOOTH_PRESIDENT&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse</td>
-                    <td class="text-end">{{ $b['agents']->count() }}<a class="small ms-1" title="{{ t('worker.role.BOOTH_AGENT') }} text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=BOOTH_AGENT&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i></a></td>
+                    <td class="text-end">{{ $b['agents']->count() }}<a class="small ms-1" title="{{ role_label('BOOTH_AGENT') }} text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=BOOTH_AGENT&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i></a></td>
                     <td class="text-end">@if($b['panna']->isEmpty())<span class="text-danger">0</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=PANNA_PRAMUKH&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@else{{ $b['panna']->count() }}@endif</td>
                     <td class="text-end">{{ number_format($b['voters']) }}</td>
                     <td class="text-end">{{ $b['voters'] ? round(100 * $b['pannaVoters'] / $b['voters']) . '%' : '-' }}</td>

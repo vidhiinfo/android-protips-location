@@ -14,7 +14,7 @@
         <button type="button" class="btn btn-sm btn-secondary" data-print><i class="bi bi-printer"></i> {{ t('common.print') }}</button>
     </div>
     @if($heads->isNotEmpty())
-    <div class="small mb-2"><i class="bi bi-person-badge"></i> {{ t('worker.role.LS_INCHARGE') }}: @foreach($heads as $h)<b>{{ $h->name }}</b>@if($h->mobile) ({{ $h->mobile }})@endif{{ !$loop->last ? ', ' : '' }}@endforeach</div>
+    <div class="small mb-2"><i class="bi bi-person-badge"></i> {{ role_label('LS_INCHARGE') }}: @foreach($heads as $h)<b>{{ $h->name }}</b>@if($h->mobile) ({{ $h->mobile }})@endif{{ !$loop->last ? ', ' : '' }}@endforeach</div>
     @endif
     @if($T)
     <div class="row g-2 mb-3">
@@ -29,7 +29,7 @@
             <th>{{ t('ls.segment') }}</th><th>{{ t('ls.flag') }}</th><th class="text-end">{{ t('dash.voters') }}</th><th class="text-end">{{ t('ls.booths') }}</th>
             <th class="text-end">{{ t('an.womenPct') }}</th><th class="text-end">{{ t('an.age18') }}</th><th class="text-end">{{ t('report.mobilePct') }}</th>
             <th class="text-end">{{ t('ls.survey') }}</th><th class="text-end">{{ t('ls.support') }}</th><th class="text-end">{{ t('ls.president') }}</th>
-            <th class="text-end">{{ t('ls.panna') }}</th><th class="text-end">{{ t('ls.mandals') }}</th><th>{{ t('worker.role.AC_INCHARGE') }}</th><th class="text-end">{{ t('ls.griev') }}</th>
+            <th class="text-end">{{ t('ls.panna') }}</th><th class="text-end">{{ t('ls.mandals') }}</th><th>{{ role_label('AC_INCHARGE') }}</th><th class="text-end">{{ t('ls.griev') }}</th>
         </tr></thead>
         <tbody>@foreach($data['rows'] as $r)
             <tr>

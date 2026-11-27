@@ -20,7 +20,9 @@ class Worker extends Model
     public function mandal() { return $this->belongsTo(Mandal::class); }
     /** The worker's own voter record (when picked from the voter list). */
     public function voter() { return $this->belongsTo(Voter::class, 'voter_id'); }
-    public function level(): int { return self::LEVEL[$this->role] ?? 5; }
+    public function level(): int { return self::LEVEL[\App\Support\WorkerRoles::base($this->role)] ?? 5; }
+    /** The built-in role this worker's role works like (own roles from Masters > Worker roles). */
+    public function base(): string { return \App\Support\WorkerRoles::base($this->role); }
     public function label(): string { return $this->name . ($this->booth_no ? ' (' . t('col.boothNo') . ' ' . $this->booth_no . ')' : ''); }
 
     /** The worker record linked to a login, if any (that login then sees only its own voters). */

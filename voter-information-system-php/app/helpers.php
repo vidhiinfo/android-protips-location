@@ -35,3 +35,11 @@ if (!function_exists('versioned_asset')) {
         return asset($path) . (is_file($file) ? '?v=' . filemtime($file) : '');
     }
 }
+
+if (!function_exists('role_label')) {
+    /** Name of a worker role in the screen language (Masters > Worker roles). */
+    function role_label(?string $code): string
+    {
+        return \App\Support\WorkerRoles::label($code);
+    }
+}

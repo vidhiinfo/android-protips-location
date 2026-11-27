@@ -5,7 +5,7 @@
     @include('partials.flash')
     <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
         <a href="{{ url('/workers') }}?assemblyNo={{ $w->assembly_no }}&boothNo={{ $w->booth_no }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
-        <h4 class="mb-0 me-auto"><i class="bi bi-person-badge"></i> {{ $w->name }} <span class="badge text-bg-light border fs-6">{{ t('worker.role.'.$w->role) }}</span></h4>
+        <h4 class="mb-0 me-auto"><i class="bi bi-person-badge"></i> {{ $w->name }} <span class="badge text-bg-light border fs-6">{{ role_label($w->role) }}</span></h4>
         <a class="btn btn-sm btn-outline-primary" href="{{ url('/workers/'.$w->id.'/edit') }}"><i class="bi bi-pencil"></i> {{ t('common.edit') }}</a>
         <form method="post" action="{{ url('/workers/'.$w->id.'/delete') }}" data-confirm="{{ t('common.confirmDelete') }}">@csrf<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
     </div>

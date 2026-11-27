@@ -212,6 +212,14 @@ Route::middleware('login.required')->group(function () {
     });
 
     // ---- masters
+    // worker roles before the general /masters/{type} routes
+    Route::middleware('perm:MASTER_EDIT')->group(function () {
+        $wr = \App\Http\Controllers\WorkerRoleController::class;
+        Route::post('/masters/worker-roles', [$wr, 'save']);
+        Route::post('/masters/worker-roles/add', [$wr, 'add']);
+        Route::post('/masters/worker-roles/{code}/delete', [$wr, 'delete'])->where('code', '[A-Z0-9_]+');
+    });
+    Route::get('/masters/worker-roles', [\App\Http\Controllers\WorkerRoleController::class, 'index'])->middleware('perm:MASTER_VIEW');
     Route::middleware('perm:MASTER_EDIT')->group(function () {
         Route::get('/masters/{type}/new', [MasterController::class, 'form']);
         Route::get('/masters/{type}/{id}/edit', [MasterController::class, 'form'])->whereNumber('id');

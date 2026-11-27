@@ -11,6 +11,8 @@
     var role = document.querySelector('[data-role-select]'), toggle = document.querySelector('[data-manual-toggle]');
     var manual = document.getElementById('manual-name'), mobile = document.querySelector('input[name=mobile]');
     var timer = null, seq = 0;
+    // a role that works like the Lok Sabha in-charge covers every assembly (roles are set in Masters > Worker roles)
+    function wholeLS() { var o = role && role.selectedOptions && role.selectedOptions[0]; return !!o && (o.dataset.base || o.value) === 'LS_INCHARGE'; }
 
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
     function info(v) {
@@ -32,7 +34,7 @@
         picked.querySelector('[data-picked-info]').textContent = info(v);
         var link = picked.querySelector('a'); if (link) link.remove();
         setBooth(v);
-        if (asm && !asm.disabled && (!role || role.value !== 'LS_INCHARGE')) asm.value = String(v.assembly);
+        if (asm && !asm.disabled && !wholeLS()) asm.value = String(v.assembly);
         if (mobile && !mobile.value && v.mobile) mobile.value = v.mobile;
         picked.classList.remove('d-none'); search.classList.add('d-none');
         if (toggle) toggle.classList.add('d-none');
@@ -64,7 +66,7 @@
         if (term.length < 2) { results.innerHTML = ''; return; }
         var p = new URLSearchParams({ q: term });
         if (box.dataset.for) p.set('for', box.dataset.for);
-        if (asm && (!role || role.value !== 'LS_INCHARGE')) p.set('assemblyNo', asm.value);
+        if (asm && !wholeLS()) p.set('assemblyNo', asm.value);
         if (booth && booth.value) p.set('boothNo', booth.value);
         var mine = ++seq;
         results.innerHTML = ''; results.appendChild(el('div', 'list-group-item small text-muted', box.dataset.searching));
