@@ -126,6 +126,7 @@
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{{ url('/account/password') }}">{{ t('account.changePassword') }}</a></li>
                     @if(config('voters.security.user_source') !== 'external')<li><a class="dropdown-item" href="{{ url('/account/security') }}"><i class="bi bi-shield-lock"></i> {{ t('otp.account') }}</a></li>@endif
+                    <li class="native-only"><a class="dropdown-item" href="#" data-app-switch><i class="bi bi-arrow-left-right"></i> {{ t('app.changeSite') }}</a></li>
                     <li class="native-hide"><a class="dropdown-item" href="{{ url('/mobile-app') }}"><i class="bi bi-phone"></i> {{ t('app.install.link') }}</a></li>
                     <li><form action="{{ url('/logout') }}" method="post" data-logout data-l-unsent="{{ t('off.unsentLogout') }}">@csrf<button class="dropdown-item">{{ t('nav.logout') }}</button></form></li>
                 </ul>

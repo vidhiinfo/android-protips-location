@@ -151,6 +151,7 @@ a.house-link:hover { border-bottom-style: solid; }
 
 /* Mobile app (Capacitor): no browser printing inside the app (use PDF), no "install app" links */
 .native-app [data-print], .native-app a[href*="print=1"], .native-app a[href*="autoprint=1"], .native-app .native-hide { display: none !important; }
+html:not(.native-app) .native-only { display: none !important; }
 .native-app body { padding-bottom: env(safe-area-inset-bottom); }
 #native-busy { position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 3000; display: none; align-items: center; justify-content: center; }
 

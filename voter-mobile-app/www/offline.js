@@ -1,5 +1,8 @@
-// Back to the application once the phone is online again (the server address comes from capacitor.config.json).
-var cfg = (window.Capacitor && window.Capacitor.getServerUrl && window.Capacitor.getServerUrl()) || '';
-function retry() { if (cfg) location.href = cfg; else history.back(); }
+// Back to the site once the phone is online again (the site chosen on the first screen).
+function retry() {
+  var site = null;
+  try { site = localStorage.getItem('vis.site'); } catch (e) { /* none */ }
+  location.href = site ? site + '/login' : 'index.html';
+}
 document.getElementById('retry').addEventListener('click', retry);
 window.addEventListener('online', retry);

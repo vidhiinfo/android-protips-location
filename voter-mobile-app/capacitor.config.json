@@ -3,11 +3,14 @@
   "appName": "Voter System",
   "webDir": "www",
   "server": {
-    "url": "https://electionsoft.in/vis/login",
     "androidScheme": "https",
     "cleartext": false,
-    "allowNavigation": ["electionsoft.in", "www.electionsoft.in"],
-    "errorPath": "offline.html"
+    "allowNavigation": [
+      "electionsoft.in",
+      "www.electionsoft.in"
+    ],
+    "errorPath": "offline.html",
+    "hostname": "localhost"
   },
   "android": {
     "allowMixedContent": false,

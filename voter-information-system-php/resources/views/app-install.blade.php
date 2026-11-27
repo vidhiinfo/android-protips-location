@@ -5,7 +5,7 @@
 <div class="container px-3 py-4" style="max-width:760px">
     <div class="d-flex justify-content-end mb-2">@include('partials.lang', ['cls' => 'w-auto'])</div>
     <div class="d-flex align-items-center gap-3 mb-3">
-        <img src="{{ asset('images/app/icon-192.png') }}" alt="" width="72" height="72" style="border-radius:16px">
+        <img src="{{ asset(\App\Http\Controllers\SettingsController::appIcons()['192'] ?? 'images/app/icon-192.png') }}" alt="" width="72" height="72" style="border-radius:16px">
         <div><h1 class="h4 mb-0">{{ t('app.name') }}</h1><div class="text-muted">{{ t('app.install.subtitle') }}</div></div>
     </div>
     <div class="alert alert-success d-none" data-installed><i class="bi bi-check-circle"></i> {{ t('app.install.already') }}</div>

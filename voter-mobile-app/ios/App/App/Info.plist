@@ -47,5 +47,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera reads the barcode, QR code or EPIC number on voter cards and slips.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The microphone lets you speak into search boxes and grievance notes instead of typing.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech recognition turns what you say into text in search boxes and grievance notes.</string>
 </dict>
 </plist>

@@ -27,7 +27,7 @@
                             <span class="input-group-text">{{ t('settings.u.' . $name) }}</span></div>
                     @elseif($it['type'] === 'image')
                         <div class="d-flex align-items-center gap-3">
-                            <span class="settings-photo">@if($it['value'])<img src="{{ asset($it['value']) }}" alt="">@else<i class="bi bi-person-fill"></i>@endif</span>
+                            <span class="settings-photo">@if($it['value'])<img src="{{ asset($it['value']) }}" alt="">@else<i class="bi bi-{{ $name === 'app_icon' ? 'phone' : 'person-fill' }}"></i>@endif</span>
                             <input type="file" class="form-control form-control-sm" id="s-{{ $name }}" name="photo[{{ $name }}]" accept="image/jpeg,image/png,image/webp" style="max-width:16rem">
                         </div>
                     @elseif($it['type'] === 'enum')

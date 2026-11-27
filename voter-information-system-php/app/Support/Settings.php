@@ -34,6 +34,7 @@ class Settings
         'constituency'            => ['display', 'voters.branding.constituency', 'text', 100],
         'organisation'            => ['display', 'voters.branding.organisation', 'text', 150],
         'rep_photo'               => ['display', 'voters.branding.rep_photo', 'image', null],
+        'app_icon'                => ['display', 'voters.branding.app_icon', 'image', null],
         'scan_enabled'            => ['smart', 'voters.tools.scan', 'bool', null],
         'voice_enabled'           => ['smart', 'voters.tools.voice', 'bool', null],
         'voice_names_lang'        => ['smart', 'voters.tools.voice_names', 'enum', ['en-IN', 'hi-IN', 'pa-IN']],

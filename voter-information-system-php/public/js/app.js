@@ -172,6 +172,9 @@ document.addEventListener('click', function (e) {
     var C = window.Capacitor;
     if (!C || !C.isNativePlatform || !C.isNativePlatform()) return;
     document.documentElement.classList.add('native-app', 'native-' + C.getPlatform());
+    // "Change site": back to the app's own first screen, which lists the sites (app 1.1 and newer)
+    var home = (C.getPlatform() === 'ios' ? 'capacitor://localhost' : 'https://localhost') + '/index.html?choose=1';
+    document.querySelectorAll('[data-app-switch]').forEach(function (a) { a.href = home; });
     var P = C.Plugins || {};
     var isDownload = function (href) { return /\/export\/|\/import\/template|\/export\?/.test(href); };
     function toBase64(blob) {

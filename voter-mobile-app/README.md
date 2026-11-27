@@ -12,13 +12,24 @@ a native Android / iOS app that opens your own installation of the web applicati
   * App icon, splash screen, status bar colour, Android back button, offline screen when there is no internet.
 * Web pages detect the app and hide what does not work inside it (browser Print buttons: use PDF instead).
 
-| | |
-|---|---|
-| App name | Voter System |
-| App ID (Android package / iOS bundle ID) | `in.electionsoft.vis` |
-| Opens | `https://electionsoft.in/vis/login` |
-| Android | 6.0 (API 23) and newer |
-| iOS | 14 and newer |
+## One app per site (Android)
+
+Each site has its own app, so a phone can have several side by side and tell them apart by the name under the icon
+and the colour / label on the icon:
+
+| App (name under the icon) | App ID | Opens | Icon |
+|---|---|---|---|
+| Delhi VIS | `in.electionsoft.vis` | `https://electionsoft.in/vis` | blue, DELHI |
+| New Delhi LS | `in.electionsoft.ndvis` | `https://electionsoft.in/ndvis` | orange, NEW DELHI |
+| UP VIS | `in.electionsoft.upvis` | `https://electionsoft.in/upvis` | green, UP |
+| Punjab VIS | `in.electionsoft.pbvis` | `https://electionsoft.in/pbvis` | purple, PUNJAB |
+
+* Name and app ID: `android/app/build.gradle` (`productFlavors`). Site: `android/app/src/<site>/assets/public/sites.js`.
+  Icons: `android/app/src/<site>/res/mipmap-*` (made from the main icon with a colour and label).
+* Build all: `cd android && ./gradlew assembleRelease` (or one: `./gradlew assembleNdvisRelease`).
+* The iOS app and `www/sites.js` list all sites: the first screen asks which site to open; "Change site" in the menu goes back.
+* Microphone and camera permission: Speak (voice typing, the phone's own speech recognition) and Scan card work in the app.
+* Android 6.0 (API 23) and newer, iOS 14 and newer. Version 1.1.0 (versionCode 2).
 
 ## Change the server address or app ID
 

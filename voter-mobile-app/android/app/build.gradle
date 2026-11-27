@@ -16,14 +16,23 @@ android {
         applicationId "in.electionsoft.vis"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 2
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
+    }
+    // One app per site: own name under the icon, own icon marker, own app ID (all can be installed side by side).
+    // The site each one opens is in src/<site>/assets/public/sites.js. Build one: ./gradlew assembleNdvisDebug
+    flavorDimensions "site"
+    productFlavors {
+        vis   { dimension "site"; applicationId "in.electionsoft.vis";   resValue "string", "app_name", "Delhi VIS";    resValue "string", "title_activity_main", "Delhi VIS" }
+        ndvis { dimension "site"; applicationId "in.electionsoft.ndvis"; resValue "string", "app_name", "New Delhi LS"; resValue "string", "title_activity_main", "New Delhi LS" }
+        upvis { dimension "site"; applicationId "in.electionsoft.upvis"; resValue "string", "app_name", "UP VIS";       resValue "string", "title_activity_main", "UP VIS" }
+        pbvis { dimension "site"; applicationId "in.electionsoft.pbvis"; resValue "string", "app_name", "Punjab VIS";   resValue "string", "title_activity_main", "Punjab VIS" }
     }
     signingConfigs {
         release {

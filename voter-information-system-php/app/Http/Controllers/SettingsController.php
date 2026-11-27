@@ -29,7 +29,7 @@ class SettingsController extends Controller
             if ($r->input('reset') === $name) { Settings::forget($name); $changed[] = "$name reset"; continue; }
             if ($type === 'image') {
                 if (!$r->hasFile("photo.$name")) continue;
-                $path = self::storeImage($r->file("photo.$name"), $name);
+                $path = $name === 'app_icon' ? self::storeAppIcon($r->file("photo.$name")) : self::storeImage($r->file("photo.$name"), $name);
                 if ($path === null) return redirect('/admin/settings')->with('error', t('settings.photoBad'));
                 Settings::set($name, $path, $this->user()->username());
                 $changed[] = "$name uploaded";
@@ -52,6 +52,38 @@ class SettingsController extends Controller
         }
         if ($changed) $this->audit()->log('UPDATE', 'SETTING', null, implode('; ', $changed));
         return redirect('/admin/settings')->with('success', $changed ? t('settings.savedN', count($changed)) : t('settings.nothing'));
+    }
+
+    /** Paths of the home-screen icon sizes (512, 192, 180) made from one upload; null for the standard icon. */
+    public static function appIcons(): ?array
+    {
+        $p = (string) config('voters.branding.app_icon');
+        if ($p === '' || !is_file(public_path($p))) return null;
+        return ['512' => $p, '192' => str_replace('-512.png', '-192.png', $p), '180' => str_replace('-512.png', '-180.png', $p)];
+    }
+
+    /** Uploaded image -> square PNG icons 512, 192 and 180 (iPhone) in public/uploads/branding/. Returns the 512 path. */
+    public static function storeAppIcon(\Illuminate\Http\UploadedFile $f): ?string
+    {
+        if (!$f->isValid() || $f->getSize() > 5 * 1024 * 1024 || !function_exists('imagecreatefromstring')) return null;
+        $info = @getimagesize($f->getRealPath());
+        if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP, IMAGETYPE_GIF], true)) return null;
+        $src = @imagecreatefromstring((string) file_get_contents($f->getRealPath()));
+        if (!$src) return null;
+        $dir = public_path('uploads/branding');
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true)) return null;
+        $w = imagesx($src); $h = imagesy($src); $side = min($w, $h);
+        $base = 'uploads/branding/app-icon-' . date('YmdHis');
+        foreach ([512, 192, 180] as $size) {
+            $out = imagecreatetruecolor($size, $size);
+            imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));   // icons need a solid background
+            imagecopyresampled($out, $src, 0, 0, intdiv($w - $side, 2), intdiv($h - $side, 2), $size, $size, $side, $side);
+            $ok = imagepng($out, public_path("$base-$size.png"), 9);
+            imagedestroy($out);
+            if (!$ok) { imagedestroy($src); return null; }
+        }
+        imagedestroy($src);
+        return "$base-512.png";
     }
 
     /**

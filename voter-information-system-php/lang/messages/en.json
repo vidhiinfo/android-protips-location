@@ -1939,5 +1939,8 @@
 "settings.h.voice_names_lang": "Language of the names in your voter list. A name spoken into a search box is written in this language, so it matches the roll (English for rolls in English letters).",
 "settings.o.en-IN": "English letters",
 "settings.o.hi-IN": "Hindi (Devanagari)",
-"settings.o.pa-IN": "Punjabi (Gurmukhi)"
+"settings.o.pa-IN": "Punjabi (Gurmukhi)",
+"app.changeSite": "Change site",
+"settings.s.app_icon": "App icon (home screen)",
+"settings.h.app_icon": "Icon shown on the phone when the site is added to the home screen from the browser (\"Install app\" / \"Add to Home screen\"). Square PNG or JPG, at least 512 x 512. Together with \"Short name\" it tells your sites apart. Phones that added the site before need to add it again to show a new icon. The downloadable Android app has its own name and icon (one app per site)."
 }

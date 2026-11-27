@@ -27,6 +27,12 @@ Route::get('/site.webmanifest', function () {
     $m['start_url'] = url('dashboard?source=app');
     $m['scope'] = rtrim(url('/'), '/') . '/';
     foreach ($m['icons'] ?? [] as $i => $icon) $m['icons'][$i]['src'] = asset($icon['src']);
+    if ($ic = \App\Http\Controllers\SettingsController::appIcons()) {   // icon uploaded in Admin > Settings
+        $m['icons'] = [['src' => asset($ic['192']), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => asset($ic['512']), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+            ['src' => asset($ic['512']), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable']];
+        foreach ($m['shortcuts'] ?? [] as $i => $sc) $m['shortcuts'][$i]['icons'] = [['src' => asset($ic['192']), 'sizes' => '192x192']];
+    }
     foreach ($m['shortcuts'] ?? [] as $i => $sc) { $m['shortcuts'][$i]['url'] = url(ltrim($sc['url'], '.')); foreach ($sc['icons'] ?? [] as $j => $ic) $m['shortcuts'][$i]['icons'][$j]['src'] = asset($ic['src']); }
     return response()->json($m, 200, ['Content-Type' => 'application/manifest+json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 });

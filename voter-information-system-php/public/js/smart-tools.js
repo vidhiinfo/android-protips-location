@@ -93,7 +93,38 @@
     'audio-capture': ['noMic', 'No microphone found on this device.'],
     'network': ['voiceNetwork', 'The speech service could not be reached. Check internet; some browsers (Brave, Firefox, the Android app) do not have it: use Google Chrome.']
   };
+  // inside the Android / iOS app (version 1.1 and newer): the phone's own speech recognition
+  var C = window.Capacitor, NATIVE = C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.SpeechRecognition;
+  function put(el, said) {
+    said = String(said || '').trim();
+    if (!said) return;
+    if (el.tagName !== 'TEXTAREA') said = said.replace(/[.,!?।]+$/, '');   // no full stop in a search box
+    if (el.tagName === 'TEXTAREA' && el.value.trim()) el.value = el.value.replace(/\s*$/, ' ') + said;
+    else el.value = said;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.focus();
+  }
+  function listenNative(el, btn) {
+    var lang = el.getAttribute('data-voice') === 'names' ? NAMES_LANG : (LANGS[(document.documentElement.lang || 'en').slice(0, 2)] || 'en-IN');
+    var SR = NATIVE;
+    btn.classList.add('btn-danger', 'text-white');
+    var done = function () { btn.classList.remove('btn-danger', 'text-white'); };
+    SR.requestPermissions().then(function (p) {
+      if (p && p.speechRecognition && p.speechRecognition !== 'granted') throw { error: 'not-allowed' };
+      return SR.start({ language: lang, maxResults: 1, prompt: t('listening', 'Listening… speak now'), popup: true, partialResults: false });
+    }).then(function (r) {
+      done();
+      if (r && r.matches && r.matches.length) put(el, r.matches[0]); else toast(t('noSpeech', ERR['no-speech'][1]), 'warning');
+    }).catch(function (e) {
+      done();
+      var msg = String((e && (e.error || e.message)) || e);
+      if (/not-allowed|denied|permission/i.test(msg)) toast(t('micBlocked', ERR['not-allowed'][1]), 'warning');
+      else if (/no match|no speech|didn't catch|timeout/i.test(msg)) toast(t('noSpeech', ERR['no-speech'][1]), 'warning');
+      else toast(t('voiceError', 'Could not hear that. Try again.') + ' (' + msg + ')', 'warning');
+    });
+  }
   function listen(el, btn, forceLang) {
+    if (NATIVE) { listenNative(el, btn); return; }
     if (active) { active.stop(); return; }
     if (!SpeechRec) { toast(t('voiceUnsupported', ERR['service-not-allowed'][1]), 'warning'); return; }
     if (window.isSecureContext === false) { toast(t('needsHttps', 'Voice typing needs the https:// address of the site.'), 'warning'); return; }
@@ -113,15 +144,7 @@
       active = null; btn.classList.remove('btn-danger', 'text-white');
       if (!got && !failed) toast(t('noSpeech', ERR['no-speech'][1]), 'warning');
     };
-    r.onresult = function (e) {
-      got = true;
-      var said = e.results[0][0].transcript.trim();
-      if (el.tagName !== 'TEXTAREA') said = said.replace(/[.,!?।]+$/, '');   // no full stop in a search box
-      if (el.tagName === 'TEXTAREA' && el.value.trim()) el.value = el.value.replace(/\s*$/, ' ') + said;
-      else el.value = said;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.focus();
-    };
+    r.onresult = function (e) { got = true; put(el, e.results[0][0].transcript); };
     try { r.start(); } catch (e) { active = null; toast(t('voiceError', 'Could not hear that. Try again.'), 'warning'); }
   }
 

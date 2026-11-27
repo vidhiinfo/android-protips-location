@@ -76,6 +76,7 @@
                     <button class="btn btn-primary btn-lg w-100 login-btn"><i class="bi bi-box-arrow-in-right"></i> {{ t('login.button') }}</button>
                 </form>
                 <p class="small text-muted mt-4 mb-0 d-flex gap-2"><i class="bi bi-shield-lock"></i> <span>{{ t('login.secure') }}</span></p>
+                <a class="small d-inline-flex gap-1 mt-2 native-only" href="#" data-app-switch><i class="bi bi-arrow-left-right"></i> {{ t('app.changeSite') }}</a>
                 <a class="small d-inline-flex gap-1 mt-2 native-hide" href="{{ url('/mobile-app') }}"><i class="bi bi-phone"></i> {{ t('app.install.link') }}</a>
                 @if(config('voters.branding.owner'))<p class="small text-muted mt-3 mb-0">{{ t('brand.copyright', date('Y'), config('voters.branding.owner')) }}</p>@endif
             </div>
