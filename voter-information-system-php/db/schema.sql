@@ -167,11 +167,12 @@ CREATE TABLE IF NOT EXISTS workers (
     mobile      VARCHAR(15),
     assembly_no INT          NOT NULL,
     booth_no    INT,
-    role        VARCHAR(30)  NOT NULL DEFAULT 'VOLUNTEER' COMMENT 'BOOTH_PRESIDENT / BOOTH_AGENT / PANNA_PRAMUKH / VOLUNTEER',
+    role        VARCHAR(30)  NOT NULL DEFAULT 'VOLUNTEER' COMMENT 'LS_INCHARGE / AC_INCHARGE / MANDAL_INCHARGE / BOOTH_PRESIDENT / BOOTH_AGENT / PANNA_PRAMUKH / VOLUNTEER',
     username    VARCHAR(50)           COMMENT 'login of this worker: sees only the voters assigned to them',
     active      TINYINT(1)   NOT NULL DEFAULT 1,
     notes       VARCHAR(300),
     created_at  DATETIME,
+    mandal_id   BIGINT                COMMENT 'mandal of a mandal in-charge (mandals.id)',
     INDEX idx_worker_booth (assembly_no, booth_no),
     INDEX idx_worker_user (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -818,4 +819,15 @@ CREATE TABLE IF NOT EXISTS field_syncs (
     last_items     INT          NOT NULL DEFAULT 0 COMMENT 'items received in the last sync',
     CONSTRAINT uk_field_sync UNIQUE (username, assembly_no, booth_no),
     INDEX idx_field_sync_booth (assembly_no, booth_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------- organisation: mandals (named groups of booths)
+CREATE TABLE IF NOT EXISTS mandals (
+    id          BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    assembly_no INT          NOT NULL,
+    name        VARCHAR(100) NOT NULL,
+    booths      VARCHAR(1000)         COMMENT 'booth numbers, e.g. 1, 2, 3, 10',
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at  DATETIME,
+    INDEX idx_mandal_assembly (assembly_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -13,8 +13,14 @@
                 @if($me->scoped())<input type="hidden" name="assembly_no" value="{{ $me->workAssembly() }}">@endif</div>
             <div class="col-md-4"><label class="form-label">{{ t('col.boothNo') }}</label><select name="booth_no" class="form-select"><option value="">-</option>
                 @foreach($booths as $b)<option value="{{ $b }}" @selected($b == old('booth_no', $w->booth_no))>{{ $b }}</option>@endforeach</select></div>
-            <div class="col-md-4"><label class="form-label">{{ t('worker.role') }} *</label><select name="role" class="form-select">
-                @foreach(\App\Models\Worker::ROLES as $ro)<option value="{{ $ro }}" @selected($ro === old('role', $w->role))>{{ t('worker.role.'.$ro) }}</option>@endforeach</select></div>
+            <div class="col-md-4"><label class="form-label">{{ t('worker.role') }} *</label><select name="role" class="form-select" data-role-select>
+                @foreach(\App\Models\Worker::ROLES as $ro)@continue($ro === 'LS_INCHARGE' && $me->scoped())<option value="{{ $ro }}" @selected($ro === old('role', $w->role))>{{ t('worker.role.'.$ro) }}</option>@endforeach</select>
+                <div class="form-text">{{ t('org.roleHint') }}</div></div>
+            @if(count($mandals))
+            <div class="col-md-6" data-mandal-field><label class="form-label">{{ t('org.mandal') }}</label><select name="mandal_id" class="form-select"><option value="">-</option>
+                @foreach($mandals as $m)<option value="{{ $m->id }}" @selected($m->id == old('mandal_id', $w->mandal_id))>{{ $m->assembly_no }} - {{ $m->name }}</option>@endforeach</select>
+                <div class="form-text">{{ t('org.mandalHint') }}</div></div>
+            @endif
             <div class="col-md-6"><label class="form-label">{{ t('worker.login') }}</label><select name="username" class="form-select"><option value="">{{ t('worker.noLogin') }}</option>
                 @foreach($usernames as $u)<option value="{{ $u }}" @selected($u === old('username', $w->username))>{{ $u }}</option>@endforeach</select>
                 <div class="form-text">{{ t('worker.loginHint') }}</div></div>

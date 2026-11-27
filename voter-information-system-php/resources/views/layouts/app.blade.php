@@ -13,13 +13,15 @@
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav me-auto">
                 @if(can('DASHBOARD_VIEW'))<li class="nav-item"><a class="nav-link" href="{{ url('/dashboard') }}"><i class="bi bi-speedometer2"></i> {{ t('nav.dashboard') }}</a></li>@endif
+                @if(can('DASHBOARD_VIEW') && config('voters.branding.level') === 'loksabha' && !$me->scoped())<li class="nav-item"><a class="nav-link" href="{{ url('/loksabha') }}"><i class="bi bi-bank2"></i> {{ t('ls.nav') }}</a></li>@endif
                 @if(can('VOTER_VIEW'))
                 <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-people"></i> {{ t('nav.voters') }}</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url('/voters') }}">{{ t('nav.voterList') }}</a></li>
                         @if(can('VOTER_EDIT'))<li><a class="dropdown-item" href="{{ url('/voters/new') }}">{{ t('nav.addVoter') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/survey') }}"><i class="bi bi-clipboard2-check"></i> {{ t('fs.title') }}</a></li>@endif
-                        @if(can('WORKER_MANAGE'))<li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>
+                        @if(can('WORKER_MANAGE'))@if(\App\Services\Org\OrganisationService::available())<li><a class="dropdown-item" href="{{ url('/organisation') }}"><i class="bi bi-diagram-3"></i> {{ t('org.title') }}</a></li>@endif
+                        <li><a class="dropdown-item" href="{{ url('/workers') }}"><i class="bi bi-person-badge"></i> {{ t('worker.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/workers/tasks') }}"><i class="bi bi-list-check"></i> {{ t('task.title') }}</a></li>
                         <li><a class="dropdown-item" href="{{ url('/workers/attendance') }}"><i class="bi bi-calendar-check"></i> {{ t('att.title') }}</a></li>@endif
                         <li><a class="dropdown-item" href="{{ url('/field') }}"><i class="bi bi-cloud-slash"></i> {{ t('field.title') }}</a></li>

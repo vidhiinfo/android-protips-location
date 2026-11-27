@@ -22,7 +22,8 @@ class WorkerController extends Controller
     {
         $w = Worker::find($id);
         $ab = \App\Support\Area::current()['booths'] ?? [];
-        abort_if(!$w || !$this->user()->allows($w->assembly_no) || ($ab && !in_array((int) $w->booth_no, $ab, true)), 404, t('error.notFound'));
+        $ok = $w && ($w->assembly_no === Worker::ALL_ASSEMBLIES ? !$this->user()->scoped() : $this->user()->allows($w->assembly_no));
+        abort_if(!$ok || ($ab && !in_array((int) $w->booth_no, $ab, true)), 404, t('error.notFound'));
         return $w;
     }
 
@@ -68,8 +69,11 @@ class WorkerController extends Controller
     {
         $w = $id ? $this->find($id) : new Worker(['assembly_no' => $this->user()->restrict($r->query('assemblyNo')) ?? array_key_first($this->voters->assemblies()),
             'booth_no' => $r->query('boothNo'), 'role' => 'VOLUNTEER', 'active' => true]);
-        return view('workers.form', ['w' => $w, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($w->assembly_no),
-            'usernames' => AppUser::orderBy('username')->pluck('username')->all()]);
+        $mandals = \App\Services\Org\OrganisationService::available()
+            ? \App\Models\Mandal::where('active', true)->when($this->user()->scoped(), fn ($q) => $q->where('assembly_no', $this->user()->workAssembly()))->orderBy('assembly_no')->orderBy('name')->get()
+            : collect();
+        return view('workers.form', ['w' => $w, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($w->assembly_no ?: null),
+            'usernames' => AppUser::orderBy('username')->pluck('username')->all(), 'mandals' => $mandals]);
     }
 
     public function save(Request $r, ?int $id = null)
@@ -77,9 +81,19 @@ class WorkerController extends Controller
         $data = $r->validate([
             'name' => ['required', 'max:120'], 'mobile' => ['nullable', 'regex:/^[6-9][0-9]{9}$/'], 'assembly_no' => ['required', 'integer', 'min:1'],
             'booth_no' => ['nullable', 'integer', 'min:1'], 'role' => ['required', 'in:' . implode(',', Worker::ROLES)], 'username' => ['nullable', 'max:50'],
-            'notes' => ['nullable', 'max:300'],
+            'notes' => ['nullable', 'max:300'], 'mandal_id' => ['nullable', 'integer'],
         ], ['mobile.regex' => t('validation.mobile'), 'required' => t('validation.required')]);
         $data['assembly_no'] = $this->user()->restrict($data['assembly_no']);
+        // organisation chain: a Lok Sabha in-charge covers every assembly; a mandal in-charge belongs to a mandal of the assembly
+        if ($data['role'] === 'LS_INCHARGE') {
+            abort_if($this->user()->scoped(), 403);
+            $data['assembly_no'] = Worker::ALL_ASSEMBLIES; $data['booth_no'] = null;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('workers', 'mandal_id')) {
+            $m = $data['role'] === 'MANDAL_INCHARGE' && !empty($data['mandal_id']) ? \App\Models\Mandal::where('assembly_no', $data['assembly_no'])->find($data['mandal_id']) : null;
+            if ($data['role'] === 'MANDAL_INCHARGE' && !$m) return back()->withInput()->with('error', 'org.pickMandal');
+            $data['mandal_id'] = $m?->id;
+        } else unset($data['mandal_id']);
         $data['active'] = $r->boolean('active');
         foreach (['mobile', 'booth_no', 'username', 'notes'] as $k) $data[$k] = $data[$k] ?? null;
         if ($data['username'] && Worker::where('username', $data['username'])->where('id', '<>', $id ?? 0)->exists()) {

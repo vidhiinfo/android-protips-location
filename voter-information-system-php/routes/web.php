@@ -52,6 +52,7 @@ Route::middleware('login.required')->group(function () {
 
     Route::middleware('perm:DASHBOARD_VIEW')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'page']);
+        Route::get('/loksabha', [\App\Http\Controllers\OrganisationController::class, 'lokSabha']);
         Route::get('/dashboard/data', [DashboardController::class, 'data']);
     });
 
@@ -84,6 +85,13 @@ Route::middleware('login.required')->group(function () {
     });
     Route::get('/voters/export/slips', [VoterController::class, 'slips'])->middleware('perm:VOTER_EXPORT');
     Route::middleware('perm:WORKER_MANAGE')->group(function () {
+        $og = \App\Http\Controllers\OrganisationController::class;
+        Route::get('/organisation', [$og, 'index']);
+        Route::post('/organisation/team-task', [$og, 'teamTask']);
+        Route::post('/organisation/person/{id}/access', [$og, 'access'])->whereNumber('id');
+        Route::get('/organisation/{a}', [$og, 'assembly'])->whereNumber('a');
+        Route::post('/organisation/{a}/mandals', [$og, 'saveMandal'])->whereNumber('a');
+        Route::post('/organisation/{a}/mandals/{id}/delete', [$og, 'deleteMandal'])->whereNumber('a')->whereNumber('id');
         $w = \App\Http\Controllers\WorkerController::class;
         Route::get('/workers', [$w, 'index']);
         Route::get('/workers/new', [$w, 'form']);

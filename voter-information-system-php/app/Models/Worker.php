@@ -10,9 +10,15 @@ class Worker extends Model
     public $timestamps = false;
     protected $guarded = ['id'];
     protected $casts = ['active' => 'boolean', 'created_at' => 'datetime'];
-    public const ROLES = ['BOOTH_PRESIDENT', 'BOOTH_AGENT', 'PANNA_PRAMUKH', 'VOLUNTEER'];
+    public const ROLES = ['LS_INCHARGE', 'AC_INCHARGE', 'MANDAL_INCHARGE', 'BOOTH_PRESIDENT', 'BOOTH_AGENT', 'PANNA_PRAMUKH', 'VOLUNTEER'];
+    /** Place in the organisation chain (0 = top). Booth agents and panna pramukhs work under the booth president. */
+    public const LEVEL = ['LS_INCHARGE' => 0, 'AC_INCHARGE' => 1, 'MANDAL_INCHARGE' => 2, 'BOOTH_PRESIDENT' => 3, 'BOOTH_AGENT' => 4, 'PANNA_PRAMUKH' => 4, 'VOLUNTEER' => 5];
+    /** A Lok Sabha in-charge covers every assembly: stored with assembly_no 0. */
+    public const ALL_ASSEMBLIES = 0;
 
     public function voters() { return $this->hasMany(Voter::class); }
+    public function mandal() { return $this->belongsTo(Mandal::class); }
+    public function level(): int { return self::LEVEL[$this->role] ?? 5; }
     public function label(): string { return $this->name . ($this->booth_no ? ' (' . t('col.boothNo') . ' ' . $this->booth_no . ')' : ''); }
 
     /** The worker record linked to a login, if any (that login then sees only its own voters). */
