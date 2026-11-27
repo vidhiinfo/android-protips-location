@@ -26,12 +26,23 @@
             @endif
             <h1 class="login-title">{{ t($ls ? 'login.banner.titleLs' : 'login.banner.title') }}</h1>
             <p class="login-tagline">{{ t($ls ? 'login.banner.taglineLs' : 'login.banner.tagline') }}</p>
+            @if($ls)
+            {{-- Lok Sabha site: what the solution does, as feature cards (no illustration) --}}
+            <div class="login-features d-none d-md-grid">
+                @foreach(['overview' => 'bank2', 'org' => 'diagram-3', 'offline' => 'cloud-slash', 'pollday' => 'broadcast', 'planner' => 'bullseye',
+                          'families' => 'people', 'grievance' => 'clipboard-check', 'languages' => 'translate'] as $f => $icon)
+                <div class="login-feature"><span class="login-feature-icon"><i class="bi bi-{{ $icon }}"></i></span>
+                    <span><span class="login-feature-title">{{ t('login.ls.' . $f) }}</span><span class="login-feature-desc">{{ t('login.ls.' . $f . '.desc') }}</span></span></div>
+                @endforeach
+            </div>
+            @else
             <img class="login-illustration d-none d-lg-block" src="{{ asset(ltrim($branding['banner_image'], '/')) }}" alt="" aria-hidden="true">
             <ul class="login-points list-unstyled d-none d-lg-block mb-0">
                 <li><i class="bi bi-translate"></i> <span>{{ t('login.banner.point1') }}</span></li>
                 <li><i class="bi bi-bar-chart-line"></i> <span>{{ t('login.banner.point2') }}</span></li>
-                <li><i class="bi bi-chat-dots"></i> <span>{{ t('login.banner.point3') }}</span></li>
+                @if(config('voters.messaging.enabled', true))<li><i class="bi bi-chat-dots"></i> <span>{{ t('login.banner.point3') }}</span></li>@endif
             </ul>
+            @endif
         </div>
         <div class="login-stripe" aria-hidden="true"><span></span><span></span><span></span></div>
     </div>

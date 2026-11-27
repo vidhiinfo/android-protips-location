@@ -1895,5 +1895,21 @@
 "org.pickMandal": "Choose the mandal of this mandal in-charge.",
 "worker.role.LS_INCHARGE": "Lok Sabha in-charge",
 "worker.role.AC_INCHARGE": "Assembly in-charge",
-"worker.role.MANDAL_INCHARGE": "Mandal in-charge"
+"worker.role.MANDAL_INCHARGE": "Mandal in-charge",
+"login.ls.overview": "Lok Sabha overview",
+"login.ls.overview.desc": "Every assembly segment side by side, with on-track flags",
+"login.ls.org": "Organisation chain",
+"login.ls.org.desc": "In-charges, mandals, booth presidents and panna pramukhs, with gaps",
+"login.ls.offline": "Works without internet",
+"login.ls.offline.desc": "Field app on the phone: search, survey and poll day offline",
+"login.ls.pollday": "Poll-day war room",
+"login.ls.pollday.desc": "Live turnout by booth, booths falling behind, transport",
+"login.ls.planner": "Votes-to-win planner",
+"login.ls.planner.desc": "Booth-wise targets from past results",
+"login.ls.families": "Families and demographics",
+"login.ls.families.desc": "Houses, families, age groups and first-time voters",
+"login.ls.grievance": "Grievance tracking",
+"login.ls.grievance.desc": "Deadlines, escalation and photos, booth by booth",
+"login.ls.languages": "9 Indian languages",
+"login.ls.languages.desc": "Screens and voter lists in Hindi, English and more"
 }

@@ -1482,5 +1482,21 @@
 "org.pickMandal": "ਇਸ ਮੰਡਲ ਇੰਚਾਰਜ ਦਾ ਮੰਡਲ ਚੁਣੋ।",
 "worker.role.LS_INCHARGE": "ਲੋਕ ਸਭਾ ਇੰਚਾਰਜ",
 "worker.role.AC_INCHARGE": "ਵਿਧਾਨ ਸਭਾ ਇੰਚਾਰਜ",
-"worker.role.MANDAL_INCHARGE": "ਮੰਡਲ ਇੰਚਾਰਜ"
+"worker.role.MANDAL_INCHARGE": "ਮੰਡਲ ਇੰਚਾਰਜ",
+"login.ls.overview": "ਲੋਕ ਸਭਾ ਸਾਰ",
+"login.ls.overview.desc": "ਹਰ ਵਿਧਾਨ ਸਭਾ ਹਲਕਾ ਇਕੱਠੇ, ਸਥਿਤੀ ਦੇ ਨਿਸ਼ਾਨ ਨਾਲ",
+"login.ls.org": "ਸੰਗਠਨ ਦੀ ਕੜੀ",
+"login.ls.org.desc": "ਇੰਚਾਰਜ, ਮੰਡਲ, ਬੂਥ ਪ੍ਰਧਾਨ ਅਤੇ ਪੰਨਾ ਪ੍ਰਮੁੱਖ - ਕਮੀਆਂ ਨਾਲ",
+"login.ls.offline": "ਬਿਨਾਂ ਇੰਟਰਨੈੱਟ ਕੰਮ",
+"login.ls.offline.desc": "ਫ਼ੋਨ ਤੇ ਫ਼ੀਲਡ ਐਪ: ਖੋਜ, ਸਰਵੇ ਅਤੇ ਵੋਟਾਂ ਵਾਲਾ ਦਿਨ ਆਫ਼ਲਾਈਨ",
+"login.ls.pollday": "ਵੋਟਾਂ ਵਾਲੇ ਦਿਨ ਦਾ ਵਾਰ ਰੂਮ",
+"login.ls.pollday.desc": "ਬੂਥ-ਵਾਰ ਵੋਟਿੰਗ, ਪਿੱਛੇ ਚੱਲ ਰਹੇ ਬੂਥ, ਵਾਹਨ",
+"login.ls.planner": "ਜਿੱਤ ਦੀਆਂ ਵੋਟਾਂ ਯੋਜਨਾਕਾਰ",
+"login.ls.planner.desc": "ਪਿਛਲੇ ਨਤੀਜਿਆਂ ਤੋਂ ਬੂਥ-ਵਾਰ ਟੀਚੇ",
+"login.ls.families": "ਪਰਿਵਾਰ ਅਤੇ ਜਨਸੰਖਿਆ",
+"login.ls.families.desc": "ਘਰ, ਪਰਿਵਾਰ, ਉਮਰ ਵਰਗ ਅਤੇ ਪਹਿਲੀ ਵਾਰ ਦੇ ਵੋਟਰ",
+"login.ls.grievance": "ਸ਼ਿਕਾਇਤ ਟ੍ਰੈਕਿੰਗ",
+"login.ls.grievance.desc": "ਸਮਾਂ-ਸੀਮਾ, ਅੱਗੇ ਭੇਜਣਾ ਅਤੇ ਫ਼ੋਟੋ - ਬੂਥ ਦਰ ਬੂਥ",
+"login.ls.languages": "9 ਭਾਰਤੀ ਭਾਸ਼ਾਵਾਂ",
+"login.ls.languages.desc": "ਹਿੰਦੀ, ਅੰਗਰੇਜ਼ੀ ਅਤੇ ਹੋਰ ਭਾਸ਼ਾਵਾਂ ਵਿੱਚ ਸਕ੍ਰੀਨਾਂ ਅਤੇ ਵੋਟਰ ਸੂਚੀਆਂ"
 }

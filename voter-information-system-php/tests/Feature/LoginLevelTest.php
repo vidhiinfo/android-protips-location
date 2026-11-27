@@ -40,6 +40,8 @@ class LoginLevelTest extends TestCase
         $this->assertStringContainsString('Ms. Bansuri Swaraj, Member of Parliament, New Delhi Lok Sabha', $html);
         $this->assertStringContainsString(t('login.banner.titleLs'), $html);
         $this->assertStringContainsString(t('login.segment'), $html);
+        $this->assertStringContainsString(t('login.ls.org'), $html);                       // feature cards
+        $this->assertStringNotContainsString(t('login.banner.point3'), $html);             // no SMS / WhatsApp line on the Lok Sabha page
     }
 
     public function test_representative_photo_circle_placeholder_then_upload(): void

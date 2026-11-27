@@ -1895,5 +1895,21 @@
 "org.pickMandal": "इस मंडल प्रभारी का मंडल चुनें।",
 "worker.role.LS_INCHARGE": "लोकसभा प्रभारी",
 "worker.role.AC_INCHARGE": "विधानसभा प्रभारी",
-"worker.role.MANDAL_INCHARGE": "मंडल प्रभारी"
+"worker.role.MANDAL_INCHARGE": "मंडल प्रभारी",
+"login.ls.overview": "लोकसभा सारांश",
+"login.ls.overview.desc": "हर विधानसभा क्षेत्र एक साथ, स्थिति के निशान के साथ",
+"login.ls.org": "संगठन की कड़ी",
+"login.ls.org.desc": "प्रभारी, मंडल, बूथ अध्यक्ष और पन्ना प्रमुख - कमियों के साथ",
+"login.ls.offline": "बिना इंटरनेट काम",
+"login.ls.offline.desc": "फ़ोन पर फ़ील्ड ऐप: खोज, सर्वे और मतदान दिवस ऑफ़लाइन",
+"login.ls.pollday": "मतदान दिवस वॉर रूम",
+"login.ls.pollday.desc": "बूथ-वार मतदान, पीछे चल रहे बूथ, वाहन",
+"login.ls.planner": "जीत के वोट योजनाकार",
+"login.ls.planner.desc": "पिछले नतीजों से बूथ-वार लक्ष्य",
+"login.ls.families": "परिवार और जनसांख्यिकी",
+"login.ls.families.desc": "घर, परिवार, आयु वर्ग और पहली बार के मतदाता",
+"login.ls.grievance": "शिकायत ट्रैकिंग",
+"login.ls.grievance.desc": "समय-सीमा, आगे भेजना और फ़ोटो - बूथ दर बूथ",
+"login.ls.languages": "9 भारतीय भाषाएँ",
+"login.ls.languages.desc": "हिंदी, अंग्रेज़ी और अन्य भाषाओं में स्क्रीन और मतदाता सूचियाँ"
 }
