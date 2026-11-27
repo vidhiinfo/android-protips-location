@@ -1775,7 +1775,7 @@
 "tools.listening": "Listening… speak now",
 "tools.voiceOffline": "Voice typing needs internet.",
 "tools.voiceError": "Could not hear that. Try again.",
-"tools.micBlocked": "microphone blocked: allow it in the browser",
+"tools.micBlocked": "Microphone is blocked: tap the lock icon next to the address and allow the microphone.",
 "family.label": "Family {0}",
 "family.members": "{0} members",
 "family.note": "Families are linked from the roll: a voter joins the member of the house whose name is their father's / husband's / mother's name, and voters naming the same father / husband / mother are joined. Check and correct by hand where needed.",
@@ -1929,5 +1929,15 @@
 "worker.thisBoothFirst": "Voters of booth {0} are shown first.",
 "worker.voterTaken": "{0} is already a worker.",
 "gr.pickVoter": "Complainant from the voter list",
-"gr.pickVoterHint": "Type a name or EPIC No. and tap the person: name, booth and address are filled from the voter list. Only if the person is not a voter here, type the name below."
+"gr.pickVoterHint": "Type a name or EPIC No. and tap the person: name, booth and address are filled from the voter list. Only if the person is not a voter here, type the name below.",
+"tools.voiceUnsupported": "This browser cannot turn speech into text. Use Google Chrome (Android or computer) or Safari (iPhone).",
+"tools.needsHttps": "Voice typing needs the https:// address of the site.",
+"tools.noSpeech": "Nothing was heard. Tap the microphone and speak straight away.",
+"tools.noMic": "No microphone found on this device.",
+"tools.voiceNetwork": "The speech service could not be reached. Check internet; some browsers (Brave, Firefox, the Android app) do not have it: use Google Chrome.",
+"settings.s.voice_names_lang": "Voice typing in search boxes",
+"settings.h.voice_names_lang": "Language of the names in your voter list. A name spoken into a search box is written in this language, so it matches the roll (English for rolls in English letters).",
+"settings.o.en-IN": "English letters",
+"settings.o.hi-IN": "Hindi (Devanagari)",
+"settings.o.pa-IN": "Punjabi (Gurmukhi)"
 }

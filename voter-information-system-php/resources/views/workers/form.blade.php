@@ -23,7 +23,7 @@
                 </div>
                 <div data-search class="@if($linked) d-none @endif">
                     <div class="input-group"><span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input id="voter-q" class="form-control" autocomplete="off" placeholder="{{ t('worker.searchPh') }}" maxlength="60" data-scan="input"></div>
+                        <input id="voter-q" class="form-control" autocomplete="off" placeholder="{{ t('worker.searchPh') }}" maxlength="60" data-scan="input" data-voice="names"></div>
                     <div class="list-group mt-1" data-results></div>
                     <div class="form-text">{{ t('worker.fromVoterListHint') }}@if($w->booth_no) {{ t('worker.thisBoothFirst', $w->booth_no) }}@endif</div>
                 </div>

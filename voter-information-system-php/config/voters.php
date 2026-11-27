@@ -108,6 +108,7 @@ return [
         // Smart tools (Admin > Settings > Smart tools); these only set the server default
         'scan' => filter_var(env('SCAN_ENABLED', true), FILTER_VALIDATE_BOOL),    // camera: voter slip barcode, voter card QR, printed EPIC number
         'voice' => filter_var(env('VOICE_ENABLED', false), FILTER_VALIDATE_BOOL), // microphone: speech to text (browser speech service, needs internet)
+        'voice_names' => 'en-IN',   // language of the voter names in the roll: speaking into a search box gives text in this language
     ],
 
     'planner' => [

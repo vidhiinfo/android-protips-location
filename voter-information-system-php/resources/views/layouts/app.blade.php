@@ -3,8 +3,8 @@
 <head>@include('layouts.head', ['title' => trim($__env->yieldContent('title'))])</head>
 @php($vtScan = (bool) config('voters.tools.scan'))
 @php($vtVoice = (bool) config('voters.tools.voice'))
-<body class="@yield('bodyClass')" @yield('bodyAttrs') data-vt-scan="{{ $vtScan ? 1 : 0 }}" data-vt-voice="{{ $vtVoice ? 1 : 0 }}"
-    @if($vtScan || $vtVoice) data-tools-i18n="{{ json_encode(collect(['scan', 'scanTitle', 'scanHelp', 'readNumber', 'reading', 'notRead', 'ocrFailed', 'noCamera', 'photo', 'close', 'found', 'speak', 'listening', 'voiceOffline', 'voiceError', 'micBlocked'])->mapWithKeys(fn ($k) => [$k => t('tools.' . $k)])->all(), JSON_UNESCAPED_UNICODE) }}" @endif>
+<body class="@yield('bodyClass')" @yield('bodyAttrs') data-vt-scan="{{ $vtScan ? 1 : 0 }}" data-vt-voice="{{ $vtVoice ? 1 : 0 }}" data-vt-names-lang="{{ config('voters.tools.voice_names', 'en-IN') }}"
+    @if($vtScan || $vtVoice) data-tools-i18n="{{ json_encode(collect(['scan', 'scanTitle', 'scanHelp', 'readNumber', 'reading', 'notRead', 'ocrFailed', 'noCamera', 'photo', 'close', 'found', 'speak', 'listening', 'voiceOffline', 'voiceError', 'micBlocked', 'voiceUnsupported', 'needsHttps', 'noSpeech', 'noMic', 'voiceNetwork'])->mapWithKeys(fn ($k) => [$k => t('tools.' . $k)])->all(), JSON_UNESCAPED_UNICODE) }}" @endif>
 @unless(trim($__env->yieldContent('bare')))
 <nav class="navbar navbar-expand-xl navbar-dark bg-primary mb-3 no-print">
     <div class="container-fluid">

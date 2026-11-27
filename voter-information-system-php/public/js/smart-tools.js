@@ -4,7 +4,8 @@
  *    new voter cards (built-in BarcodeDetector, Android Chrome) or the printed EPIC number (Tesseract OCR, served from
  *    this site, so it also works on iPhone and, once loaded, without internet). Nothing leaves the phone.
  *  - Voice: microphone button next to fields marked data-voice; speech to text in the screen language
- *    (browser speech service, needs internet).
+ *    (browser speech service, needs internet). data-voice="names" (search boxes) uses the language of the names
+ *    in the voter list instead (Admin > Settings), so a spoken name matches the roll spelling.
  * data-scan="submit" submits the form after a scan; data-scan="input" only fills the field (and fires "input").
  */
 (function () {
@@ -74,7 +75,7 @@
         });
       });
     });
-    if (VOICE && SpeechRec) root.querySelectorAll('input[data-voice]:not([data-voice-ready]), textarea[data-voice]:not([data-voice-ready])').forEach(function (el) {
+    if (VOICE) root.querySelectorAll('input[data-voice]:not([data-voice-ready]), textarea[data-voice]:not([data-voice-ready])').forEach(function (el) {
       el.setAttribute('data-voice-ready', '1');
       addButton(el, 'mic', t('speak', 'Speak'), 'vt-mic', function (b) { listen(el, b); });
     });
@@ -84,23 +85,44 @@
   var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   var LANGS = { en: 'en-IN', hi: 'hi-IN', pa: 'pa-IN', mr: 'mr-IN', gu: 'gu-IN', bn: 'bn-IN', ta: 'ta-IN', te: 'te-IN', ur: 'ur-IN' };
   var active = null;
-  function listen(el, btn) {
+  var NAMES_LANG = body.getAttribute('data-vt-names-lang') || 'en-IN';
+  var ERR = {
+    'not-allowed': ['micBlocked', 'Microphone is blocked: tap the lock icon next to the address and allow the microphone.'],
+    'service-not-allowed': ['voiceUnsupported', 'This browser cannot turn speech into text. Use Google Chrome (Android or computer) or Safari (iPhone).'],
+    'no-speech': ['noSpeech', 'Nothing was heard. Tap the microphone and speak straight away.'],
+    'audio-capture': ['noMic', 'No microphone found on this device.'],
+    'network': ['voiceNetwork', 'The speech service could not be reached. Check internet; some browsers (Brave, Firefox, the Android app) do not have it: use Google Chrome.']
+  };
+  function listen(el, btn, forceLang) {
     if (active) { active.stop(); return; }
+    if (!SpeechRec) { toast(t('voiceUnsupported', ERR['service-not-allowed'][1]), 'warning'); return; }
+    if (window.isSecureContext === false) { toast(t('needsHttps', 'Voice typing needs the https:// address of the site.'), 'warning'); return; }
     if (!navigator.onLine) { toast(t('voiceOffline', 'Voice typing needs internet.'), 'warning'); return; }
-    var r = new SpeechRec();
-    r.lang = LANGS[(document.documentElement.lang || 'en').slice(0, 2)] || 'en-IN';
-    r.interimResults = false; r.maxAlternatives = 1;
+    var r = new SpeechRec(), got = false, failed = false;
+    r.lang = forceLang || (el.getAttribute('data-voice') === 'names' ? NAMES_LANG : (LANGS[(document.documentElement.lang || 'en').slice(0, 2)] || 'en-IN'));
+    r.interimResults = false; r.maxAlternatives = 1; r.continuous = false;
     r.onstart = function () { active = r; btn.classList.add('btn-danger', 'text-white'); toast(t('listening', 'Listening… speak now'), 'info'); };
-    r.onerror = function (e) { toast(t('voiceError', 'Could not hear that. Try again.') + (e.error === 'not-allowed' ? ' (' + t('micBlocked', 'microphone blocked') + ')' : ''), 'warning'); };
-    r.onend = function () { active = null; btn.classList.remove('btn-danger', 'text-white'); };
+    r.onerror = function (e) {
+      failed = true;
+      if (e.error === 'aborted') return;
+      if (e.error === 'language-not-supported' && r.lang !== 'en-IN') { active = null; btn.classList.remove('btn-danger', 'text-white'); listen(el, btn, 'en-IN'); return; }
+      var m = ERR[e.error];
+      toast(m ? t(m[0], m[1]) : t('voiceError', 'Could not hear that. Try again.') + ' (' + e.error + ')', 'warning');
+    };
+    r.onend = function () {
+      active = null; btn.classList.remove('btn-danger', 'text-white');
+      if (!got && !failed) toast(t('noSpeech', ERR['no-speech'][1]), 'warning');
+    };
     r.onresult = function (e) {
+      got = true;
       var said = e.results[0][0].transcript.trim();
+      if (el.tagName !== 'TEXTAREA') said = said.replace(/[.,!?।]+$/, '');   // no full stop in a search box
       if (el.tagName === 'TEXTAREA' && el.value.trim()) el.value = el.value.replace(/\s*$/, ' ') + said;
       else el.value = said;
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.focus();
     };
-    try { r.start(); } catch (e) { active = null; }
+    try { r.start(); } catch (e) { active = null; toast(t('voiceError', 'Could not hear that. Try again.'), 'warning'); }
   }
 
   // ---------------------------------------------------------------- scanner
@@ -217,7 +239,7 @@
     var d = document.createElement('div');
     d.className = 'vt-toast alert alert-' + (kind || 'info') + ' py-2 px-3 small shadow';
     d.textContent = msg; body.appendChild(d);
-    setTimeout(function () { d.remove(); }, 2600);
+    setTimeout(function () { d.remove(); }, kind === 'warning' ? 7000 : 2600);   // reasons stay long enough to read
   }
 
   window.VisTools = { scan: openScanner, epicFrom: epicFrom };

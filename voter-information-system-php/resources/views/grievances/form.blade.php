@@ -15,7 +15,7 @@
                 <div class="me-auto"><span class="small">{{ t('gr.linkedVoter') }}:</span> <b data-picked-name></b> <span class="small" data-picked-info></span></div>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-unpick>{{ t('worker.change') }}</button></div>
             <div data-search><div class="input-group"><span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input id="voter-q" class="form-control" autocomplete="off" placeholder="{{ t('worker.searchPh') }}" maxlength="60" data-scan="input"></div>
+                <input id="voter-q" class="form-control" autocomplete="off" placeholder="{{ t('worker.searchPh') }}" maxlength="60" data-scan="input" data-voice="names"></div>
                 <div class="list-group mt-1" data-results></div><div class="form-text">{{ t('gr.pickVoterHint') }}</div></div>
         </div>
         @endif

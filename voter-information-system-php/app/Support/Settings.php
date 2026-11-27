@@ -36,6 +36,7 @@ class Settings
         'rep_photo'               => ['display', 'voters.branding.rep_photo', 'image', null],
         'scan_enabled'            => ['smart', 'voters.tools.scan', 'bool', null],
         'voice_enabled'           => ['smart', 'voters.tools.voice', 'bool', null],
+        'voice_names_lang'        => ['smart', 'voters.tools.voice_names', 'enum', ['en-IN', 'hi-IN', 'pa-IN']],
         'planner_enabled'         => ['planner', 'voters.planner.enabled', 'bool', null],
         'planner_our_party'       => ['planner', 'voters.planner.our_party', 'text', 20],
         'planner_safety_margin'   => ['planner', 'voters.planner.safety_margin', 'int', [0, 30]],
