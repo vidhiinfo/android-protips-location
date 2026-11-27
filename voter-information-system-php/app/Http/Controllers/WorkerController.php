@@ -18,7 +18,22 @@ class WorkerController extends Controller
 
     public function __construct(private VoterService $voters) {}
 
-    private function find(int $id): Worker
+    /** A voter of the user's own area, by EPIC No. */
+    private function voterByEpic(string $epic): ?Voter
+    {
+        $v = Voter::where('epic_no', strtoupper(trim($epic)))->first();
+        return $v && $this->user()->allows($v->assembly_no) && \App\Support\Area::fits($v) ? $v : null;
+    }
+
+    /** A voter's mobile, only when it is a valid 10-digit Indian number. */
+    private static function cleanMobile(?string $m): ?string
+    {
+        $m = preg_replace('/\D/', '', (string) $m);
+        if (strlen($m) === 12 && str_starts_with($m, '91')) $m = substr($m, 2);
+        return preg_match('/^[6-9][0-9]{9}$/', $m) ? $m : null;
+    }
+
+        private function find(int $id): Worker
     {
         $w = Worker::find($id);
         $ab = \App\Support\Area::current()['booths'] ?? [];
@@ -65,19 +80,63 @@ class WorkerController extends Controller
             'booths' => $this->voters->booths($a), 'boothNo' => $b, 'role' => $role, 'unassigned' => $unassigned]);
     }
 
+    /**
+     * Voters for the worker form's search box (JSON): EPIC No. or name, within the user's area and assembly;
+     * voters of the given booth first. At most 15.
+     */
+    public function voterSearch(Request $r)
+    {
+        abort_unless($this->user()->can('WORKER_MANAGE') || $this->user()->can('GRIEVANCE'), 403);
+        $q = trim((string) $r->query('q'));
+        if (mb_strlen($q) < 2) return response()->json([]);
+        $a = $this->user()->restrict($r->query('assemblyNo'));
+        $b = $r->query('boothNo') ? (int) $r->query('boothNo') : null;
+        $query = \App\Support\Area::voters()->when($a, fn ($x) => $x->where('assembly_no', $a))
+            ->where(fn ($x) => $x->where('deleted', false)->orWhereNull('deleted'));
+        if (preg_match('/^[A-Za-z]{2,3}\d{2,}$/', $q)) $query->where('epic_no', 'like', strtoupper($q) . '%');
+        else foreach (preg_split('/\s+/', $q) as $word) $query->where('name', 'like', '%' . addcslashes($word, '%_\\') . '%');
+        if ($b) $query->orderByRaw('case when booth_no = ? then 0 else 1 end', [$b]);
+        $taken = $r->query('for') !== 'grievance' && \Illuminate\Support\Facades\Schema::hasColumn('workers', 'voter_id') ? Worker::whereNotNull('voter_id')->pluck('voter_id')->flip() : collect();
+        $rows = $query->orderBy('booth_no')->orderBy('serial_no')->limit(15)
+            ->get(['id', 'epic_no', 'name', 'relation_type', 'relative_name', 'gender', 'age', 'assembly_no', 'booth_no', 'serial_no', 'house_no', 'mobile', 'address', 'village_ward', 'district', 'pincode', 'ward_no']);
+        return response()->json($rows->map(function ($row) use ($taken) {
+            $v = (new Voter)->forceFill((array) $row);
+            return ['id' => $v->id, 'epic' => $v->epic_no, 'name' => $v->name, 'relative' => $v->relationDisplay(), 'age' => $v->age, 'gender' => $v->genderLabel(),
+                'assembly' => $v->assembly_no, 'booth' => $v->booth_no, 'serial' => $v->serial_no, 'house' => $v->house_no,
+                'address' => trim($v->house_no . ' ' . $v->fullAddress()), 'mobile' => self::cleanMobile($v->mobile), 'taken' => isset($taken[$v->id])];
+        })->values());
+    }
+
     public function form(Request $r, ?int $id = null)
     {
         $w = $id ? $this->find($id) : new Worker(['assembly_no' => $this->user()->restrict($r->query('assemblyNo')) ?? array_key_first($this->voters->assemblies()),
-            'booth_no' => $r->query('boothNo'), 'role' => 'VOLUNTEER', 'active' => true]);
+            'booth_no' => $r->query('boothNo'), 'role' => in_array($r->query('role'), Worker::ROLES, true) ? $r->query('role') : 'VOLUNTEER', 'active' => true,
+            'mandal_id' => $r->query('mandal') ? (int) $r->query('mandal') : null]);
+        // "Make worker" on a voter's page: everything filled in from the voter list
+        $linked = $w->exists && $w->voter_id ? Voter::find($w->voter_id) : null;
+        if (!$w->exists && $r->query('epic') && ($v = $this->voterByEpic((string) $r->query('epic')))) {
+            $w->fill(['name' => $v->name, 'mobile' => self::cleanMobile($v->mobile), 'assembly_no' => $v->assembly_no, 'booth_no' => $v->booth_no]);
+            $linked = $v;
+        }
         $mandals = \App\Services\Org\OrganisationService::available()
             ? \App\Models\Mandal::where('active', true)->when($this->user()->scoped(), fn ($q) => $q->where('assembly_no', $this->user()->workAssembly()))->orderBy('assembly_no')->orderBy('name')->get()
             : collect();
         return view('workers.form', ['w' => $w, 'assemblies' => $this->voters->assemblies(), 'booths' => $this->voters->booths($w->assembly_no ?: null),
-            'usernames' => AppUser::orderBy('username')->pluck('username')->all(), 'mandals' => $mandals]);
+            'usernames' => AppUser::orderBy('username')->pluck('username')->all(), 'mandals' => $mandals, 'linked' => $linked]);
     }
 
     public function save(Request $r, ?int $id = null)
     {
+        // picked from the voter list by EPIC: the name always comes from the roll (no spelling mistakes); mobile and booth when left empty
+        $epic = strtoupper(trim((string) $r->input('epic_no')));
+        $voter = $epic !== '' ? $this->voterByEpic($epic) : null;
+        if ($epic !== '' && !$voter) return back()->withInput()->with('error', t('worker.epicNotFound', $epic));
+        if ($voter && Worker::where('voter_id', $voter->id)->where('id', '<>', $id ?? 0)->exists()) return back()->withInput()->with('error', t('worker.voterTaken', $voter->name));
+        if ($voter) {
+            $r->merge(['name' => $voter->name, 'mobile' => trim((string) $r->input('mobile')) ?: self::cleanMobile($voter->mobile),
+                'booth_no' => $r->input('booth_no') ?: $voter->booth_no]);
+            if ($r->input('role') !== 'LS_INCHARGE') $r->merge(['assembly_no' => $voter->assembly_no]);
+        }
         $data = $r->validate([
             'name' => ['required', 'max:120'], 'mobile' => ['nullable', 'regex:/^[6-9][0-9]{9}$/'], 'assembly_no' => ['required', 'integer', 'min:1'],
             'booth_no' => ['nullable', 'integer', 'min:1'], 'role' => ['required', 'in:' . implode(',', Worker::ROLES)], 'username' => ['nullable', 'max:50'],
@@ -96,12 +155,16 @@ class WorkerController extends Controller
         } else unset($data['mandal_id']);
         $data['active'] = $r->boolean('active');
         foreach (['mobile', 'booth_no', 'username', 'notes'] as $k) $data[$k] = $data[$k] ?? null;
+        if (\Illuminate\Support\Facades\Schema::hasColumn('workers', 'voter_id')) $data['voter_id'] = $voter?->id;
         if ($data['username'] && Worker::where('username', $data['username'])->where('id', '<>', $id ?? 0)->exists()) {
             return back()->withInput()->with('error', 'worker.userTaken');
         }
         $w = $id ? $this->find($id) : new Worker(['created_at' => now()]);
         $w->fill($data)->save();
         $this->audit()->log($id ? 'UPDATE' : 'CREATE', 'WORKER', $w->id, $w->name);
+        // added from a gap on the organisation page: go back there
+        $back = (string) $r->input('return_to');
+        if (preg_match('#^/organisation(/\d+)?$#', $back)) return redirect($back)->with('success', 'common.saved');
         return redirect('/workers/' . $w->id)->with('success', 'common.saved');
     }
 

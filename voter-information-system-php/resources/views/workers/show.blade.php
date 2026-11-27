@@ -9,7 +9,8 @@
         <a class="btn btn-sm btn-outline-primary" href="{{ url('/workers/'.$w->id.'/edit') }}"><i class="bi bi-pencil"></i> {{ t('common.edit') }}</a>
         <form method="post" action="{{ url('/workers/'.$w->id.'/delete') }}" data-confirm="{{ t('common.confirmDelete') }}">@csrf<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
     </div>
-    <p class="text-muted small">{{ t('col.assemblyNo') }} {{ $w->assembly_no }}@if($w->booth_no) · {{ t('col.boothNo') }} {{ $w->booth_no }}@endif @if($w->mobile) · <a href="tel:{{ $w->mobile }}">{{ $w->mobile }}</a>@endif @if($w->username) · {{ t('worker.login') }}: <b>{{ $w->username }}</b>@endif</p>
+    <p class="text-muted small">{{ t('col.assemblyNo') }} {{ $w->assembly_no }}@if($w->booth_no) · {{ t('col.boothNo') }} {{ $w->booth_no }}@endif @if($w->mobile) · <a href="tel:{{ $w->mobile }}">{{ $w->mobile }}</a>@endif @if($w->username) · {{ t('worker.login') }}: <b>{{ $w->username }}</b>@endif
+        @if($w->voter_id && ($wv = $w->voter)) · <i class="bi bi-person-vcard"></i> <a href="{{ url('/voters/' . $wv->id) }}">{{ t('worker.ownVoter') }}: {{ $wv->epic_no }}</a>@endif</p>
     <div class="row g-2 mb-3">
         @foreach([['dash.voters', $s['n']], ['an.households', $s['houses'] ?? 0], ['worker.surveyed', $s['surveyed'] . ($s['n'] ? ' (' . round(100 * $s['surveyed'] / $s['n']) . '%)' : '')], ['an.support', $s['support']], ['worker.voted', $s['voted']]] as [$k, $val])
         <div class="col-6 col-md"><div class="stat"><div class="small text-muted">{{ t($k) }}</div><div class="num">{{ $val }}</div></div></div>

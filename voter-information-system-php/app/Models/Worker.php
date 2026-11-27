@@ -18,6 +18,8 @@ class Worker extends Model
 
     public function voters() { return $this->hasMany(Voter::class); }
     public function mandal() { return $this->belongsTo(Mandal::class); }
+    /** The worker's own voter record (when picked from the voter list). */
+    public function voter() { return $this->belongsTo(Voter::class, 'voter_id'); }
     public function level(): int { return self::LEVEL[$this->role] ?? 5; }
     public function label(): string { return $this->name . ($this->booth_no ? ' (' . t('col.boothNo') . ' ' . $this->booth_no . ')' : ''); }
 

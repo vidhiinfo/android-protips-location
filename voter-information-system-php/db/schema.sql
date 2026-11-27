@@ -173,6 +173,8 @@ CREATE TABLE IF NOT EXISTS workers (
     notes       VARCHAR(300),
     created_at  DATETIME,
     mandal_id   BIGINT                COMMENT 'mandal of a mandal in-charge (mandals.id)',
+    voter_id    BIGINT                COMMENT 'voter record of this worker, when picked from the voter list',
+    INDEX idx_worker_voter (voter_id),
     INDEX idx_worker_booth (assembly_no, booth_no),
     INDEX idx_worker_user (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

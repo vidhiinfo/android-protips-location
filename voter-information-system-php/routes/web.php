@@ -48,6 +48,8 @@ Route::get('/mobile-app', fn () => view('app-install', [
 ]));
 
 Route::middleware('login.required')->group(function () {
+    // pick a person from the voter list (worker and grievance forms) instead of typing the name
+    Route::get('/voters/pick', [\App\Http\Controllers\WorkerController::class, 'voterSearch'])->middleware('throttle:120,1');
     Route::get('/', [AuthController::class, 'home']);
 
     Route::middleware('perm:DASHBOARD_VIEW')->group(function () {

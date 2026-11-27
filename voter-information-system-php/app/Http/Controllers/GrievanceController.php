@@ -92,7 +92,9 @@ class GrievanceController extends Controller
         if ($d['worker_id'] && !Worker::where('id', $d['worker_id'])->where('assembly_no', $d['assembly_no'])->exists()) $d['worker_id'] = null;
         $g = $id ? $this->find($id) : new Grievance(['created_by' => $this->user()->username()]);
         if ($id) unset($d['voter_id']);
-        elseif ($d['voter_id'] && ($v = Voter::find($d['voter_id'])) && $this->user()->allowsVoter($v)) $d['ward_no'] = $v->ward_no;
+        elseif ($d['voter_id'] && ($v = Voter::find($d['voter_id'])) && $this->user()->allowsVoter($v)) {
+            $d['ward_no'] = $v->ward_no; $d['name'] = $v->name;   // the roll spelling, not a typed one
+        }
         else $d['voter_id'] = null;
         $wasOpen = !$g->exists || $g->isOpen();
         $oldStatus = $g->status;

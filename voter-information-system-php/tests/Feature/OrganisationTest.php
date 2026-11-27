@@ -103,4 +103,60 @@ class OrganisationTest extends TestCase
         config(['voters.branding.level' => 'assembly']);
         $this->get('/dashboard?assemblyNo=45')->assertDontSee(url('/loksabha') . '"', false);
     }
+
+    public function test_worker_picked_from_the_voter_list(): void
+    {
+        $this->login();
+        $v = Voter::where('assembly_no', 45)->whereNotNull('booth_no')->orderBy('id')->first();
+        $v->update(['mobile' => '9876501234']);
+        // "Make worker" on the voter's page opens a filled-in form
+        $this->get('/voters/' . $v->id)->assertOk()->assertSee(t('worker.makeWorker'));
+        $this->get('/workers/new?epic=' . $v->epic_no)->assertOk()->assertSee($v->name)->assertSee('9876501234')->assertSee(t('worker.linkedTo'));
+        // saving with only the EPIC takes name, mobile, assembly and booth from the roll
+        $this->post('/workers', ['epic_no' => strtolower($v->epic_no), 'name' => '', 'assembly_no' => 46, 'role' => 'BOOTH_PRESIDENT', 'active' => 1])->assertRedirect();
+        $w = Worker::where('voter_id', $v->id)->firstOrFail();
+        $this->assertSame([$v->name, '9876501234', 45, (int) $v->booth_no], [$w->name, $w->mobile, (int) $w->assembly_no, (int) $w->booth_no]);
+        $this->get('/voters/' . $v->id)->assertSee(t('worker.role.BOOTH_PRESIDENT'))->assertDontSee(t('worker.makeWorker'));
+        $this->get('/workers/' . $w->id)->assertSee($v->epic_no);
+        // the same voter cannot be two workers; an unknown EPIC is refused
+        $this->post('/workers', ['epic_no' => $v->epic_no, 'assembly_no' => 45, 'role' => 'VOLUNTEER', 'active' => 1])->assertSessionHas('error', t('worker.voterTaken', $v->name));
+        $this->post('/workers', ['epic_no' => 'ZZZ9999999', 'assembly_no' => 45, 'role' => 'VOLUNTEER', 'active' => 1])->assertSessionHas('error', t('worker.epicNotFound', 'ZZZ9999999'));
+        // clearing the EPIC unlinks, the worker stays
+        $this->post('/workers/' . $w->id, ['epic_no' => '', 'name' => $w->name, 'assembly_no' => 45, 'booth_no' => $w->booth_no, 'role' => 'BOOTH_PRESIDENT', 'active' => 1])->assertRedirect();
+        $this->assertNull($w->fresh()->voter_id);
+    }
+
+    public function test_voter_search_and_add_from_organisation_gaps(): void
+    {
+        $this->login();
+        $v = Voter::where('assembly_no', 45)->whereNotNull('booth_no')->orderBy('id')->first();
+        $word = explode(' ', $v->name)[0];
+        // search by EPIC and by name; only the chosen assembly
+        $this->getJson('/voters/pick?q=' . $v->epic_no . '&assemblyNo=45')->assertOk()->assertJsonFragment(['epic' => $v->epic_no, 'name' => $v->name, 'taken' => false]);
+        $res = $this->getJson('/voters/pick?q=' . urlencode($word) . '&assemblyNo=45&boothNo=' . $v->booth_no)->assertOk()->json();
+        $this->assertNotEmpty($res);
+        $this->assertTrue(collect($res)->every(fn ($x) => $x['assembly'] == 45 && stripos($x['name'], $word) !== false));
+        $this->assertEquals($v->booth_no, $res[0]['booth'], 'the booth being filled comes first');
+        $this->getJson('/voters/pick?q=a')->assertExactJson([]);
+        // "+ Add" on a booth without a president opens the form with role and booth chosen and returns to the page
+        $this->get('/organisation/45')->assertSee('role=BOOTH_PRESIDENT&boothNo=', false);
+        $this->get('/workers/new?assemblyNo=45&role=BOOTH_PRESIDENT&boothNo=' . $v->booth_no, ['referer' => url('/organisation/45')])
+            ->assertOk()->assertSee('value="BOOTH_PRESIDENT" selected', false)->assertSee('name="return_to" value="/organisation/45"', false);
+        // a typed name never overrides the roll name once a voter is picked
+        $this->post('/workers', ['epic_no' => $v->epic_no, 'name' => 'Misspelt Name', 'assembly_no' => 45, 'booth_no' => $v->booth_no, 'role' => 'BOOTH_PRESIDENT',
+            'active' => 1, 'return_to' => '/organisation/45'])->assertRedirect(url('/organisation/45'));
+        $this->assertSame($v->name, Worker::where('voter_id', $v->id)->value('name'));
+        $this->getJson('/voters/pick?q=' . $v->epic_no)->assertJsonFragment(['taken' => true]);
+    }
+
+    public function test_grievance_complainant_picked_from_the_voter_list(): void
+    {
+        $this->login();
+        $v = Voter::where('assembly_no', 45)->whereNotNull('booth_no')->orderBy('id')->first();
+        $this->get('/grievances/new?assemblyNo=45')->assertOk()->assertSee(t('gr.pickVoter'))->assertSee('js/worker-pick.js', false);
+        $this->getJson('/voters/pick?for=grievance&q=' . $v->epic_no)->assertOk()->assertJsonFragment(['id' => $v->id, 'taken' => false]);
+        $this->post('/grievances', ['voter_id' => $v->id, 'name' => 'typo name', 'assembly_no' => 45, 'booth_no' => $v->booth_no, 'category' => \App\Models\Grievance::CATEGORIES[0],
+            'subject' => 'Water', 'priority' => 'NORMAL', 'status' => 'OPEN'])->assertRedirect();
+        $this->assertSame($v->name, \App\Models\Grievance::where('voter_id', $v->id)->latest('id')->value('name'));
+    }
 }

@@ -15,8 +15,7 @@
     <div class="card mb-3"><div class="card-body py-2">
         <span class="fw-semibold">{{ t('worker.role.AC_INCHARGE') }}:</span>
         @forelse($data['incharge'] as $h)<a href="{{ url('/workers/' . $h->id) }}" class="ms-1">{{ $h->name }}</a>@if($h->mobile) <span class="small text-muted">{{ $h->mobile }}</span>@endif{!! $accessBtn($h) !!}{{ !$loop->last ? ',' : '' }}
-        @empty<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span>
-            <a class="small ms-2" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}">{{ t('worker.add') }}</a>@endforelse
+        @empty<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=AC_INCHARGE"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse
     </div></div>
 
     {{-- mandals --}}
@@ -28,7 +27,7 @@
             <tbody>@forelse($data['mandals'] as $m)
                 <tr>
                     <td class="fw-semibold">{{ $m['mandal']->name }}</td>
-                    <td>@forelse($m['head'] as $h)<a href="{{ url('/workers/' . $h->id) }}">{{ $h->name }}</a>{!! $accessBtn($h) !!}{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span>@endforelse</td>
+                    <td>@forelse($m['head'] as $h)<a href="{{ url('/workers/' . $h->id) }}">{{ $h->name }}</a>{!! $accessBtn($h) !!}{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=MANDAL_INCHARGE&mandal={{ $m['mandal']->id }}"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse</td>
                     <td class="small">{{ implode(', ', $m['booths']) ?: '-' }}</td><td class="text-end">{{ number_format($m['voters']) }}</td>
                     <td class="text-end">@if($m['noPresident'])<span class="text-danger">{{ $m['noPresident'] }}</span>@else 0 @endif</td>
                     <td class="text-end">{{ $m['tasks']['total'] ? $m['tasks']['done'] . '/' . $m['tasks']['total'] : '-' }}</td>
@@ -81,9 +80,9 @@
                 <tr>
                     <td><a href="{{ url('/workers') }}?assemblyNo={{ $a }}&boothNo={{ $b['booth'] }}">{{ $b['booth'] }}</a></td>
                     <td class="small">{{ $b['mandal']?->name ?? '-' }}</td>
-                    <td>@forelse($b['president'] as $p)<a href="{{ url('/workers/' . $p->id) }}">{{ $p->name }}</a>{!! $accessBtn($p) !!}{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span>@endforelse</td>
-                    <td class="text-end">{{ $b['agents']->count() }}</td>
-                    <td class="text-end">@if($b['panna']->isEmpty())<span class="text-danger">0</span>@else{{ $b['panna']->count() }}@endif</td>
+                    <td>@forelse($b['president'] as $p)<a href="{{ url('/workers/' . $p->id) }}">{{ $p->name }}</a>{!! $accessBtn($p) !!}{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=BOOTH_PRESIDENT&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse</td>
+                    <td class="text-end">{{ $b['agents']->count() }}<a class="small ms-1" title="{{ t('worker.role.BOOTH_AGENT') }} text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=BOOTH_AGENT&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i></a></td>
+                    <td class="text-end">@if($b['panna']->isEmpty())<span class="text-danger">0</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $a }}&role=PANNA_PRAMUKH&boothNo={{ $b['booth'] }}"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@else{{ $b['panna']->count() }}@endif</td>
                     <td class="text-end">{{ number_format($b['voters']) }}</td>
                     <td class="text-end">{{ $b['voters'] ? round(100 * $b['pannaVoters'] / $b['voters']) . '%' : '-' }}</td>
                 </tr>

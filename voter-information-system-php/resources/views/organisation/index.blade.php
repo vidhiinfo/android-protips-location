@@ -11,7 +11,7 @@
     <div class="card mb-3"><div class="card-body py-2">
         <span class="fw-semibold"><i class="bi bi-bank2"></i> {{ t('worker.role.LS_INCHARGE') }}:</span>
         @forelse($heads as $h)<a href="{{ url('/workers/' . $h->id) }}" class="ms-1">{{ $h->name }}</a>@if($h->mobile) <span class="small text-muted">{{ $h->mobile }}</span>@endif{{ !$loop->last ? ',' : '' }}
-        @empty<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span>@endforelse
+        @empty<span class="text-danger small ms-1"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?role=LS_INCHARGE"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse
     </div></div>
     @endunless
     <div class="card"><div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0">
@@ -21,7 +21,7 @@
         <tbody>@foreach($assemblies as $no => $name) @php($s = $summary[$no])
             <tr>
                 <td><a class="fw-semibold" href="{{ url('/organisation/' . $no) }}">{{ $no }} - {{ $name }}</a></td>
-                <td>@forelse($s['incharge'] as $h)<a href="{{ url('/workers/' . $h->id) }}">{{ $h->name }}</a>{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span>@endforelse</td>
+                <td>@forelse($s['incharge'] as $h)<a href="{{ url('/workers/' . $h->id) }}">{{ $h->name }}</a>{{ !$loop->last ? ', ' : '' }}@empty<span class="text-danger small"><i class="bi bi-exclamation-circle"></i> {{ t('org.missing') }}</span><a class="small ms-1 text-nowrap" href="{{ url('/workers/new') }}?assemblyNo={{ $no }}&role=AC_INCHARGE"><i class="bi bi-plus-circle"></i> {{ t('org.addHere') }}</a>@endforelse</td>
                 <td class="text-end">{{ $s['mandals'] }}</td><td class="text-end">{{ $s['booths'] }}</td>
                 <td class="text-end">{{ $s['withPresident'] }}</td><td class="text-end">{{ $s['withPanna'] }}</td>
                 <td class="text-end">{{ $s['voters'] ? round(100 * $s['pannaVoters'] / $s['voters'], 1) . '%' : '-' }}</td><td class="text-end">{{ $s['workers'] }}</td>
