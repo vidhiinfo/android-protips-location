@@ -118,6 +118,27 @@
             <span class="badge text-bg-light me-2 mb-2 mb-xl-0" title="{{ t('login.assembly') }}"><i class="bi bi-geo-alt"></i>
                 {{ $me->scoped() ? $me->workAssembly() . ' - ' . $me->workAssemblyName() : t('login.allAssemblies') }}@if($areaLabel = \App\Support\Area::label(\App\Support\Area::current())) · {{ $areaLabel }}@endif</span>
             @include('partials.lang', ['cls' => 'w-auto me-2 mb-2 mb-xl-0'])
+            @if(\App\Services\Notify\Notifier::enabled())
+            @php($notifier = app(\App\Services\Notify\Notifier::class))
+            @php($unread = $notifier->unread((string) $me->username()))
+            <div class="dropdown me-2 mb-2 mb-xl-0" data-notif data-count-url="{{ url('/notifications/count') }}">
+                <a class="btn btn-sm btn-outline-light position-relative" href="#" data-bs-toggle="dropdown" title="{{ t('notif.title') }}" aria-label="{{ t('notif.title') }}">
+                    <i class="bi bi-bell{{ $unread ? '-fill' : '' }}"></i><span class="badge rounded-pill text-bg-danger ms-1 @if(!$unread) d-none @endif" data-notif-badge>{{ $unread > 99 ? '99+' : $unread }}</span></a>
+                <div class="dropdown-menu dropdown-menu-end p-0 notif-menu">
+                    <div class="d-flex align-items-center px-3 py-2 border-bottom"><b class="me-auto">{{ t('notif.title') }}</b>
+                        @if($unread)<form method="post" action="{{ url('/notifications/read-all') }}">@csrf<button class="btn btn-link btn-sm p-0">{{ t('notif.markAll') }}</button></form>@endif</div>
+                    @forelse($notifier->latest((string) $me->username()) as $nt)
+                        <a class="dropdown-item notif-item @if(!$nt->read_at) unread @endif" href="{{ url('/notifications/' . $nt->id) }}">
+                            <div class="small fw-semibold text-wrap"><i class="bi bi-{{ ['ANNOUNCE' => 'megaphone', 'TASK' => 'list-check', 'GRIEVANCE' => 'chat-left-text', 'ESCALATION' => 'exclamation-triangle'][$nt->kind] ?? 'bell' }}"></i> {{ $nt->title }}</div>
+                            @if($nt->body)<div class="small text-muted text-wrap">{{ \Illuminate\Support\Str::limit($nt->body, 110) }}</div>@endif
+                            <div class="text-muted" style="font-size:.75rem">{{ \Carbon\Carbon::parse($nt->created_at)->format('d-m-Y H:i') }}@if($nt->created_by && $nt->created_by !== 'system') · {{ $nt->created_by }}@endif</div>
+                        </a>
+                    @empty<div class="px-3 py-3 small text-muted">{{ t('notif.none') }}</div>@endforelse
+                    <div class="d-flex border-top"><a class="dropdown-item text-center small py-2" href="{{ url('/notifications') }}">{{ t('notif.all') }}</a>
+                        @if(can('WORKER_MANAGE'))<a class="dropdown-item text-center small py-2 border-start" href="{{ url('/notifications/send') }}"><i class="bi bi-megaphone"></i> {{ t('notif.send') }}</a>@endif</div>
+                </div>
+            </div>
+            @endif
             <div class="dropdown">
                 @php($dueTasks = app(\App\Services\Workers\TaskService::class)->dueFor($me->username()))
                 <a class="btn btn-sm btn-outline-light dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i> {{ $me->username() }}@if($dueTasks) <span class="badge rounded-pill text-bg-danger" title="{{ t('task.dueBadge') }}">{{ $dueTasks }}</span>@endif</a>
@@ -143,6 +164,7 @@
 @stack('modals')
 <script src="{{ asset('vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ versioned_asset('js/app.js') }}"></script>
+<script src="{{ versioned_asset('js/notify.js') }}"></script>
 @if($vtScan || $vtVoice)<script src="{{ versioned_asset('js/smart-tools.js') }}"></script>@endif
 @stack('scripts')
 </body>

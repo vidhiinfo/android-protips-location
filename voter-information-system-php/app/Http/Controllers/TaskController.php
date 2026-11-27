@@ -70,6 +70,10 @@ class TaskController extends Controller
         } else {
             $id = DB::table('worker_tasks')->insertGetId($row + ['status' => 'OPEN', 'created_by' => $this->user()->username(), 'created_at' => now()]);
             $this->audit()->log('CREATE', 'TASK', $id, $row['title'] . ($w ? ' -> ' . $w->name : ''));
+            if ($row['username'] && $row['username'] !== $this->user()->username()) {
+                app(\App\Services\Notify\Notifier::class)->send([$row['username']], 'TASK', t('notif.newTask', $row['title']),
+                    trim(($row['due_date'] ? t('task.due') . ': ' . $row['due_date'] . '. ' : '') . ($row['notes'] ?? '')) ?: null, '/my/tasks', $this->user()->username());
+            }
         }
         return redirect('/workers/tasks?assemblyNo=' . $a)->with('success', t('task.saved'));
     }

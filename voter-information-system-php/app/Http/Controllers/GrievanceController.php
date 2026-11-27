@@ -97,6 +97,7 @@ class GrievanceController extends Controller
         }
         else $d['voter_id'] = null;
         $wasOpen = !$g->exists || $g->isOpen();
+        $oldWorker = $g->worker_id;
         $oldStatus = $g->status;
         $due = $d['due_date'] ?? null; unset($d['due_date']);
         $g->fill($d);
@@ -111,6 +112,10 @@ class GrievanceController extends Controller
         $g->save();
         if ($id && $oldStatus !== $g->status) $this->svc->note($g->id, 'STATUS', t('gr.status.' . $g->status), $this->user()->username());
         if (!$id) $this->svc->note($g->id, 'STATUS', t('grv.logged'), $this->user()->username());
+        if ($g->worker_id && (int) $g->worker_id !== (int) $oldWorker && $g->isOpen()) {   // given to a worker: tell their login
+            app(\App\Services\Notify\Notifier::class)->toWorker((int) $g->worker_id, 'GRIEVANCE', t('notif.grievance', $g->id, $g->subject),
+                trim($g->name . ($g->due_at ? ' · ' . t('grv.dueDate') . ': ' . $g->due_at->format('d-m-Y') : '')), '/grievances/' . $g->id, $this->user()->username());
+        }
         $this->audit()->log($id ? 'UPDATE' : 'CREATE', 'GRIEVANCE', $g->id, $g->status . ' ' . $g->category . ': ' . $g->subject);
         return redirect('/grievances/' . $g->id)->with('success', 'common.saved');
     }

@@ -152,6 +152,9 @@ a.house-link:hover { border-bottom-style: solid; }
 /* Mobile app (Capacitor): no browser printing inside the app (use PDF), no "install app" links */
 .native-app [data-print], .native-app a[href*="print=1"], .native-app a[href*="autoprint=1"], .native-app .native-hide { display: none !important; }
 html:not(.native-app) .native-only { display: none !important; }
+.notif-menu { width: min(360px, 92vw); max-height: 70vh; overflow-y: auto; }
+.notif-item { white-space: normal; border-bottom: 1px solid var(--bs-border-color-translucent); padding-top: .5rem; padding-bottom: .5rem; }
+.notif-item.unread { background: var(--bs-primary-bg-subtle); }
 .native-app body { padding-bottom: env(safe-area-inset-bottom); }
 #native-busy { position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 3000; display: none; align-items: center; justify-content: center; }
 

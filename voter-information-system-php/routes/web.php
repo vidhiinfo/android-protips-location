@@ -54,6 +54,14 @@ Route::get('/mobile-app', fn () => view('app-install', [
 ]));
 
 Route::middleware('login.required')->group(function () {
+    // in-app notifications (bell); announcements need worker management
+    $nc = \App\Http\Controllers\NotificationController::class;
+    Route::get('/notifications/send', [$nc, 'sendForm'])->middleware('perm:WORKER_MANAGE');
+    Route::post('/notifications/send', [$nc, 'send'])->middleware(['perm:WORKER_MANAGE', 'throttle:20,1']);
+    Route::get('/notifications', [$nc, 'index']);
+    Route::get('/notifications/count', [$nc, 'count'])->middleware('throttle:120,1');
+    Route::post('/notifications/read-all', [$nc, 'readAll']);
+    Route::get('/notifications/{id}', [$nc, 'open'])->whereNumber('id');
     // pick a person from the voter list (worker and grievance forms) instead of typing the name
     Route::get('/voters/pick', [\App\Http\Controllers\WorkerController::class, 'voterSearch'])->middleware('throttle:120,1');
     Route::get('/', [AuthController::class, 'home']);

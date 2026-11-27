@@ -102,6 +102,8 @@ class OrganisationController extends Controller
             'booth_no' => $x->booth_no, 'target' => $d['target'] ?? null, 'due_date' => $d['due_date'] ?? null, 'status' => 'OPEN',
             'notes' => t('org.fromLeader', $w->name), 'created_by' => $this->user()->username(), 'created_at' => $now];
         foreach (array_chunk($rows, 200) as $chunk) DB::table('worker_tasks')->insert($chunk);
+        app(\App\Services\Notify\Notifier::class)->send(array_column($rows, 'username'), 'TASK', t('notif.newTask', trim($d['title'])),
+            t('org.fromLeader', $w->name) . (!empty($d['due_date']) ? ' · ' . t('task.due') . ': ' . $d['due_date'] : ''), '/my/tasks', $this->user()->username());
         $this->audit()->log('CREATE', 'TASK', null, "team task '{$d['title']}' for " . count($rows) . " people under {$w->name}");
         return back()->with('success', t('org.teamTaskDone', count($rows)));
     }

@@ -74,6 +74,8 @@ class GrievanceService
             $to = $sla[$g->category][$level === 2 ? 'escalate_to2' : 'escalate_to'] ?? null;
             $this->note($g->id, 'ESCALATED', t('grv.escalatedNote', $level, $g->due_at->format('d-m-Y')) . ($to ? ' → ' . $to : ''), 'system');
             if ($to) $this->alert($to, $g, $level);
+            app(\App\Services\Notify\Notifier::class)->send(array_filter([$to, $g->worker_id ? \App\Models\Worker::where('id', $g->worker_id)->value('username') : null]),
+                'ESCALATION', t('notif.escalated', $g->id, $g->subject), t('grv.escalatedNote', $level, $g->due_at->format('d-m-Y')), '/grievances/' . $g->id, 'system');
             $n++;
         }
         return $n;
