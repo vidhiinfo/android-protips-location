@@ -12,7 +12,7 @@ class BrandingController extends Controller
 {
     public function __invoke(string $type)
     {
-        $path = setting($type === 'leader' ? 'leader_photo_path' : 'logo_path');
+        $path = setting(['leader' => 'leader_photo_path', 'login-bg' => 'login_bg_path'][$type] ?? 'logo_path');
         $disk = Storage::disk('public');
         abort_unless($path && $disk->exists($path), 404);
 

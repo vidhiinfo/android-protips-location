@@ -80,6 +80,8 @@ class SettingsController extends Controller implements HasMiddleware
             'leader_name' => 'nullable|string|max:150',
             'leader_designation' => 'nullable|string|max:600',
             'leader_photo' => 'nullable|image|max:5120',
+            'login_tagline' => 'nullable|string|max:200',
+            'login_bg' => 'nullable|image|max:8192',
             'biodata_prefix' => 'required|alpha_dash|max:10',
             'biodata_max_file_mb' => 'required|integer|min:1|max:50',
             'biodata_required_fields' => 'nullable|array',
@@ -100,6 +102,17 @@ class SettingsController extends Controller implements HasMiddleware
             Setting::put('leader_photo_path', null);
         }
         unset($data['leader_photo']);
+        if ($request->hasFile('login_bg')) {
+            $old = setting('login_bg_path');
+            Setting::put('login_bg_path', PhotoService::store($request->file('login_bg'), 'branding', 'public', 1920));
+            if ($old) {
+                Storage::disk('public')->delete($old);
+            }
+        } elseif ($request->boolean('remove_login_bg')) {
+            Storage::disk('public')->delete((string) setting('login_bg_path'));
+            Setting::put('login_bg_path', null);
+        }
+        unset($data['login_bg']);
         $data['leader_designation'] = trim(preg_replace("/\r\n?/", "\n", (string) ($data['leader_designation'] ?? '')));
 
         foreach (['require_consent', 'state_entries_need_approval', 'duplicate_check_mobile'] as $flag) {

@@ -52,6 +52,12 @@
                     <label class="label">Designation — one per line</label>
                     <textarea name="leader_designation" rows="3" class="input" placeholder="सांसद (राज्यसभा)&#10;राष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा">{{ old('leader_designation', setting('leader_designation')) }}</textarea>
                 </div>
+                <div><label class="label">Slogan / tagline (optional, shown under the designation)</label><input name="login_tagline" value="{{ old('login_tagline', setting('login_tagline')) }}" class="input"></div>
+                <div class="flex flex-wrap items-center gap-3">
+                    @if (setting('login_bg_path'))<img src="{{ branding_image_url('login-bg') }}" alt="" class="h-14 w-24 rounded-md object-cover ring-1 ring-slate-200">@endif
+                    <div><label class="label">Login background photo (optional, e.g. an event photo — wide image)</label><input type="file" name="login_bg" accept="image/*" class="input"></div>
+                    @if (setting('login_bg_path'))<label class="flex items-center gap-1 pt-5 text-sm"><input type="checkbox" name="remove_login_bg" value="1"> Remove</label>@endif
+                </div>
                 <label class="flex items-center gap-2 text-sm"><input type="hidden" name="leader_on_login" value="0"><input type="checkbox" name="leader_on_login" value="1" @checked(setting('leader_on_login'))> Show photo, name and designation on the login page</label>
             </div>
         </div>

@@ -147,4 +147,19 @@ class ConfigurationTest extends OfficeTestCase
             ->assertOk()->assertJsonPath('user.branding.leader_name', 'श्री अमरपाल मौर्य')
             ->assertJsonCount(2, 'user.branding.leader_designations');
     }
+
+    public function test_login_tagline_and_background_photo(): void
+    {
+        Storage::fake('public');
+        $this->actingAs($this->admin())->post('/settings/general', $this->generalPayload([
+            'leader_name' => 'श्री अमरपाल मौर्य', 'leader_on_login' => '1', 'login_tagline' => 'Test slogan',
+            'login_bg' => UploadedFile::fake()->image('bg.jpg', 2400, 1400),
+        ]))->assertSessionHasNoErrors();
+        [$w] = getimagesizefromstring(Storage::disk('public')->get(setting('login_bg_path')));
+        $this->assertLessThanOrEqual(1920, $w);
+
+        auth()->logout();
+        $this->get('/login')->assertOk()->assertSee('Test slogan')->assertSee(route('branding.image', 'login-bg'), false);
+        $this->get(route('branding.image', 'login-bg'))->assertOk();
+    }
 }

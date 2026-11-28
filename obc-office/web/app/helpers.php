@@ -65,7 +65,7 @@ if (! function_exists('branding_image_url')) {
     /** Public URL of an uploaded branding image ("logo" or "leader"), or null. Works without `php artisan storage:link`. */
     function branding_image_url(string $type): ?string
     {
-        $path = setting($type === 'leader' ? 'leader_photo_path' : 'logo_path');
+        $path = setting(['leader' => 'leader_photo_path', 'login-bg' => 'login_bg_path'][$type] ?? 'logo_path');
 
         return $path ? route('branding.image', $type).'?v='.substr(md5((string) $path), 0, 8) : null;
     }

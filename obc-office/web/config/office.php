@@ -52,6 +52,8 @@ return [
         'leader_designation' => "सांसद (राज्यसभा)\nराष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा",
         'leader_photo_path' => null,
         'leader_on_login' => true,
+        'login_tagline' => '',          // optional line under the designations, e.g. a slogan
+        'login_bg_path' => null,        // optional background photo for the login page's left side
 
         // Messages ({name}, {designation}, {signature}, {org} are replaced)
         'greeting_signature' => 'National President, OBC Morcha',

@@ -23,7 +23,7 @@ use App\Http\Controllers\VisitorController;
 use Illuminate\Support\Facades\Route;
 
 // Logo / leader photo (public: used on the login page)
-Route::get('/branding/{type}', BrandingController::class)->whereIn('type', ['logo', 'leader'])->name('branding.image');
+Route::get('/branding/{type}', BrandingController::class)->whereIn('type', ['logo', 'leader', 'login-bg'])->name('branding.image');
 
 // Mobile app: public install page + direct APK link (can be switched off in Administration → Mobile App)
 Route::get('/app', [MobileAppController::class, 'publicPage'])->name('app.public');
