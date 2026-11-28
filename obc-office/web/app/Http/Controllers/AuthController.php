@@ -26,7 +26,14 @@ class AuthController extends Controller
         }
 
         $field = filter_var($data['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        if (! Auth::attempt([$field => $data['username'], 'password' => $data['password'], 'active' => true], $request->boolean('remember'))) {
+        try {
+            $ok = Auth::attempt([$field => $data['username'], 'password' => $data['password'], 'active' => true], $request->boolean('remember'));
+        } catch (\RuntimeException $e) {
+            // The stored password is not a Laravel (bcrypt) hash, e.g. it was edited directly in phpMyAdmin.
+            report($e);
+            throw ValidationException::withMessages(['username' => 'This account\'s password must be reset by the administrator (it was changed outside the portal).']);
+        }
+        if (! $ok) {
             RateLimiter::hit($key, 300);
             throw ValidationException::withMessages(['username' => 'Invalid username or password.']);
         }

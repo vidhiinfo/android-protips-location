@@ -20,7 +20,13 @@ class AuthController extends Controller
         ]);
         $user = User::where('username', $data['username'])->orWhere('email', $data['username'])->first();
 
-        if (! $user || ! $user->active || ! Hash::check($data['password'], $user->password)) {
+        try {
+            $valid = $user && $user->active && Hash::check($data['password'], $user->password);
+        } catch (\RuntimeException $e) {
+            report($e);
+            throw ValidationException::withMessages(['username' => 'This account\'s password must be reset by the administrator.']);
+        }
+        if (! $valid) {
             throw ValidationException::withMessages(['username' => 'Invalid username or password.']);
         }
 

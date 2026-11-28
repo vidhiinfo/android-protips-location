@@ -8,6 +8,7 @@ use App\Models\District;
 use App\Models\Member;
 use App\Models\Setting;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class MemberTest extends OfficeTestCase
@@ -159,5 +160,14 @@ class MemberTest extends OfficeTestCase
                 'designation_id' => Designation::where(['level' => 'state', 'title' => $post])->value('id')]);
         }
         $this->get('/directory?state_id='.$this->up->id.'&level=state')->assertOk()->assertSeeInOrder(['Amy President', 'Zed Secretary']);
+    }
+
+    public function test_password_edited_outside_the_portal_gives_a_clear_message_not_a_crash(): void
+    {
+        $u = $this->admin();
+        DB::table('users')->where('id', $u->id)->update(['password' => md5('Secret123')]);
+        $this->post('/login', ['username' => $u->username, 'password' => 'Secret123'])
+            ->assertSessionHasErrors(['username' => "This account's password must be reset by the administrator (it was changed outside the portal)."]);
+        $this->postJson('/api/v1/login', ['username' => $u->username, 'password' => 'Secret123', 'device_name' => 't'])->assertUnprocessable();
     }
 }
