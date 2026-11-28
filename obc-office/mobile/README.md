@@ -28,7 +28,7 @@ flutter pub get
 flutter run                                   # on a connected phone or emulator
 ```
 
-The app connects to **https://electionsoft.in/obc** by default. To test against a local server, tap **Server
+The app connects to **https://electionsoft.in/obc-office** by default. To test against a local server, tap **Server
 settings** on the login screen and enter e.g. `http://10.0.2.2:8000` (the Android emulator's address for your
 computer). Plain http only works in debug builds.
 
