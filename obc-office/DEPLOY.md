@@ -8,7 +8,7 @@ The Android and iOS apps are built to talk to `https://electionsoft.in/obc`.
 
 ## 1. Server requirements
 
-- PHP **8.3+** with these extensions: `pdo_mysql`, `mbstring`, `xml`, `curl`, `gd`, `intl`, `zip`, `fileinfo`, `bcmath`.
+- PHP **8.2+** with these extensions: `pdo_mysql`, `mbstring`, `xml`, `curl`, `gd`, `intl`, `zip`, `fileinfo`, `bcmath`.
 - MySQL 8 (or MariaDB 10.6+) and Composer 2.
 - Node 20+, needed only to build the CSS/JS. You can also build on your laptop and upload `public/build`.
 - An HTTPS certificate for electionsoft.in (e.g. Let's Encrypt). **The mobile app only connects over HTTPS.**
@@ -98,6 +98,21 @@ Laravel's migration history, so nothing is applied twice.
 
 ## 4. Web server: expose `public/` at `/obc`
 
+### Option 0: whole app inside public_html (e.g. `public_html/obc-office`)
+
+This is the setup on electionsoft.in, at https://electionsoft.in/obc-office. It is supported and tested on Apache.
+The app's own **`.htaccess`** (next to `artisan`) blocks web access to `.env`, the code, `vendor`, `storage` and the
+database files, and serves everything from `public/`. Make sure that `.htaccess` file is uploaded (it is hidden in
+File Manager/WinSCP; show hidden files). Then set in `.env`:
+
+```dotenv
+APP_URL=https://electionsoft.in/obc-office
+SESSION_PATH=/obc-office
+```
+
+No link or server configuration is needed.
+
+
 Pick the option that matches the server.
 
 ### Option A: Nginx
@@ -145,7 +160,7 @@ points to the app's `public` folder:
 ln -s /home/USER/obc-src/obc-office/web/public /home/USER/public_html/obc
 ```
 
-The included `.htaccess` works as-is in this layout. Select PHP 8.3 in cPanel's *MultiPHP Manager*.
+The included `.htaccess` works as-is in this layout. Select PHP 8.2 or newer in cPanel's *MultiPHP Manager*.
 
 ## 5. Check it works
 
@@ -191,7 +206,7 @@ shows passwords.
 | Site doesn't open at all / "can't be reached" | Domain DNS or hosting down, or no SSL | Check https://electionsoft.in itself opens; run AutoSSL in cPanel |
 | **404 Not Found** | `public_html/obc` missing | `ln -s ~/obc-office/web/public ~/public_html/obc` |
 | **403 Forbidden** | Host blocks symlinks (SymLinksIfOwnerMatch), or wrong permissions | Folders 755, files 644; ask the host to allow FollowSymLinks, or see "No symlinks allowed" below |
-| **500 Internal Server Error** / blank page | PHP below 8.3, `.env` missing, no APP_KEY, storage not writable, DB details wrong | Run the check page; the last error is in `web/storage/logs/laravel.log` |
+| **500 Internal Server Error** / blank page | PHP below 8.2, `.env` missing, no APP_KEY, storage not writable, DB details wrong | Run the check page; the last error is in `web/storage/logs/laravel.log` |
 | Page shows but **no styling** | `public/build` not uploaded, or wrong APP_URL | Re-upload the zip; `APP_URL=https://electionsoft.in/obc`; `php artisan config:clear` |
 | **419 Page Expired** at login | Opened over http, or SESSION settings | Always use **https**; `SESSION_PATH=/obc`, `SESSION_SECURE_COOKIE=true`; `php artisan config:clear` |
 | Login says wrong password | `db:seed` not run, or a different password was used | `php artisan db:seed --force` (prints the admin password if ADMIN_PASSWORD was empty) |

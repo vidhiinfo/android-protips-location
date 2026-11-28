@@ -2,7 +2,7 @@
 /*
  | OBC Office — server check
  | -------------------------------------------------------------------------
- | 1. Upload this file to public_html/  (next to the "obc" folder/link).
+ | 1. Upload this file to public_html/.
  | 2. Open https://electionsoft.in/obc-check.php in a browser.
  | 3. Send the result to your developer, then DELETE this file.
  |
@@ -20,6 +20,7 @@ if ($app === '') {
     foreach (['/obc-office', '/obc-office/web', '/obc-app'] as $sub) {
         $candidates[] = dirname(__DIR__).$sub;
     }
+    $candidates[] = __DIR__.'/obc-office';   // whole app inside public_html (protected by its .htaccess)
     foreach ($candidates as $c) {
         if (is_file($c.'/artisan')) {
             $app = $c;
@@ -28,7 +29,10 @@ if ($app === '') {
     }
     $app = $app ?: dirname(__DIR__).'/obc-office';
 }
-$exposed = is_file(__DIR__.'/obc-office/.env') || is_file(__DIR__.'/obc-office/web/.env');
+$insidePublic = str_starts_with(realpath($app) ?: $app, (realpath(__DIR__) ?: __DIR__).'/');
+$guarded = $insidePublic && is_file($app.'/.htaccess') && str_contains((string) @file_get_contents($app.'/.htaccess'), 'RewriteRule ^(.*)$ public/$1');
+$exposed = $insidePublic && ! $guarded;
+$urlPath = $insidePublic ? '/'.basename($app) : '/obc';
 
 header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex');
@@ -39,13 +43,13 @@ $add = function (string $label, bool $ok, string $detail = '', string $fix = '')
 };
 
 // Security: the app (and its .env) must not be inside public_html
-$add('App is NOT inside public_html', ! $exposed && ! str_starts_with(realpath($app) ?: $app, realpath(__DIR__) ?: __DIR__),
-    $exposed ? 'found public_html/obc-office — .env may be downloadable!' : '',
-    'Move public_html/obc-office to your home folder ('.dirname(__DIR__).'/obc-office), then change the database password');
+$add('App files protected from the web', ! $exposed,
+    $insidePublic ? ($guarded ? 'inside public_html, protected by obc-office/.htaccess' : 'inside public_html WITHOUT protection — .env may be downloadable!') : 'outside public_html',
+    'Upload the .htaccess file from the update into '.$app.'/ (next to artisan), then change the database password');
 
 // PHP
-$add('PHP version 8.3 or newer', version_compare(PHP_VERSION, '8.3.0', '>='), PHP_VERSION,
-    'cPanel → MultiPHP Manager → set electionsoft.in to PHP 8.3');
+$add('PHP version 8.2 or newer', version_compare(PHP_VERSION, '8.2.0', '>='), PHP_VERSION,
+    'cPanel → MultiPHP Manager → PHP 8.2 or newer');
 foreach (['pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'fileinfo', 'gd', 'intl', 'curl', 'zip'] as $ext) {
     $add("PHP extension: $ext", extension_loaded($ext), '', 'cPanel → Select PHP Version → Extensions → tick '.$ext);
 }
@@ -59,17 +63,19 @@ $add('App folder found', is_dir($app), $app, 'Extract obc-office-web.zip in your
 $add('Libraries present (vendor/autoload.php)', is_file("$app/vendor/autoload.php"), '', 'Re-upload the full zip (it contains the vendor folder)');
 $add('Built CSS/JS present (public/build)', is_file("$app/public/build/manifest.json"), '', 'Re-upload the full zip (it contains public/build)');
 
-$obc = __DIR__.'/obc';
+$obc = $insidePublic ? $app.'/public' : __DIR__.'/obc';
 $isLink = is_link($obc);
 $target = $isLink ? readlink($obc) : '';
-$add('public_html/obc exists', file_exists($obc), $isLink ? "link → $target" : (is_dir($obc) ? 'folder' : 'missing'),
-    'Run in cPanel Terminal: ln -s '.$app.'/public '.$obc);
+if (! $insidePublic) {
+    $add('public_html/obc exists', file_exists($obc), $isLink ? "link → $target" : (is_dir($obc) ? 'folder' : 'missing'),
+        'Run in cPanel Terminal: ln -s '.$app.'/public '.$obc);
+}
 if ($isLink) {
     $add('public_html/obc points to the app\'s public folder', realpath($obc) === realpath("$app/public"), (string) realpath($obc),
         'Remove it and recreate: rm '.$obc.' && ln -s '.$app.'/public '.$obc);
 }
-$add('obc/index.php reachable', is_file("$obc/index.php"), '', 'public_html/obc must show the contents of obc-office/web/public');
-$add('obc/.htaccess present', is_file("$obc/.htaccess"), '', 'The .htaccess file is hidden in File Manager — enable "Show hidden files" and re-upload public/.htaccess');
+$add('public/index.php present', is_file("$obc/index.php"), '', 'Re-upload the public folder');
+$add('public/.htaccess present', is_file("$obc/.htaccess"), '', 'The .htaccess file is hidden in File Manager — enable "Show hidden files" and re-upload public/.htaccess');
 
 // .env (values are never printed)
 $envFile = "$app/.env";
@@ -83,9 +89,10 @@ if (is_file($envFile)) {
 }
 $add('.env file exists', is_file($envFile), '', 'Copy .env.example to .env in '.$app.' and fill it in (see DEPLOY.md)');
 $add('APP_KEY is set', str_starts_with($env['APP_KEY'] ?? '', 'base64:'), '', 'Run: cd '.$app.' && php artisan key:generate');
-$add('APP_URL = https://electionsoft.in/obc', rtrim($env['APP_URL'] ?? '', '/') === 'https://electionsoft.in/obc', $env['APP_URL'] ?? '(not set)', 'Set APP_URL=https://electionsoft.in/obc in .env');
+$add("APP_URL = https://electionsoft.in$urlPath", rtrim($env['APP_URL'] ?? '', '/') === "https://electionsoft.in$urlPath", $env['APP_URL'] ?? '(not set)', "Set APP_URL=https://electionsoft.in$urlPath in .env");
 $add('APP_DEBUG is false', in_array(strtolower($env['APP_DEBUG'] ?? 'false'), ['false', '0'], true), $env['APP_DEBUG'] ?? '', 'Set APP_DEBUG=false (temporarily true only to see an error, then back to false)');
-$add('SESSION_PATH = /obc', ($env['SESSION_PATH'] ?? '') === '/obc', $env['SESSION_PATH'] ?? '(not set)', 'Add SESSION_PATH=/obc to .env');
+$add("SESSION_PATH = $urlPath", ($env['SESSION_PATH'] ?? '') === $urlPath, $env['SESSION_PATH'] ?? '(not set)', "Set SESSION_PATH=$urlPath in .env");
+$add('Laravel 12 libraries (PHP 8.2 compatible)', ! is_file("$app/vendor/laravel/framework/composer.json") || str_contains((string) @file_get_contents("$app/vendor/composer/installed.json"), '"version": "v12.'), '', 'Replace the whole vendor folder with the one from the update');
 $add('DB_CONNECTION = mysql', ($env['DB_CONNECTION'] ?? '') === 'mysql', $env['DB_CONNECTION'] ?? '(not set)', 'Set DB_CONNECTION=mysql and the DB_* values from cPanel → MySQL Databases');
 
 // Database
@@ -97,10 +104,10 @@ if (($env['DB_CONNECTION'] ?? '') === 'mysql' && extension_loaded('pdo_mysql')) 
         );
         $add('Database connection', true, $env['DB_DATABASE'] ?? '');
         $tables = $pdo->query("SHOW TABLES LIKE 'members'")->fetchColumn();
-        $add('Tables created (migrate)', (bool) $tables, '', 'Run: cd '.$app.' && php artisan migrate --force');
+        $add('Tables created', (bool) $tables, '', 'Import obc_office.sql in phpMyAdmin (or run: cd '.$app.' && php artisan migrate --force)');
         if ($tables) {
             $admins = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE role='super_admin'")->fetchColumn();
-            $add('Admin user exists (db:seed)', $admins > 0, "$admins admin(s)", 'Run: cd '.$app.' && php artisan db:seed --force');
+            $add('Admin user exists', $admins > 0, "$admins admin(s)", 'Import obc_office.sql in phpMyAdmin (or run: cd '.$app.' && php artisan db:seed --force)');
         }
     } catch (Throwable $e) {
         $msg = preg_replace('/(password|using password: \w+)/i', '[hidden]', $e->getMessage());
@@ -144,16 +151,16 @@ $failed = array_filter($checks, fn ($c) => ! $c['ok']);
   <br><b>Delete this file (obc-check.php) when you are done.</b>
 </div>
 <table>
-<?php foreach ($checks as $c): ?>
+<?php foreach ($checks as $c) { ?>
  <tr>
   <td style="width:28px" class="<?= $c['ok'] ? 'ok' : 'bad' ?>"><?= $c['ok'] ? '✔' : '✘' ?></td>
   <td><span class="<?= $c['ok'] ? '' : 'bad' ?>"><?= htmlspecialchars($c['label']) ?></span>
-   <?php if ($c['detail'] !== ''): ?> <span class="d">— <?= htmlspecialchars($c['detail']) ?></span><?php endif ?>
-   <?php if (! $c['ok'] && $c['fix']): ?><div class="fix">Fix: <?= htmlspecialchars($c['fix']) ?></div><?php endif ?>
+   <?php if ($c['detail'] !== '') { ?> <span class="d">— <?= htmlspecialchars($c['detail']) ?></span><?php } ?>
+   <?php if (! $c['ok'] && $c['fix']) { ?><div class="fix">Fix: <?= htmlspecialchars($c['fix']) ?></div><?php } ?>
   </td>
  </tr>
-<?php endforeach ?>
+<?php } ?>
 </table>
-<?php if ($logTail): ?><h3>Last error in the app log</h3><div class="box log"><?= htmlspecialchars($logTail) ?></div><?php endif ?>
+<?php if ($logTail) { ?><h3>Last error in the app log</h3><div class="box log"><?= htmlspecialchars($logTail) ?></div><?php } ?>
 <p class="d">Checked <?= date('Y-m-d H:i:s') ?> · app path: <?= htmlspecialchars($app) ?> · this page: <?= htmlspecialchars(__FILE__) ?></p>
 </body></html>

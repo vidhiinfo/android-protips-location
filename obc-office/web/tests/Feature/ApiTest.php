@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Circular;
 use App\Models\Member;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -65,12 +66,12 @@ class ApiTest extends OfficeTestCase
 
     public function test_greetings_use_token_photo_urls_and_circular_attachment_downloads(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
         $admin = $this->admin();
         Member::forceCreate(['name' => 'Bday', 'level' => 'state', 'state_id' => $this->up->id, 'type' => 'bearer', 'status' => 'active',
             'mobile' => '9876543210', 'dob' => now()->subYears(40)->toDateString(), 'photo_path' => 'photos/members/x.jpg']);
-        \Illuminate\Support\Facades\Storage::disk('local')->put('circulars/c.pdf', '%PDF-1.4 test');
-        $c = \App\Models\Circular::create(['title' => 'With file']);
+        Storage::disk('local')->put('circulars/c.pdf', '%PDF-1.4 test');
+        $c = Circular::create(['title' => 'With file']);
         $c->forceFill(['attachment_path' => 'circulars/c.pdf'])->save();
 
         $h = ['Authorization' => 'Bearer '.$this->token($admin), 'Accept' => 'application/json'];

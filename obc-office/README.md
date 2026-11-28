@@ -1,6 +1,6 @@
 # OBC Office — National President's Office Management System
 
-A web application (Laravel 13, PHP 8.3+) and a mobile app (Flutter, one codebase for Android and iOS) for the
+A web application (Laravel 12, PHP 8.2+) and a mobile app (Flutter, one codebase for Android and iOS) for the
 National President's office. It covers the organisation database of
 office bearers and party workers (national → state → district → mandal), with photos, plus the President's daily
 office work. The mobile app uses the web application's REST API.
@@ -61,7 +61,7 @@ obc-office/
 
 ## Quick start (local)
 
-Requirements: PHP 8.3+ with `pdo_sqlite` (or `pdo_mysql`), `gd`, `mbstring` and `intl`; Composer; Node 20+.
+Requirements: PHP 8.2+ with `pdo_sqlite` (or `pdo_mysql`), `gd`, `mbstring` and `intl`; Composer; Node 20+.
 
 ```bash
 cd obc-office/web

@@ -1,0 +1,30 @@
+# -----------------------------------------------------------------------------
+# OBC Office — used ONLY when the whole app sits inside public_html
+# (e.g. public_html/obc-office, opened as https://electionsoft.in/obc-office).
+#
+# 1. Blocks web access to everything except the public/ folder
+#    (.env with passwords, app code, vendor, storage, database files…).
+# 2. Sends every request into public/, so the address has no "/public" in it.
+#
+# Not needed (and harmless) when public/ is linked as public_html/obc.
+# -----------------------------------------------------------------------------
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never serve hidden files such as .env, .git, .htaccess
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+
+    # Already inside public/? Let public/.htaccess handle it.
+    RewriteRule ^public/ - [L]
+
+    # Everything else is served from public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Second line of defence if mod_rewrite is unavailable
+<FilesMatch "^(\.env.*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|vite\.config\.js|.*\.md|.*\.sql|.*\.log)$">
+    Require all denied
+</FilesMatch>
