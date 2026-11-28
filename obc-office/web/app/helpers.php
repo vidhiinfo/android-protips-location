@@ -53,6 +53,24 @@ if (! function_exists('render_template')) {
     }
 }
 
+if (! function_exists('leader_designations')) {
+    /** Leader's designation lines (one per line in Settings). */
+    function leader_designations(): array
+    {
+        return array_values(array_filter(array_map('trim', preg_split('/\r?\n/', (string) setting('leader_designation', '')))));
+    }
+}
+
+if (! function_exists('branding_image_url')) {
+    /** Public URL of an uploaded branding image ("logo" or "leader"), or null. Works without `php artisan storage:link`. */
+    function branding_image_url(string $type): ?string
+    {
+        $path = setting($type === 'leader' ? 'leader_photo_path' : 'logo_path');
+
+        return $path ? route('branding.image', $type).'?v='.substr(md5((string) $path), 0, 8) : null;
+    }
+}
+
 if (! function_exists('wa_link')) {
     /** wa.me click-to-chat link; assumes Indian numbers when no country code is given. */
     function wa_link(?string $mobile, string $text = ''): ?string

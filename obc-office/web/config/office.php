@@ -46,6 +46,12 @@ return [
         'theme_color' => '#ea580c',
         'footer_text' => 'Confidential — for official party use only',
 
+        // Leader profile shown on the login page (Settings → General → Leader profile)
+        'leader_name' => 'श्री अमरपाल मौर्य',
+        'leader_designation' => "सांसद (राज्यसभा)\nराष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा",
+        'leader_photo_path' => null,
+        'leader_on_login' => true,
+
         // Messages ({name}, {designation}, {signature}, {org} are replaced)
         'greeting_signature' => 'National President, OBC Morcha',
         'birthday_template' => "Dear {name} ji,\nHeartiest wishes on your birthday! May you be blessed with good health and continue serving the people with the same dedication.\n\n— {signature}",

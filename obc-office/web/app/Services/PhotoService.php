@@ -9,14 +9,14 @@ use Illuminate\Support\Str;
 /** Stores photos on the private disk, downscaled (GD) to keep storage and mobile data small. */
 class PhotoService
 {
-    public static function store(UploadedFile $file, string $dir): string
+    public static function store(UploadedFile $file, string $dir, string $disk = 'local', ?int $maxPx = null): string
     {
-        $max = (int) setting('photo_max_px', 600);
+        $max = $maxPx ?? (int) setting('photo_max_px', 600);
         $path = $dir.'/'.Str::uuid().'.jpg';
         $src = @imagecreatefromstring(file_get_contents($file->getRealPath()));
 
         if (! $src) {
-            return $file->store($dir, 'local');
+            return $file->store($dir, $disk);
         }
 
         $w = imagesx($src);
@@ -30,7 +30,7 @@ class PhotoService
 
         ob_start();
         imagejpeg($dst, null, 82);
-        Storage::disk('local')->put($path, ob_get_clean());
+        Storage::disk($disk)->put($path, ob_get_clean());
         imagedestroy($src);
         imagedestroy($dst);
 

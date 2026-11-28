@@ -4,7 +4,7 @@
 <body class="bg-white p-8 text-slate-900" onload="window.print()">
 <div class="mx-auto max-w-xl rounded-xl border-2 border-slate-300 p-6">
     <div class="flex items-center gap-4 border-b-2 border-brand pb-3">
-        @if (setting('logo_path'))<img src="{{ asset('storage/'.setting('logo_path')) }}" class="h-14 w-14 object-contain" alt="">@endif
+        @if (setting('logo_path'))<img src="{{ branding_image_url('logo') }}" class="h-14 w-14 object-contain" alt="">@endif
         <div><div class="text-lg font-bold">{{ setting('org_name') }}</div><div class="text-sm text-slate-600">Office of the {{ setting('president_name') }}</div></div>
     </div>
     <h1 class="mt-4 text-center text-base font-semibold tracking-wide uppercase">Petition Acknowledgement</h1>

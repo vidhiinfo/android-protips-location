@@ -61,7 +61,10 @@ class AuthController extends Controller
                 'org_short_name' => setting('org_short_name'),
                 'president_name' => setting('president_name'),
                 'theme_color' => setting('theme_color'),
-                'logo_url' => setting('logo_path') ? asset('storage/'.setting('logo_path')) : null,
+                'logo_url' => branding_image_url('logo'),
+                'leader_name' => setting('leader_name'),
+                'leader_designations' => leader_designations(),
+                'leader_photo_url' => branding_image_url('leader'),
             ],
         ];
     }

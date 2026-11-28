@@ -23,9 +23,36 @@
             <div><label class="label">Theme colour</label><div class="flex gap-2"><input type="color" name="theme_color" value="{{ old('theme_color', setting('theme_color')) }}" class="h-9 w-14 rounded border border-slate-300"><span class="pt-2 text-xs text-slate-500">Used across web and mobile apps</span></div></div>
             <div><label class="label">Footer text</label><input name="footer_text" value="{{ old('footer_text', setting('footer_text')) }}" class="input"></div>
             <div class="sm:col-span-2 lg:col-span-3 flex items-center gap-4">
-                @if (setting('logo_path'))<img src="{{ asset('storage/'.setting('logo_path')) }}" class="h-14 w-14 rounded-full bg-white object-contain ring-1 ring-slate-200" alt="">@endif
+                @if (setting('logo_path'))<img src="{{ branding_image_url('logo') }}" class="h-14 w-14 rounded-full bg-white object-contain ring-1 ring-slate-200" alt="">@endif
                 <div><label class="label">Logo (PNG/JPG, square)</label><input type="file" name="logo" accept="image/*" class="input"></div>
                 @if (setting('logo_path'))<label class="flex items-center gap-1 pt-5 text-sm"><input type="checkbox" name="remove_logo" value="1"> Remove logo</label>@endif
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-h">Leader profile <span class="text-xs font-normal text-slate-500">Shown on the login page</span></div>
+        <div class="card-b grid gap-5 lg:grid-cols-[200px_1fr]">
+            <div class="text-center">
+                <div class="mx-auto h-44 w-36 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
+                    <img id="leader-preview" src="{{ branding_image_url('leader') }}" alt="" class="{{ setting('leader_photo_path') ? '' : 'hidden' }} h-full w-full object-cover object-top">
+                    @unless (setting('leader_photo_path'))<div class="flex h-full items-center justify-center text-xs text-slate-400">No photo</div>@endunless
+                </div>
+                <label class="btn-secondary btn-sm mt-2 cursor-pointer">📷 {{ setting('leader_photo_path') ? 'Change photo' : 'Upload photo' }}
+                    <input type="file" name="leader_photo" accept="image/*" class="hidden" data-preview="#leader-preview">
+                </label>
+                @if (setting('leader_photo_path'))
+                    <label class="mt-2 flex items-center justify-center gap-1 text-xs text-slate-500"><input type="checkbox" name="remove_leader_photo" value="1"> Remove photo</label>
+                @endif
+                <p class="mt-1 text-[11px] text-slate-400">Portrait photo, JPG/PNG up to 5 MB</p>
+            </div>
+            <div class="space-y-4">
+                <div><label class="label">Name</label><input name="leader_name" value="{{ old('leader_name', setting('leader_name')) }}" class="input" placeholder="श्री अमरपाल मौर्य"></div>
+                <div>
+                    <label class="label">Designation — one per line</label>
+                    <textarea name="leader_designation" rows="3" class="input" placeholder="सांसद (राज्यसभा)&#10;राष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा">{{ old('leader_designation', setting('leader_designation')) }}</textarea>
+                </div>
+                <label class="flex items-center gap-2 text-sm"><input type="hidden" name="leader_on_login" value="0"><input type="checkbox" name="leader_on_login" value="1" @checked(setting('leader_on_login'))> Show photo, name and designation on the login page</label>
             </div>
         </div>
     </div>

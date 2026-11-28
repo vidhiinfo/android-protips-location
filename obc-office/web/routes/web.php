@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BiodataController;
+use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\CircularController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
@@ -19,6 +20,9 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisitorController;
 use Illuminate\Support\Facades\Route;
+
+// Logo / leader photo (public: used on the login page)
+Route::get('/branding/{type}', BrandingController::class)->whereIn('type', ['logo', 'leader'])->name('branding.image');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

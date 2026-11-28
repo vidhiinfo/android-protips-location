@@ -4,7 +4,7 @@
 <body class="bg-white p-8 text-slate-900" onload="window.print()">
 <div class="mx-auto max-w-3xl">
     <div class="flex items-center gap-4 border-b-2 border-brand pb-3">
-        @if (setting('logo_path'))<img src="{{ asset('storage/'.setting('logo_path')) }}" class="h-14 w-14 object-contain" alt="">@endif
+        @if (setting('logo_path'))<img src="{{ branding_image_url('logo') }}" class="h-14 w-14 object-contain" alt="">@endif
         <div class="flex-1"><div class="text-lg font-bold">{{ setting('org_name') }}</div><div class="text-sm text-slate-600">Biodata</div></div>
         <div class="text-right text-xs text-slate-500">{{ $bio->reference_no }}<br>Received {{ fmt_date($bio->received_on) }}</div>
     </div>

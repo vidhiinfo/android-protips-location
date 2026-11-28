@@ -20,7 +20,7 @@
 <aside id="sidebar" class="no-print fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-slate-900 transition lg:translate-x-0">
     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 border-b border-white/10 px-4 py-4">
         @if (setting('logo_path'))
-            <img src="{{ asset('storage/'.setting('logo_path')) }}" alt="" class="h-10 w-10 rounded-full bg-white object-contain">
+            <img src="{{ branding_image_url('logo') }}" alt="" class="h-10 w-10 rounded-full bg-white object-contain">
         @else
             <span class="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-lg font-bold text-white">{{ mb_substr(setting('org_short_name') ?: setting('org_name'), 0, 1) }}</span>
         @endif

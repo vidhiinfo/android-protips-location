@@ -86,6 +86,7 @@ if (is_file($envFile)) {
         if (preg_match('/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/', $line, $m)) {
             if (array_key_exists($m[1], $env)) {
                 $dupes[] = $m[1]; // Laravel uses the FIRST occurrence
+
                 continue;
             }
             $env[$m[1]] = trim($m[2], " \t\"'");

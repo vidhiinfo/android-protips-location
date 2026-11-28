@@ -8,6 +8,7 @@ use App\Models\Lookup;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\BiodataService;
+use App\Services\PhotoService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -76,12 +77,30 @@ class SettingsController extends Controller implements HasMiddleware
             'datetime_format' => ['required', Rule::in(['d M Y, h:i A', 'd/m/Y H:i', 'd-m-Y h:i A', 'Y-m-d H:i'])],
             'per_page' => 'required|integer|min:10|max:200',
             'logo' => 'nullable|image|max:2048',
+            'leader_name' => 'nullable|string|max:150',
+            'leader_designation' => 'nullable|string|max:600',
+            'leader_photo' => 'nullable|image|max:5120',
             'biodata_prefix' => 'required|alpha_dash|max:10',
             'biodata_max_file_mb' => 'required|integer|min:1|max:50',
             'biodata_required_fields' => 'nullable|array',
             'biodata_required_fields.*' => Rule::in(array_keys(BiodataService::OPTIONAL_FIELDS)),
         ]);
         $data['biodata_required_fields'] = array_values($data['biodata_required_fields'] ?? []);
+
+        // Leader profile (login page)
+        Setting::put('leader_on_login', $request->boolean('leader_on_login'));
+        if ($request->hasFile('leader_photo')) {
+            $old = setting('leader_photo_path');
+            Setting::put('leader_photo_path', PhotoService::store($request->file('leader_photo'), 'branding', 'public', 800));
+            if ($old) {
+                Storage::disk('public')->delete($old);
+            }
+        } elseif ($request->boolean('remove_leader_photo')) {
+            Storage::disk('public')->delete((string) setting('leader_photo_path'));
+            Setting::put('leader_photo_path', null);
+        }
+        unset($data['leader_photo']);
+        $data['leader_designation'] = trim(preg_replace("/\r\n?/", "\n", (string) ($data['leader_designation'] ?? '')));
 
         foreach (['require_consent', 'state_entries_need_approval', 'duplicate_check_mobile'] as $flag) {
             Setting::put($flag, $request->boolean($flag));

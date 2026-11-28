@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Lookup;
 use App\Models\Petition;
 use App\Models\Setting;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class ConfigurationTest extends OfficeTestCase
 {
@@ -90,5 +92,59 @@ class ConfigurationTest extends OfficeTestCase
         }
         $this->get('/tasks')->assertOk();
         $this->get('/circulars')->assertOk();
+    }
+
+    private function generalPayload(array $over = []): array
+    {
+        return $over + [
+            'org_name' => 'Org', 'president_name' => 'P', 'theme_color' => '#112233', 'greeting_days_ahead' => 5,
+            'petition_prefix' => 'PET', 'petition_default_due_days' => 10, 'petition_closed_status' => 'closed',
+            'photo_max_px' => 600, 'date_format' => 'd M Y', 'datetime_format' => 'd M Y, h:i A', 'per_page' => 25,
+            'biodata_prefix' => 'BIO', 'biodata_max_file_mb' => 10,
+        ];
+    }
+
+    public function test_leader_profile_with_photo_shows_on_login_page(): void
+    {
+        Storage::fake('public');
+        $this->actingAs($this->admin())->post('/settings/general', $this->generalPayload([
+            'leader_name' => 'श्री अमरपाल मौर्य',
+            'leader_designation' => "सांसद (राज्यसभा)\r\nराष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा",
+            'leader_on_login' => '1',
+            'leader_photo' => UploadedFile::fake()->image('leader.jpg', 1600, 2000),
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertSame(['सांसद (राज्यसभा)', 'राष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा'], leader_designations());
+        [$w, $h] = getimagesizefromstring(Storage::disk('public')->get(setting('leader_photo_path')));
+        $this->assertLessThanOrEqual(800, max($w, $h), 'photo is resized');
+
+        auth()->logout();
+        $this->get('/login')->assertOk()
+            ->assertSee('श्री अमरपाल मौर्य')->assertSee('सांसद (राज्यसभा)')
+            ->assertSee('राष्ट्रीय अध्यक्ष, भारतीय जनता पार्टी ओबीसी मोर्चा')
+            ->assertSee(route('branding.image', 'leader'), false);
+        $this->get(route('branding.image', 'leader'))->assertOk(); // public, no login needed
+    }
+
+    public function test_leader_block_can_be_hidden_and_photo_removed(): void
+    {
+        Storage::fake('public');
+        $admin = $this->admin();
+        $this->actingAs($admin)->post('/settings/general', $this->generalPayload([
+            'leader_name' => 'Leader X', 'leader_on_login' => '1', 'leader_photo' => UploadedFile::fake()->image('a.jpg'),
+        ]));
+        $this->post('/settings/general', $this->generalPayload(['leader_name' => 'Leader X', 'leader_on_login' => '0', 'remove_leader_photo' => '1']));
+        $this->assertNull(setting('leader_photo_path'));
+        auth()->logout();
+        $this->get('/login')->assertOk()->assertDontSee('Leader X');
+        $this->get(route('branding.image', 'leader'))->assertNotFound();
+    }
+
+    public function test_api_branding_includes_leader(): void
+    {
+        $sa = $this->stateAdmin();
+        $this->postJson('/api/v1/login', ['username' => $sa->username, 'password' => 'Secret123', 'device_name' => 't'])
+            ->assertOk()->assertJsonPath('user.branding.leader_name', 'श्री अमरपाल मौर्य')
+            ->assertJsonCount(2, 'user.branding.leader_designations');
     }
 }
