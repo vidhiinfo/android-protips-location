@@ -27,7 +27,7 @@ class BiodataTest extends OfficeTestCase
         ]))->assertRedirect();
 
         $b = Biodata::first();
-        $this->assertMatchesRegularExpression('/^BIO-\d{4}-00001$/', $b->reference_no);
+        $this->assertSame(sprintf('BIO-%s-%05d', date('Y'), $b->id), $b->reference_no);
         $this->assertSame('received', $b->status, 'defaults to the first configured status');
         $this->assertCount(2, $b->documents);
         Storage::disk('local')->assertExists($b->documents->first()->path);

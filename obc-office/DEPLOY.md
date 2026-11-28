@@ -81,6 +81,21 @@ sudo chown -R www-data:www-data storage bootstrap/cache
 
 Once you've signed in, remove `ADMIN_PASSWORD` from `.env` and change the password from **Users** in the portal.
 
+### No terminal? Import the ready-made database instead
+
+If you can't run `php artisan migrate` / `db:seed` (common on shared hosting), ask your developer for
+**`obc_office.sql`**. It has all tables, the 36 states/UTs, posts, dropdown lists and one admin account, and was
+tested on MySQL 8.0.
+
+1. cPanel → **MySQL Database Wizard**: create an empty database and user with ALL PRIVILEGES.
+2. cPanel → **phpMyAdmin** → click the new database on the left → **Import** → choose `obc_office.sql` → **Go**.
+3. Put those database details in `.env` (step 3 above). You still need `APP_KEY`: run `php artisan key:generate`
+   once, or ask your developer to generate one for you.
+4. Sign in as `admin` with the password supplied with the file, then change it under **Users**.
+
+Later updates that add tables can still be applied with `php artisan migrate --force`; the import includes
+Laravel's migration history, so nothing is applied twice.
+
 ## 4. Web server: expose `public/` at `/obc`
 
 Pick the option that matches the server.

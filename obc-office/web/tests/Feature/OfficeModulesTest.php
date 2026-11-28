@@ -19,7 +19,7 @@ class OfficeModulesTest extends OfficeTestCase
             'status' => 'received', 'received_on' => today()->toDateString(), 'state_id' => $this->up->id,
         ])->assertRedirect();
         $p = Petition::first();
-        $this->assertMatchesRegularExpression('/^PET-\d{4}-00001$/', $p->tracking_no);
+        $this->assertSame(sprintf('PET-%s-%05d', date('Y'), $p->id), $p->tracking_no);
 
         $this->post(route('petitions.updates.store', $p), ['status' => 'forwarded', 'forwarded_to' => 'DM Lucknow', 'note' => 'Sent'])->assertRedirect();
         $this->assertSame('forwarded', $p->fresh()->status);
