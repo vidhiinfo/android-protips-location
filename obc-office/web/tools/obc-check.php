@@ -10,7 +10,25 @@
  | If the app is not in ~/obc-office/web, set $app below.
  */
 
-$app = getenv('OBC_APP_PATH') ?: dirname(__DIR__).'/obc-office/web';
+// Find the app: via the public_html/obc link if present, else the usual locations next to public_html.
+$app = getenv('OBC_APP_PATH') ?: '';
+if ($app === '') {
+    $candidates = [];
+    if (is_file(__DIR__.'/obc/index.php') && ($real = realpath(__DIR__.'/obc/..'))) {
+        $candidates[] = $real;
+    }
+    foreach (['/obc-office', '/obc-office/web', '/obc-app'] as $sub) {
+        $candidates[] = dirname(__DIR__).$sub;
+    }
+    foreach ($candidates as $c) {
+        if (is_file($c.'/artisan')) {
+            $app = $c;
+            break;
+        }
+    }
+    $app = $app ?: dirname(__DIR__).'/obc-office';
+}
+$exposed = is_file(__DIR__.'/obc-office/.env') || is_file(__DIR__.'/obc-office/web/.env');
 
 header('Content-Type: text/html; charset=utf-8');
 header('X-Robots-Tag: noindex');
@@ -19,6 +37,11 @@ $checks = [];
 $add = function (string $label, bool $ok, string $detail = '', string $fix = '') use (&$checks) {
     $checks[] = compact('label', 'ok', 'detail', 'fix');
 };
+
+// Security: the app (and its .env) must not be inside public_html
+$add('App is NOT inside public_html', ! $exposed && ! str_starts_with(realpath($app) ?: $app, realpath(__DIR__) ?: __DIR__),
+    $exposed ? 'found public_html/obc-office — .env may be downloadable!' : '',
+    'Move public_html/obc-office to your home folder ('.dirname(__DIR__).'/obc-office), then change the database password');
 
 // PHP
 $add('PHP version 8.3 or newer', version_compare(PHP_VERSION, '8.3.0', '>='), PHP_VERSION,
