@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:material_ui/material_ui.dart';
 
 import 'api.dart';
@@ -10,7 +12,35 @@ class Session extends ChangeNotifier {
 
   bool get signedIn => user != null;
 
-  Map<String, dynamic> get branding => (user?['branding'] as Map?)?.cast<String, dynamic>() ?? {};
+  /// Public branding (works before sign-in): organisation, theme, leader profile, latest app version.
+  Map<String, dynamic> publicBranding = {};
+
+  Map<String, dynamic> get branding =>
+      {...publicBranding, ...((user?['branding'] as Map?)?.cast<String, dynamic>() ?? {})};
+
+  bool get showLeader => publicBranding['leader_on_login'] != false && (branding['leader_name'] ?? '').toString().isNotEmpty;
+
+  List<String> get leaderDesignations =>
+      ((branding['leader_designations'] as List?) ?? const []).map((e) => e.toString()).toList();
+
+  /// Loads the cached copy first (so it shows offline), then refreshes from the server.
+  Future<void> loadPublicBranding() async {
+    try {
+      final cached = await Api.instance.readCache('branding');
+      if (cached != null) {
+        publicBranding = (jsonDecode(cached) as Map).cast<String, dynamic>();
+        notifyListeners();
+      }
+    } catch (_) {}
+    try {
+      final fresh = (await Api.instance.get('/branding') as Map).cast<String, dynamic>();
+      publicBranding = fresh;
+      await Api.instance.writeCache('branding', jsonEncode(fresh));
+      notifyListeners();
+    } catch (_) {
+      // Offline: keep the cached copy.
+    }
+  }
 
   String get orgName => (branding['org_short_name'] as String?)?.isNotEmpty == true
       ? branding['org_short_name'] as String
@@ -38,6 +68,7 @@ class Session extends ChangeNotifier {
   Future<void> restore() async {
     await Api.instance.init();
     Api.instance.onUnauthorized = () => _clear();
+    loadPublicBranding(); // not awaited: the login screen updates when it arrives
     if (Api.instance.token != null) {
       try {
         await _load();
@@ -65,7 +96,10 @@ class Session extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshMeta() => _load();
+  Future<void> refreshMeta() async {
+    await _load();
+    await loadPublicBranding();
+  }
 
   Future<void> logout() async {
     try {

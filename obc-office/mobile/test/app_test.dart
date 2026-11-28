@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:obc_office/api.dart';
 import 'package:obc_office/screens/login.dart';
 import 'package:obc_office/session.dart';
+import 'package:obc_office/version.dart';
 import 'package:obc_office/widgets/form_kit.dart';
 import 'package:provider/provider.dart';
 
@@ -93,4 +94,44 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
     expect(find.text('Server settings'), findsOneWidget);
   });
+
+  group('App updates & leader profile', () {
+    test('version comparison', () {
+      expect(isNewerVersion('1.2.0', '1.1.0'), isTrue);
+      expect(isNewerVersion('1.1.0', '1.1.0'), isFalse);
+      expect(isNewerVersion('1.0.9', '1.1.0'), isFalse);
+      expect(isNewerVersion('2.0', '1.9.9'), isTrue);
+      expect(isNewerVersion(null), isFalse);
+      expect(isNewerVersion(''), isFalse);
+    });
+
+    test('leader profile comes from public branding before sign-in', () {
+      final s = Session()
+        ..publicBranding = {
+          'leader_on_login': true,
+          'leader_name': 'श्री अमरपाल मौर्य',
+          'leader_designations': ['सांसद (राज्यसभा)', 'राष्ट्रीय अध्यक्ष'],
+        };
+      expect(s.signedIn, isFalse);
+      expect(s.showLeader, isTrue);
+      expect(s.leaderDesignations.length, 2);
+      s.publicBranding['leader_on_login'] = false;
+      expect(s.showLeader, isFalse);
+    });
+  });
+
+  testWidgets('login screen shows the leader name and designations', (tester) async {
+    final s = Session()
+      ..publicBranding = {
+        'leader_on_login': true,
+        'leader_name': 'श्री अमरपाल मौर्य',
+        'leader_designations': ['सांसद (राज्यसभा)'],
+        'org_name': 'BJP OBC Morcha',
+      };
+    await tester.pumpWidget(ChangeNotifierProvider.value(value: s, child: const MaterialApp(home: LoginScreen())));
+    expect(find.text('श्री अमरपाल मौर्य'), findsOneWidget);
+    expect(find.text('सांसद (राज्यसभा)'), findsOneWidget);
+    expect(find.text('BJP OBC Morcha'), findsOneWidget);
+  });
 }
+

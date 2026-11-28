@@ -6,7 +6,7 @@
 */
 
 $allModules = ['dashboard', 'members', 'biodata', 'directory', 'import', 'schedule', 'visitors', 'petitions', 'tasks',
-    'contacts', 'letters', 'greetings', 'circulars', 'programs', 'users', 'masters', 'settings', 'audit'];
+    'contacts', 'letters', 'greetings', 'circulars', 'programs', 'users', 'masters', 'settings', 'audit', 'mobile_app'];
 
 $grant = fn (array $map) => array_replace(array_fill_keys($allModules, 'none'), $map);
 
@@ -31,6 +31,7 @@ return [
         'contacts' => ['label' => 'VIP Contacts', 'group' => "President's Office", 'icon' => '📇', 'route' => 'contacts.index', 'levels' => ['none', 'view', 'manage']],
         'letters' => ['label' => 'Letters Register', 'group' => "President's Office", 'icon' => '✉️', 'route' => 'letters.index', 'levels' => ['none', 'view', 'manage']],
         'greetings' => ['label' => 'Greetings', 'group' => "President's Office", 'icon' => '🎉', 'route' => 'greetings', 'levels' => ['none', 'view']],
+        'mobile_app' => ['label' => 'Mobile App', 'group' => 'Administration', 'icon' => '📱', 'route' => 'mobile-app.index', 'levels' => ['none', 'view', 'manage']],
         'users' => ['label' => 'Users', 'group' => 'Administration', 'icon' => '🔐', 'route' => 'users.index', 'levels' => ['none', 'manage']],
         'masters' => ['label' => 'States, Districts & Posts', 'group' => 'Administration', 'icon' => '🗺️', 'route' => 'masters.index', 'levels' => ['none', 'manage']],
         'settings' => ['label' => 'Settings', 'group' => 'Administration', 'icon' => '⚙️', 'route' => 'settings.index', 'levels' => ['none', 'manage']],
@@ -71,6 +72,15 @@ return [
         'photo_max_px' => 600,
         'duplicate_check_mobile' => true,
 
+        // Mobile app distribution (Administration → Mobile App)
+        'app_public' => true,        // public install page at /app
+        'app_apk_path' => null,
+        'app_version' => null,
+        'app_notes' => '',
+        'app_size' => null,
+        'app_uploaded_at' => null,
+        'app_downloads' => 0,
+
         // Biodata
         'biodata_prefix' => 'BIO',
         'biodata_required_fields' => ['received_from'],
@@ -90,15 +100,15 @@ return [
                 'dashboard' => 'view', 'members' => 'manage', 'biodata' => 'manage',
                 'directory' => 'view', 'import' => 'manage', 'programs' => 'manage', 'circulars' => 'manage', 'schedule' => 'manage', 'visitors' => 'manage',
                 'petitions' => 'manage', 'tasks' => 'manage', 'contacts' => 'manage', 'letters' => 'manage',
-                'greetings' => 'view', 'masters' => 'manage',
+                'greetings' => 'view', 'masters' => 'manage', 'mobile_app' => 'view',
             ]),
             'state_admin' => $grant([
                 'dashboard' => 'view', 'members' => 'manage', 'directory' => 'view', 'import' => 'manage',
-                'programs' => 'view', 'circulars' => 'view', 'tasks' => 'view',
+                'programs' => 'view', 'circulars' => 'view', 'tasks' => 'view', 'mobile_app' => 'view',
             ]),
             'district_admin' => $grant([
                 'dashboard' => 'view', 'members' => 'manage', 'directory' => 'view',
-                'programs' => 'view', 'circulars' => 'view', 'tasks' => 'view',
+                'programs' => 'view', 'circulars' => 'view', 'tasks' => 'view', 'mobile_app' => 'view',
             ]),
         ],
     ],

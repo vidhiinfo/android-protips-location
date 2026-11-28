@@ -12,6 +12,7 @@ use App\Http\Controllers\ImportController;
 use App\Http\Controllers\LetterController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\MobileAppController;
 use App\Http\Controllers\PetitionController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ScheduleController;
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\Route;
 
 // Logo / leader photo (public: used on the login page)
 Route::get('/branding/{type}', BrandingController::class)->whereIn('type', ['logo', 'leader'])->name('branding.image');
+
+// Mobile app: public install page + direct APK link (can be switched off in Administration → Mobile App)
+Route::get('/app', [MobileAppController::class, 'publicPage'])->name('app.public');
+Route::get('/app/download', [MobileAppController::class, 'download'])->name('app.download');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -104,4 +109,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+
+    Route::get('/mobile-app', [MobileAppController::class, 'index'])->name('mobile-app.index');
+    Route::post('/mobile-app/upload', [MobileAppController::class, 'upload'])->name('mobile-app.upload');
+    Route::post('/mobile-app/settings', [MobileAppController::class, 'saveSettings'])->name('mobile-app.settings');
 });

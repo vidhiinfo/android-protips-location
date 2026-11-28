@@ -1,7 +1,10 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../session.dart';
+import '../version.dart';
 import 'biodata.dart';
 import 'circulars.dart';
 import 'dashboard.dart';
@@ -83,6 +86,13 @@ class MoreScreen extends StatelessWidget {
           title: Text(u['name'] as String, style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Text('${u['role_label']} · ${u['jurisdiction']}'),
         ),
+        if (isNewerVersion(s.branding['app_version'] as String?) && (s.branding['app_page_url'] ?? s.branding['app_download_url']) != null)
+          ListTile(
+            leading: Icon(Icons.system_update, color: Theme.of(context).colorScheme.primary),
+            title: Text('Update available: version ${s.branding['app_version']}'),
+            subtitle: const Text('Tap to download and install'),
+            onTap: () => launchUrl(Uri.parse((s.branding['app_page_url'] ?? s.branding['app_download_url']) as String), mode: LaunchMode.externalApplication),
+          ),
         const Divider(),
         ...modules.map((m) => ListTile(
               leading: Icon(m.icon),
@@ -100,6 +110,7 @@ class MoreScreen extends StatelessWidget {
             if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Updated')));
           },
         ),
+        ListTile(leading: const Icon(Icons.info_outline), title: const Text('App version'), trailing: Text(kAppVersion)),
         ListTile(
           leading: const Icon(Icons.logout, color: Colors.red),
           title: const Text('Sign out', style: TextStyle(color: Colors.red)),

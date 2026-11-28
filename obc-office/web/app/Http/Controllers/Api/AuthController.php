@@ -31,6 +31,24 @@ class AuthController extends Controller
         return ['token' => $user->createToken($data['device_name'])->plainTextToken, 'user' => $this->profile($user)];
     }
 
+    /** Public branding for the app's login screen: organisation, theme, leader profile, latest app version. */
+    public function branding()
+    {
+        return [
+            'org_name' => setting('org_name'),
+            'org_short_name' => setting('org_short_name'),
+            'theme_color' => setting('theme_color'),
+            'logo_url' => branding_image_url('logo'),
+            'leader_on_login' => (bool) setting('leader_on_login'),
+            'leader_name' => setting('leader_name'),
+            'leader_designations' => leader_designations(),
+            'leader_photo_url' => branding_image_url('leader'),
+            'app_version' => setting('app_version'),
+            'app_download_url' => setting('app_apk_path') ? route('app.download') : null,
+            'app_page_url' => setting('app_public') ? route('app.public') : null,
+        ];
+    }
+
     public function me(Request $request)
     {
         return $this->profile($request->user());

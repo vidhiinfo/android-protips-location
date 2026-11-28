@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 */
 Route::prefix('v1')->name('api.')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login');
+    // Public: shown on the app's login screen before sign-in
+    Route::get('/branding', [AuthController::class, 'branding'])->middleware('throttle:60,1')->name('branding');
 
     Route::middleware(['auth:sanctum', 'active', 'throttle:120,1'])->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('me');

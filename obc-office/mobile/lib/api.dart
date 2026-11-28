@@ -73,6 +73,10 @@ class Api {
     _build();
   }
 
+  Future<String?> readCache(String key) => _storage.read(key: 'cache_$key');
+
+  Future<void> writeCache(String key, String value) => _storage.write(key: 'cache_$key', value: value);
+
   Future<void> saveToken(String? value) async {
     token = value;
     if (value == null) {

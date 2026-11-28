@@ -1,3 +1,5 @@
+import qrcode from 'qrcode-generator';
+
 // Dependent district dropdowns: <select data-state-select="#district"> + <select id="district" data-districts='{"stateId":[[id,name],...]}'>
 function bindStateDistrict(stateSel) {
     const target = document.querySelector(stateSel.dataset.stateSelect);
@@ -20,6 +22,15 @@ function bindStateDistrict(stateSel) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // QR codes: <div data-qr="https://…"></div>
+    document.querySelectorAll('[data-qr]').forEach((el) => {
+        const qr = qrcode(0, 'M');
+        qr.addData(el.dataset.qr);
+        qr.make();
+        el.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+        el.querySelector('svg')?.setAttribute('role', 'img');
+    });
+
     document.querySelectorAll('[data-state-select]').forEach(bindStateDistrict);
 
     // Confirm destructive actions
