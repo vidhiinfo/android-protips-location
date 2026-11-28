@@ -164,3 +164,30 @@ php artisan config:cache && php artisan route:cache && php artisan view:cache
   Developer account.
 - If the portal address ever changes, users can tap **Server settings** on the login screen. For new builds, pass
   `--dart-define=API_BASE_URL=https://new-address`.
+
+## Troubleshooting: "https://electionsoft.in/obc is not working"
+
+**Fastest way to find the problem:** upload `web/tools/obc-check.php` to `public_html/`, open
+`https://electionsoft.in/obc-check.php`, fix the red items from the top down, then **delete the file**. It never
+shows passwords.
+
+| What you see | Usual cause | Fix |
+|---|---|---|
+| Site doesn't open at all / "can't be reached" | Domain DNS or hosting down, or no SSL | Check https://electionsoft.in itself opens; run AutoSSL in cPanel |
+| **404 Not Found** | `public_html/obc` missing | `ln -s ~/obc-office/web/public ~/public_html/obc` |
+| **403 Forbidden** | Host blocks symlinks (SymLinksIfOwnerMatch), or wrong permissions | Folders 755, files 644; ask the host to allow FollowSymLinks, or see "No symlinks allowed" below |
+| **500 Internal Server Error** / blank page | PHP below 8.3, `.env` missing, no APP_KEY, storage not writable, DB details wrong | Run the check page; the last error is in `web/storage/logs/laravel.log` |
+| Page shows but **no styling** | `public/build` not uploaded, or wrong APP_URL | Re-upload the zip; `APP_URL=https://electionsoft.in/obc`; `php artisan config:clear` |
+| **419 Page Expired** at login | Opened over http, or SESSION settings | Always use **https**; `SESSION_PATH=/obc`, `SESSION_SECURE_COOKIE=true`; `php artisan config:clear` |
+| Login says wrong password | `db:seed` not run, or a different password was used | `php artisan db:seed --force` (prints the admin password if ADMIN_PASSWORD was empty) |
+| Mobile app: "Cannot reach the server" | Site not on https, or the web portal itself isn't working yet | Fix the web portal first; the app needs https://electionsoft.in/obc/api/v1 |
+
+After changing `.env`, always run `php artisan config:clear` (and `php artisan config:cache` once it works).
+
+### No symlinks allowed (some shared hosts)
+
+1. Create the folder `public_html/obc`.
+2. Copy everything from `obc-office/web/public/` into it, including the hidden `.htaccess` file.
+3. Edit `public_html/obc/index.php` and replace `__DIR__.'/../` with `__DIR__.'/../../obc-office/web/` in the three
+   lines that load `storage/framework/maintenance.php`, `vendor/autoload.php` and `bootstrap/app.php`.
+4. Repeat step 2 after every update.
