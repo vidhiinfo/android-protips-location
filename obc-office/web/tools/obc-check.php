@@ -80,14 +80,21 @@ $add('public/.htaccess present', is_file("$obc/.htaccess"), '', 'The .htaccess f
 // .env (values are never printed)
 $envFile = "$app/.env";
 $env = [];
+$dupes = [];
 if (is_file($envFile)) {
     foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
         if (preg_match('/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/', $line, $m)) {
+            if (array_key_exists($m[1], $env)) {
+                $dupes[] = $m[1]; // Laravel uses the FIRST occurrence
+                continue;
+            }
             $env[$m[1]] = trim($m[2], " \t\"'");
         }
     }
 }
 $add('.env file exists', is_file($envFile), '', 'Copy .env.example to .env in '.$app.' and fill it in (see DEPLOY.md)');
+$add('No setting written twice in .env', ! $dupes, $dupes ? implode(', ', array_unique($dupes)).' (only the first one counts)' : '', 'Delete the extra lines so each setting appears once');
+$add('.env file location', true, $envFile);
 $add('APP_KEY is set', str_starts_with($env['APP_KEY'] ?? '', 'base64:'), '', 'Run: cd '.$app.' && php artisan key:generate');
 $add("APP_URL = https://electionsoft.in$urlPath", rtrim($env['APP_URL'] ?? '', '/') === "https://electionsoft.in$urlPath", $env['APP_URL'] ?? '(not set)', "Set APP_URL=https://electionsoft.in$urlPath in .env");
 $add('APP_DEBUG is false', in_array(strtolower($env['APP_DEBUG'] ?? 'false'), ['false', '0'], true), $env['APP_DEBUG'] ?? '', 'Set APP_DEBUG=false (temporarily true only to see an error, then back to false)');
